@@ -66,7 +66,7 @@ export async function recommend(
   c: Case,
   e: Eligibility,
   client: Anthropic = new Anthropic(), // reads ANTHROPIC_API_KEY from the environment
-): Promise<Recommendation> {
+): Promise<Recommendation & { removed: string[] }> {
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 1000,
