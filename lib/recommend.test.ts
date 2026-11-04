@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { buildPrompt, parseRecommendation } from "./recommend.ts";
+import { buildPrompt, enforceEligibility, parseRecommendation } from "./recommend.ts";
 
 const c = toCase({ dispute_id: "X", reason: "INR", status: "OPEN",
   dispute_amount: { currency_code: "EUR", value: "60.00" } });
@@ -27,4 +27,17 @@ test("rejects off-schema replies", () => {
   assert.throws(() => parseRecommendation("no json here"));
   assert.throws(() => parseRecommendation('{"recommendation":"MAYBE","confidence":"HIGH","claims":[]}'));
   assert.throws(() => parseRecommendation('{"recommendation":"FIGHT","confidence":"HIGH"}'));
+});
+
+// G09: PayPal is reviewing the case, so the seller cannot respond. The model said FIGHT; the rule must win.
+test("G09: a FIGHT is forced to YOUR_CALL when the seller cannot respond", () => {
+  const forced = enforceEligibility({ recommendation: "FIGHT", confidence: "HIGH", claims: [] },
+    { canRespond: false, reason: "CLOSED" });
+  assert.equal(forced.recommendation, "YOUR_CALL");
+});
+
+test("a FIGHT stands when the seller can respond", () => {
+  const kept = enforceEligibility({ recommendation: "FIGHT", confidence: "HIGH", claims: [] },
+    { canRespond: true, daysLeft: 5 });
+  assert.equal(kept.recommendation, "FIGHT");
 });

@@ -84,5 +84,11 @@ export async function recommend(
     .map((b) => b.text)
     .join("");
   // Grounding guard: drop any claim whose listed fields are missing or null.
-  return applyGuard(parseRecommendation(text), factsFor(c, e, answer));
+  return enforceEligibility(applyGuard(parseRecommendation(text), factsFor(c, e, answer)), e);
+}
+
+// Deterministic rule: if the seller cannot respond (under review, overdue, closed, no due date),
+// the seller decides. The model cannot override this, whatever it says.
+export function enforceEligibility<T extends { recommendation: string }>(r: T, e: Eligibility): T {
+  return e.canRespond ? r : { ...r, recommendation: "YOUR_CALL" };
 }
