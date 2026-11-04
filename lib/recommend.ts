@@ -89,6 +89,7 @@ export async function recommend(
 
 // Deterministic rule: if the seller cannot respond (under review, overdue, closed, no due date),
 // the seller decides. The model cannot override this, whatever it says.
-export function enforceEligibility<T extends { recommendation: string }>(r: T, e: Eligibility): T {
-  return e.canRespond ? r : { ...r, recommendation: "YOUR_CALL" };
+export function enforceEligibility<T extends { recommendation: string; confidence: string }>(r: T, e: Eligibility): T {
+  // The model's confidence judged its FIGHT or REFUND, which is now discarded, so the answer is LOW.
+  return e.canRespond ? r : { ...r, recommendation: "YOUR_CALL", confidence: "LOW" };
 }

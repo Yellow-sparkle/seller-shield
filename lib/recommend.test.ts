@@ -34,6 +34,7 @@ test("G09: a FIGHT is forced to YOUR_CALL when the seller cannot respond", () =>
   const forced = enforceEligibility({ recommendation: "FIGHT", confidence: "HIGH", claims: [] },
     { canRespond: false, reason: "CLOSED" });
   assert.equal(forced.recommendation, "YOUR_CALL");
+  assert.equal(forced.confidence, "LOW");
 });
 
 test("a FIGHT stands when the seller can respond", () => {

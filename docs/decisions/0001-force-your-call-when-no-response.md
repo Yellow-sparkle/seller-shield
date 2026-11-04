@@ -10,7 +10,7 @@ The golden check case G09 exposed the gap. PayPal is reviewing the case, so the 
 A FIGHT on a case the seller cannot answer sends the seller to act on a recommendation that cannot be carried out. It is the same kind of error as the top PRD risk, "AI recommends fighting a case that should be refunded". The PRD already says eligibility is decided by code, not the model (PRD "Split of work", line 181).
 
 ## Decision
-After the model answers and the grounding guard runs, the app checks eligibility. If `canRespond` is false, the recommendation becomes YOUR_CALL. The model cannot override this.
+After the model answers and the grounding guard runs, the app checks eligibility. If `canRespond` is false, the recommendation becomes YOUR_CALL with LOW confidence. The model cannot override this.
 
 Code: `enforceEligibility` in `lib/recommend.ts`, called from `recommend()` after `applyGuard`.
 
@@ -30,7 +30,7 @@ Cases where `canRespond` is false (from `responseEligibility`):
 - Live red-flag subset (`scripts/golden-check.ts --red-flag`): 7 of 7 match. G09 is YOUR_CALL. This was one run.
 
 ## Known gaps and trade-offs
-- **Confidence label:** a forced YOUR_CALL keeps the model's confidence, so G09 shows YOUR_CALL with HIGH confidence. This reads oddly on screen. Proposed fix: set confidence to LOW when the rule applies. Not done.
+- **Confidence label (resolved):** a forced YOUR_CALL now also sets confidence to LOW, because the model's confidence judged the discarded FIGHT. Before this, G09 showed YOUR_CALL with HIGH confidence.
 - **Override is silent:** the model's disagreement is not recorded. We could log the original answer for review.
 - **One live run:** the model can vary between runs. Repeat the red-flag subset before the demo.
 - **Review status mapping:** the claim that PayPal's review status maps to CLOSED is inferred from the code. Unverified against a live review case.
