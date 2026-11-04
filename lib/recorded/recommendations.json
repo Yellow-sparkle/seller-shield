@@ -65,14 +65,6 @@
         ]
       },
       {
-        "text": "Seller protection is unlikely to help without proof of fulfillment.",
-        "fields": [
-          "sellerProtectionEligible",
-          "evidenceTypeNeeded",
-          "hasTracking"
-        ]
-      },
-      {
         "text": "PayPal is holding EUR 43.12, net of fees, on this EUR 45 sale.",
         "fields": [
           "holdAmount",
