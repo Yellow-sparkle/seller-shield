@@ -4,6 +4,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Case } from "./dispute.ts";
 import { requiredEvidence, type Eligibility } from "./rules.ts";
+import { applyGuard } from "./guard.ts";
 
 export const MODEL = "claude-opus-5-5";
 
@@ -13,8 +14,8 @@ export type Recommendation = {
   rationale: string;
 };
 
-export function buildPrompt(c: Case, e: Eligibility): string {
-  const facts = {
+export function factsFor(c: Case, e: Eligibility): Record<string, unknown> {
+  return {
     reason: c.reason,
     status: c.status,
     amount: c.amount,
@@ -25,6 +26,10 @@ export function buildPrompt(c: Case, e: Eligibility): string {
     evidenceTypeNeeded: requiredEvidence(c.reason),
     canRespond: e.canRespond,
   };
+}
+
+export function buildPrompt(c: Case, e: Eligibility): string {
+  const facts = factsFor(c, e);
   return [
     "You help a small PayPal seller decide whether to fight a dispute or refund the buyer.",
     "Use only the facts below. If a fact is null or missing, say so and lower your confidence.",
@@ -71,5 +76,6 @@ export async function recommend(
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
     .map((b) => b.text)
     .join("");
-  return parseRecommendation(text);
+  // Grounding guard: drop any sentence that doesn't cite a real fact.
+  return applyGuard(parseRecommendation(text), factsFor(c, e));
 }
