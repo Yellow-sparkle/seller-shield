@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef } from "ag-grid-community";
 import { toCase, daysUntilDue } from "../lib/dispute.ts";
-import { responseEligibility } from "../lib/rules.ts";
+import { protectionLabel, responseEligibility } from "../lib/rules.ts";
 import fixtures from "../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../lib/recorded/recommendations.json" with { type: "json" };
 
@@ -48,7 +48,7 @@ function toRow(raw: object, now: Date): Row {
       : "-",
     deadline: c.responseDueAt ? c.responseDueAt.slice(0, 10) : "-",
     daysLeft: daysUntilDue(c, now),
-    protection: c.sellerProtectionEligible === null ? "-" : c.sellerProtectionEligible ? "Eligible" : "Not eligible",
+    protection: protectionLabel(c),
     status: e.canRespond ? "You can respond" : `Closed to response (${e.reason})`,
     ...recommendationFor(c.disputeId),
     decision: "Not decided",

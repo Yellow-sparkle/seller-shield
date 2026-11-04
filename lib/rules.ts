@@ -32,3 +32,11 @@ export function responseEligibility(c: Case, now: Date = new Date()): Eligibilit
   if (days < 0 || Date.parse(c.responseDueAt as string) < now.getTime()) return { canRespond: false, reason: "OVERDUE" };
   return { canRespond: true, daysLeft: days };
 }
+
+// Seller Protection label for the case screen. SNAD is excluded in PayPal's published PT terms,
+// so it reads "Not covered" even when PayPal's sandbox status says ELIGIBLE.
+export function protectionLabel(c: Case): string {
+  if (c.reason === "SNAD") return "Not covered (SNAD is excluded in PayPal PT terms)";
+  if (c.sellerProtectionEligible === null) return "-";
+  return c.sellerProtectionEligible ? "Eligible" : "Not eligible";
+}

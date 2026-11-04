@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { requiredEvidence, responseEligibility } from "./rules.ts";
+import { protectionLabel, requiredEvidence, responseEligibility } from "./rules.ts";
 import fixtures from "./fixtures/sandbox-disputes.json" with { type: "json" };
 
 const now = new Date("2026-11-04T00:00:00Z");
@@ -56,4 +56,16 @@ test("GJM sandbox dispute: seller ID, protection and net hold match the live res
   assert.equal(c.transactionId, "35W222794X4866508");
   assert.equal(c.sellerProtectionEligible, true);
   assert.deepEqual(c.holdAmount, { currency: "EUR", value: -57.61 });
+});
+
+test("NVP (SNAD) shows Not covered even though the sandbox says ELIGIBLE", () => {
+  const f = (fixtures as object[]).find((x) => (x as { dispute_id: string }).dispute_id === "PP-R-NVP-10196239");
+  const c = toCase(f as never);
+  assert.equal(c.sellerProtectionEligible, true);
+  assert.match(protectionLabel(c), /^Not covered/);
+});
+
+test("non-SNAD cases keep PayPal's protection status", () => {
+  const c = toCase((fixtures as object[])[0] as never);
+  assert.equal(protectionLabel(c), "Eligible");
 });
