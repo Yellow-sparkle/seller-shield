@@ -35,7 +35,7 @@ export function buildPrompt(c: Case, e: Eligibility): string {
     "Use only the facts below. If a fact is null or missing, say so and lower your confidence.",
     "Reply with JSON only, in this shape:",
     '{"recommendation":"FIGHT|REFUND|YOUR_CALL","confidence":"HIGH|LOW","claims":[{"text":"one short claim","fields":["fieldName"]}]}',
-    "Every claim must list the fact fields it relies on. A claim with no fields will be discarded.",
+    "Every claim must list the fact fields it relies on. A claim with no fields will be discarded. Give at most 6 claims, short ones.",
     "",
     "Facts:",
     JSON.stringify(facts, null, 2),
@@ -69,7 +69,7 @@ export async function recommend(
 ): Promise<GuardedResult> {
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 1000,
+    max_tokens: 2500,
     messages: [{ role: "user", content: buildPrompt(c, e) }],
   });
   const text = response.content
