@@ -35,7 +35,10 @@ export function buildPrompt(c: Case, e: Eligibility, answer: SellerAnswer = {}):
   const facts = factsFor(c, e, answer);
   return [
     "You help a small PayPal seller decide whether to fight a dispute or refund the buyer.",
-    "Use only the facts below. If a fact is null or missing, say so and lower your confidence.",
+    "Use only the facts below.",
+    "A null fact lowers confidence only when it would change the answer. Do not mention null facts that do not matter to the answer.",
+    "The seller's answers (hasTracking, matchesListing) are facts. Use them as given.",
+    "holdAmount is the amount PayPal holds, net of PayPal fees. The minus sign is how PayPal records it. It is not an error.",
     "Reply with JSON only, in this shape:",
     '{"recommendation":"FIGHT|REFUND|YOUR_CALL","confidence":"HIGH|LOW","claims":[{"text":"one short claim","fields":["fieldName"]}]}',
     "Every claim must list the fact fields it relies on. A claim with no fields will be discarded. Give at most 6 claims, short ones.",
