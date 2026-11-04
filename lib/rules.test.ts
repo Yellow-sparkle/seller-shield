@@ -41,3 +41,11 @@ test("FGC sandbox dispute: seller ID, protection and net hold match the live res
   assert.equal(c.sellerProtectionEligible, true);
   assert.deepEqual(c.holdAmount, { currency: "EUR", value: -43.12 });
 });
+
+test("NVP sandbox dispute: seller ID, protection and net hold match the live response", () => {
+  const f = (fixtures as object[]).find((x) => (x as { dispute_id: string }).dispute_id === "PP-R-NVP-10196239");
+  const c = toCase(f as never);
+  assert.equal(c.transactionId, "11X88937YC2460212");
+  assert.equal(c.sellerProtectionEligible, true);
+  assert.deepEqual(c.holdAmount, { currency: "EUR", value: -81.76 });
+});

@@ -56,10 +56,22 @@
     },
     "disputed_transactions": [
       {
-        "seller_transaction_id": "0JH27316PV1712529"
+        "seller_transaction_id": "11X88937YC2460212"
       }
     ],
     "create_time": "2026-11-03T10:00:00Z",
-    "seller_response_due_date": "2026-11-23T10:00:00Z"
+    "seller_response_due_date": "2026-11-23T10:00:00Z",
+    "seller_protection": {
+      "status": "ELIGIBLE"
+    },
+    "fund_movements": [
+      {
+        "type": "HOLD_PLACED",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "-81.76"
+        }
+      }
+    ]
   }
 ]
