@@ -1,27 +1,30 @@
-# Policy mapping: public PayPal terms vs. Seller Shield rules
+# Policy mapping: PayPal public seller-protection terms vs. Seller Shield rules
 
-Sources: PayPal public Seller Protection terms (https://pep.paypal.com/legalhub/paypal/seller-protection, read 4 Nov 2026).
-Only public terms are used here. No internal PayPal documents are in this repo.
-This is a product mapping, not legal advice. A lawyer should check the EU and Swiss consumer and payment rules before any real use.
+Seller country: Portugal (confirmed by Kate, 4 Nov 2026). Currency: EUR.
+Source used: Portugal page, https://www.paypal.com/pt/webapps/mpp/ua/seller-protection (last updated 17 July 2025, read 4 Nov 2026).
+Only public PayPal terms are used. No internal PayPal documents are in this repo.
+Other country pages checked for comparison: Switzerland, https://www.paypal.com/ch/webapps/mpp/ua/seller-protection (13 Jan 2025). The US legal hub is not the right source for a Portuguese seller.
+This is a product mapping, not legal advice. A lawyer should check EU and Portuguese consumer and payment rules before any real use.
 
-| # | Public term (section) | What it says | What the app does now | Gap / action |
+| # | Public term (PT page section) | What it says | What the app does now | Gap / action |
 |---|---|---|---|---|
-| 1 | Eligibility: Item Not Received | Covered, except buyer card chargebacks | Uses `seller_protection` status from PayPal | OK. We rely on PayPal's own flag. |
-| 2 | Eligibility: SNAD | Not covered by Seller Protection (Ineligible Items) | SNAD FIGHT uses `matchesListing`, and the sandbox fixture for NVP says protection ELIGIBLE | Mismatch between sandbox data and the public terms. Show a warning on SNAD cases and do not claim protection covers them. |
-| 3 | Evidence: proof of delivery (Physical Goods) | Tracking number, ship date, address matching the transaction, and "delivered" status | Uses `hasTracking` (yes or no) | Too weak. Add `deliveredAtBuyerAddress`, and treat "tracking exists" as not enough. Until that is answered, INR FIGHT should be YOUR_CALL. |
-| 4 | Basic requirements: shipping address | Redirected items lose protection | Not checked | Add a seller question: "Was it sent to the address on the transaction?" |
-| 5 | Deadline: Unauthorized claims | Proof must show the item was sent no later than 2 days after PayPal notified the seller | Shows only the response due date | Show a 2-day proof window for UNAUTHORISED cases. |
-| 6 | Basic requirements: primary account address | Protection applies only if the primary PayPal account address is in the US | Not checked | Major gap for a Zurich seller. Show a warning, or ask Kate to confirm. Sandbox ELIGIBLE flags do not prove this. |
-| 7 | Basic requirements: unauthorised payments | Protection only if the payment is marked eligible or partially eligible | Uses `sellerProtectionEligible` | OK. |
-| 8 | Ineligible: items sent after PayPal said not to release | Not covered | Not checked | Add a question to the seller. |
-| 9 | Ineligible: in-person, gift cards, etc. | Not covered | Not checked | Out of scope for the demo (online sales). Say so in the Devpost text. |
+| 1 | "O que é elegível": Item Not Received | Covered, except card-issuer chargebacks | Uses PayPal's `seller_protection` status | OK. |
+| 2 | "Artigos e transações não elegíveis": SNAD | Excluded (Significantly Not As Described) | SNAD FIGHT uses `matchesListing`. The sandbox NVP fixture says protection ELIGIBLE. | Conflict with the public terms. Warn on SNAD cases, and never say protection covers them. |
+| 3 | "Estabelecer comprovativo de entrega": Item Not Received | Tracking number, delivery date, status "entregue" (delivered), address matching the transaction | Uses `hasTracking` (yes or no) | Too weak. Add `deliveredAtBuyerAddress`. Until that is answered, INR FIGHT should be YOUR_CALL. |
+| 4 | "Requisitos básicos": unauthorised claims | Proof of shipment within 2 days after PayPal's notice | Shows only the response due date | Show a 2-day proof window for UNAUTHORISED cases. |
+| 5 | "Requisitos básicos": address | Goods redirected elsewhere are ineligible | Not checked | Add a seller question: "Was it sent to the address on the transaction?" |
+| 6 | "Requisitos básicos": primary account address | Must be in Portugal | Not checked | Matches Kate's country, if her PayPal primary address is in Portugal. Ask her to confirm. |
+| 7 | "Requisitos básicos": payment marked eligible | Required for unauthorised claims | Uses `sellerProtectionEligible` | OK. |
+| 8 | "Itens não elegíveis": shipped after PayPal advised against it | Not covered | Not checked | Add a seller question. |
+| 9 | "Itens não elegíveis": in-person, gift cards, etc. | Not covered | Not checked | Out of scope for online sales. Say so in the Devpost text. |
 
 ## Laws (not checked yet)
-- EU consumer law (withdrawal right, refunds for distance sales) and PSD2 rules on unauthorised payments are relevant to EUR sales.
-- Swiss law may also apply, since the seller is in Switzerland.
-- Not reviewed. Do not state legal compliance anywhere until a lawyer has checked it.
+- EU consumer law (distance-selling withdrawal right, refunds) and PSD2 rules on unauthorised payments apply to a Portuguese seller selling in EUR.
+- Portuguese implementation of these rules has not been checked.
+- Do not state legal compliance anywhere until a lawyer has checked it.
 
-## Decisions for Kate
-1. Keep the sandbox demo as it is, and say the sandbox does not apply US-only protection? Or show a warning on every case?
-2. Add the two new seller questions (delivered to the buyer's address, sent after PayPal's notice)?
-3. Add the 2-day UNAUTHORISED proof window to the case screen?
+## Decisions still open for Kate
+1. Keep the sandbox demo and disclose that the SNAD and eligibility flags differ from the public terms?
+2. Add the two seller questions (delivered to the buyer's address, shipped after PayPal's advice)?
+3. Add the 2-day UNAUTHORISED window to the case screen?
+4. Show the policy basis on each recommendation? (Kate answered yes on 4 Nov 2026. Not built yet.)
