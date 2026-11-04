@@ -11,7 +11,7 @@ export type GuardedResult = {
 };
 
 // Predictions about the outcome are not facts. Claims that forecast a win or loss are removed.
-const PREDICTION = /\b(likely|likelihood|usually|probably|favou?rs?|should win|will win|would win|would lose|will lose|likely win|likely lose)\b/i;
+const PREDICTION = /\b(likely|likelihood|usually|probably|favou?rs?|win|winning|lose|losing|chances?|protect you)\b/i;
 
 export function isGrounded(claim: Claim, facts: Record<string, unknown>): boolean {
   if (!Array.isArray(claim.fields) || claim.fields.length === 0) return false;

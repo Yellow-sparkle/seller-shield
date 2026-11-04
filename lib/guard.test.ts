@@ -43,3 +43,8 @@ test("removes a claim that predicts the outcome, even with a real field", () => 
   assert.equal(isGrounded({ text: "With proof you would likely win.", fields: ["sellerProtectionEligible"] }, facts), false);
   assert.equal(isGrounded({ text: "Seller protection is eligible.", fields: ["sellerProtectionEligible"] }, facts), true);
 });
+
+test("removes outcome wording such as 'should let you win' or 'chances of winning'", () => {
+  assert.equal(isGrounded({ text: "Valid proof should let you win.", fields: ["sellerProtectionEligible"] }, facts), false);
+  assert.equal(isGrounded({ text: "Your chances of winning are unclear.", fields: ["evidenceTypeNeeded"] }, facts), false);
+});
