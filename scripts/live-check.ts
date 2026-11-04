@@ -3,6 +3,7 @@
 import { toCase } from "../lib/dispute.ts";
 import { responseEligibility } from "../lib/rules.ts";
 import { recommend } from "../lib/recommend.ts";
+import { sellerAnswers } from "../lib/answers.ts";
 import fixtures from "../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 
 if (!process.env.ANTHROPIC_API_KEY) {
@@ -14,7 +15,7 @@ for (const raw of fixtures as object[]) {
   const c = toCase(raw as never);
   const e = responseEligibility(c);
   console.log(`\n=== ${c.disputeId} | ${c.reason} | ${c.amount?.value} ${c.amount?.currency}`);
-  const r = await recommend(c, e);
+  const r = await recommend(c, e, sellerAnswers[c.disputeId] ?? {});
   console.log("Recommendation:", r.recommendation, "| confidence:", r.confidence);
   console.log("Claims kept:");
   for (const cl of r.claims) console.log(" -", cl.text, "[" + cl.fields.join(", ") + "]");

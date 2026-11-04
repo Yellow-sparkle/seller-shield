@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { Case } from "./dispute.ts";
 import { requiredEvidence, type Eligibility } from "./rules.ts";
 import { applyGuard, type Claim, type GuardedResult } from "./guard.ts";
+import type { SellerAnswer } from "./answers.ts";
 
 export const MODEL = "claude-opus-5-5";
 
@@ -14,8 +15,10 @@ export type Recommendation = {
   claims: Claim[];
 };
 
-export function factsFor(c: Case, e: Eligibility): Record<string, unknown> {
+export function factsFor(c: Case, e: Eligibility, answer: SellerAnswer = {}): Record<string, unknown> {
   return {
+    hasTracking: answer.hasTracking ?? null,
+    matchesListing: answer.matchesListing ?? null,
     reason: c.reason,
     status: c.status,
     amount: c.amount,
@@ -28,8 +31,8 @@ export function factsFor(c: Case, e: Eligibility): Record<string, unknown> {
   };
 }
 
-export function buildPrompt(c: Case, e: Eligibility): string {
-  const facts = factsFor(c, e);
+export function buildPrompt(c: Case, e: Eligibility, answer: SellerAnswer = {}): string {
+  const facts = factsFor(c, e, answer);
   return [
     "You help a small PayPal seller decide whether to fight a dispute or refund the buyer.",
     "Use only the facts below. If a fact is null or missing, say so and lower your confidence.",
@@ -65,17 +68,18 @@ export function parseRecommendation(text: string): Recommendation {
 export async function recommend(
   c: Case,
   e: Eligibility,
+  answer: SellerAnswer = {},
   client: Anthropic = new Anthropic(), // reads ANTHROPIC_API_KEY from the environment
 ): Promise<GuardedResult> {
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 2500,
-    messages: [{ role: "user", content: buildPrompt(c, e) }],
+    messages: [{ role: "user", content: buildPrompt(c, e, answer) }],
   });
   const text = response.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
     .map((b) => b.text)
     .join("");
   // Grounding guard: drop any claim whose listed fields are missing or null.
-  return applyGuard(parseRecommendation(text), factsFor(c, e));
+  return applyGuard(parseRecommendation(text), factsFor(c, e, answer));
 }
