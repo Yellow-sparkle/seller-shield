@@ -4,14 +4,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Case } from "./dispute.ts";
 import { requiredEvidence, type Eligibility } from "./rules.ts";
-import { applyGuard } from "./guard.ts";
+import { applyGuard, type Claim, type GuardedResult } from "./guard.ts";
 
 export const MODEL = "claude-opus-5-5";
 
 export type Recommendation = {
   recommendation: "FIGHT" | "REFUND" | "YOUR_CALL";
   confidence: "HIGH" | "LOW";
-  rationale: string;
+  claims: Claim[];
 };
 
 export function factsFor(c: Case, e: Eligibility): Record<string, unknown> {
@@ -34,7 +34,8 @@ export function buildPrompt(c: Case, e: Eligibility): string {
     "You help a small PayPal seller decide whether to fight a dispute or refund the buyer.",
     "Use only the facts below. If a fact is null or missing, say so and lower your confidence.",
     "Reply with JSON only, in this shape:",
-    '{"recommendation":"FIGHT|REFUND|YOUR_CALL","confidence":"HIGH|LOW","rationale":"one or two sentences, each citing a fact by its field name"}',
+    '{"recommendation":"FIGHT|REFUND|YOUR_CALL","confidence":"HIGH|LOW","claims":[{"text":"one short claim","fields":["fieldName"]}]}',
+    "Every claim must list the fact fields it relies on. A claim with no fields will be discarded.",
     "",
     "Facts:",
     JSON.stringify(facts, null, 2),
@@ -55,18 +56,17 @@ export function parseRecommendation(text: string): Recommendation {
   if (raw.confidence !== "HIGH" && raw.confidence !== "LOW") {
     throw new Error(`Unknown confidence: ${String(raw.confidence)}`);
   }
-  if (typeof raw.rationale !== "string" || raw.rationale.trim() === "") {
-    throw new Error("Missing rationale");
-  }
+  if (!Array.isArray(raw.claims)) throw new Error("Missing claims");
+  const claims = raw.claims as Claim[];
   const recommendation = raw.confidence === "LOW" ? "YOUR_CALL" : raw.recommendation!;
-  return { recommendation, confidence: raw.confidence, rationale: raw.rationale };
+  return { recommendation, confidence: raw.confidence, claims };
 }
 
 export async function recommend(
   c: Case,
   e: Eligibility,
   client: Anthropic = new Anthropic(), // reads ANTHROPIC_API_KEY from the environment
-): Promise<Recommendation & { removed: string[] }> {
+): Promise<GuardedResult> {
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 1000,
@@ -76,6 +76,6 @@ export async function recommend(
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
     .map((b) => b.text)
     .join("");
-  // Grounding guard: drop any sentence that doesn't cite a real fact.
+  // Grounding guard: drop any claim whose listed fields are missing or null.
   return applyGuard(parseRecommendation(text), factsFor(c, e));
 }

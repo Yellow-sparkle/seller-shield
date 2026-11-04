@@ -14,17 +14,17 @@ test("prompt carries the case facts and asks for JSON only", () => {
 });
 
 test("parses a high-confidence FIGHT", () => {
-  const r = parseRecommendation('{"recommendation":"FIGHT","confidence":"HIGH","rationale":"reason is INR, tracking needed"}');
+  const r = parseRecommendation('{"recommendation":"FIGHT","confidence":"HIGH","claims":[{"text":"reason is INR","fields":["reason"]}]}');
   assert.equal(r.recommendation, "FIGHT");
 });
 
 test("low confidence is forced to YOUR_CALL", () => {
-  const r = parseRecommendation('{"recommendation":"REFUND","confidence":"LOW","rationale":"amount is null"}');
+  const r = parseRecommendation('{"recommendation":"REFUND","confidence":"LOW","claims":[{"text":"amount unknown","fields":["amount"]}]}');
   assert.equal(r.recommendation, "YOUR_CALL");
 });
 
 test("rejects off-schema replies", () => {
   assert.throws(() => parseRecommendation("no json here"));
-  assert.throws(() => parseRecommendation('{"recommendation":"MAYBE","confidence":"HIGH","rationale":"x"}'));
-  assert.throws(() => parseRecommendation('{"recommendation":"FIGHT","confidence":"HIGH","rationale":""}'));
+  assert.throws(() => parseRecommendation('{"recommendation":"MAYBE","confidence":"HIGH","claims":[]}'));
+  assert.throws(() => parseRecommendation('{"recommendation":"FIGHT","confidence":"HIGH"}'));
 });

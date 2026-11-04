@@ -15,5 +15,6 @@ const e = responseEligibility(c);
 console.log("Dispute:", c.disputeId, c.reason, c.amount);
 const r = await recommend(c, e);
 console.log("Recommendation:", r.recommendation, "| confidence:", r.confidence);
-console.log("Rationale:", r.rationale);
-if (r.removed.length) console.log("Removed (no citation):", r.removed);
+console.log("Claims kept:");
+for (const cl of r.claims) console.log(" -", cl.text, "[" + cl.fields.join(", ") + "]");
+if (r.removed.length) console.log("Removed (ungrounded):", r.removed.map((x) => x.text));
