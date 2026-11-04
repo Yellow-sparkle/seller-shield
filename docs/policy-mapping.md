@@ -13,7 +13,7 @@ This is a product mapping, not legal advice. A lawyer should check EU and Portug
 | 3 | "Estabelecer comprovativo de entrega": Item Not Received | Tracking number, delivery date, status "entregue" (delivered), address matching the transaction | Uses `hasTracking` (yes or no) | Too weak. Add `deliveredAtBuyerAddress`. Until that is answered, INR FIGHT should be YOUR_CALL. |
 | 4 | "Requisitos básicos": unauthorised claims | Proof of shipment within 2 days after PayPal's notice | Shows only the response due date | Show a 2-day proof window for UNAUTHORISED cases. |
 | 5 | "Requisitos básicos": address | Goods redirected elsewhere are ineligible | Not checked | Add a seller question: "Was it sent to the address on the transaction?" |
-| 6 | "Requisitos básicos": primary account address | Must be in Portugal | Not checked | Matches Kate's country, if her PayPal primary address is in Portugal. Ask her to confirm. |
+| 6 | "Requisitos básicos": primary account address | Must be in Portugal | Kate reports the business profile shows Lisbon (Residential and Commercial), 4 Nov 2026. Still to confirm it is the sandbox account. | Mostly met. Confirm the account is the sandbox one. Do not store the merchant ID in the repo. |
 | 7 | "Requisitos básicos": payment marked eligible | Required for unauthorised claims | Uses `sellerProtectionEligible` | OK. |
 | 8 | "Itens não elegíveis": shipped after PayPal advised against it | Not covered | Not checked | Add a seller question. |
 | 9 | "Itens não elegíveis": in-person, gift cards, etc. | Not covered | Not checked | Out of scope for online sales. Say so in the Devpost text. |
