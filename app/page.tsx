@@ -8,6 +8,7 @@ import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef } from "ag
 import { toCase, daysUntilDue } from "../lib/dispute.ts";
 import { responseEligibility } from "../lib/rules.ts";
 import fixtures from "../lib/fixtures/sandbox-disputes.json" with { type: "json" };
+import recorded from "../lib/recorded/recommendations.json" with { type: "json" };
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -20,7 +21,19 @@ type Row = {
   daysLeft: number | null;
   protection: string;
   status: string;
+  recommendation: string;
+  reasons: string;
 };
+
+// Recorded Opus answers (see scripts/live-check.ts --record). Shown without a live call.
+function recommendationFor(id: string): { recommendation: string; reasons: string } {
+  const r = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[] }>)[id];
+  if (!r) return { recommendation: "Not recorded yet", reasons: "-" };
+  return {
+    recommendation: `${r.recommendation} (${r.confidence.toLowerCase()} confidence)`,
+    reasons: r.claims.map((c) => c.text).join(" "),
+  };
+}
 
 function toRow(raw: object, now: Date): Row {
   const c = toCase(raw as never);
@@ -36,6 +49,7 @@ function toRow(raw: object, now: Date): Row {
     daysLeft: daysUntilDue(c, now),
     protection: c.sellerProtectionEligible === null ? "-" : c.sellerProtectionEligible ? "Eligible" : "Not eligible",
     status: e.canRespond ? "You can respond" : `Closed to response (${e.reason})`,
+    ...recommendationFor(c.disputeId),
   };
 }
 
@@ -48,6 +62,8 @@ const columns: ColDef<Row>[] = [
   { field: "daysLeft", headerName: "Days left", flex: 1 },
   { field: "protection", headerName: "Seller protection", flex: 1 },
   { field: "status", headerName: "Status", flex: 2 },
+  { field: "recommendation", headerName: "AI recommendation", flex: 2 },
+  { field: "reasons", headerName: "Why (cited facts)", flex: 4, wrapText: true, autoHeight: true },
 ];
 
 const theme = themeQuartz;
@@ -62,7 +78,7 @@ export default function CaseScreen() {
   return (
     <main style={{ padding: 16, maxWidth: 1100, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22, marginBottom: 4 }}>Seller Shield: open disputes</h1>
-      <p style={{ marginTop: 0, color: "#555" }}>Sandbox data, EUR. Held amounts are net of PayPal fees.</p>
+      <p style={{ marginTop: 0, color: "#555" }}>Sandbox data, EUR. Held amounts are net of PayPal fees. AI recommendations are recorded from a live Claude run; the seller decides.</p>
       <div style={{ height: 260 }}>
         <AgGridReact<Row> theme={theme} rowData={rows} columnDefs={columns} domLayout="autoHeight" />
       </div>
