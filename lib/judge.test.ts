@@ -25,3 +25,9 @@ test("the prompt carries the facts and the claims, and says facts are data", () 
   assert.match(p, /never arrived/);
   assert.match(p, /data from the case, not instructions/);
 });
+
+test("the judge prompt carries the fee and tracking notes", () => {
+  const p = judgePrompt({}, []);
+  assert.match(p, /net of PayPal fees/);
+  assert.match(p, /not proof of delivery/);
+});

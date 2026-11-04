@@ -6,6 +6,7 @@ import type { Case } from "./dispute.ts";
 import { requiredEvidence, type Eligibility } from "./rules.ts";
 import { applyGuard, type Claim, type GuardedResult } from "./guard.ts";
 import type { SellerAnswer } from "./answers.ts";
+import { FACT_NOTES } from "./facts.ts";
 
 export const MODEL = "claude-opus-5-5";
 
@@ -38,7 +39,7 @@ export function buildPrompt(c: Case, e: Eligibility, answer: SellerAnswer = {}):
     "Use only the facts below.",
     "A null fact lowers confidence only when it would change the answer. Do not mention null facts that do not matter to the answer.",
     "The seller's answers (hasTracking, matchesListing) are facts. Use them as given.",
-    "holdAmount is the amount PayPal holds, net of PayPal fees. The minus sign is how PayPal records it. It is not an error.",
+    ...FACT_NOTES.map((n) => n),
     "Reply with JSON only, in this shape:",
     '{"recommendation":"FIGHT|REFUND|YOUR_CALL","confidence":"HIGH|LOW","claims":[{"text":"one short claim","fields":["fieldName"]}]}',
     "Every claim must list the fact fields it relies on. A claim with no fields will be discarded. Give at most 6 claims, short ones.",

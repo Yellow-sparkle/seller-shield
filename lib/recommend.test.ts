@@ -42,3 +42,9 @@ test("a FIGHT stands when the seller can respond", () => {
     { canRespond: true, daysLeft: 5 });
   assert.equal(kept.recommendation, "FIGHT");
 });
+
+test("the recommender prompt says tracking alone is not proof of delivery", () => {
+  const p = buildPrompt(c, { canRespond: true, daysLeft: 20 });
+  assert.match(p, /not proof of delivery/);
+  assert.match(p, /no tracking recorded/);
+});
