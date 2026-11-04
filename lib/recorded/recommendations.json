@@ -1,45 +1,7 @@
 {
   "PP-R-GJM-10196233": {
-    "recommendation": "YOUR_CALL",
-    "confidence": "LOW",
-    "claims": [
-      {
-        "text": "Buyer says the item was not received (INR).",
-        "fields": [
-          "reason"
-        ]
-      },
-      {
-        "text": "PayPal wants proof of fulfillment, but you have no tracking to provide.",
-        "fields": [
-          "evidenceTypeNeeded",
-          "hasTracking"
-        ]
-      },
-      {
-        "text": "Dispute is EUR 60, and EUR 57.61 is currently held.",
-        "fields": [
-          "amount",
-          "holdAmount"
-        ]
-      },
-      {
-        "text": "You can still respond until 2026-11-23 if you find other proof of shipment.",
-        "fields": [
-          "canRespond",
-          "responseDueAt",
-          "status"
-        ]
-      }
-    ],
-    "removed": [
-      "Seller protection eligibility likely won't help without proof of fulfillment.",
-      "Whether the item matches the listing is unknown (null), which lowers confidence."
-    ]
-  },
-  "PP-R-FGC-10196238": {
-    "recommendation": "YOUR_CALL",
-    "confidence": "LOW",
+    "recommendation": "REFUND",
+    "confidence": "HIGH",
     "claims": [
       {
         "text": "The buyer says the item never arrived.",
@@ -48,72 +10,127 @@
         ]
       },
       {
-        "text": "PayPal wants proof of fulfillment, but there is no tracking to provide.",
+        "text": "PayPal wants proof of delivery to decide this case.",
         "fields": [
-          "evidenceTypeNeeded",
-          "hasTracking"
+          "evidenceTypeNeeded"
         ]
       },
       {
-        "text": "The disputed amount is EUR 45.",
+        "text": "You have no tracking, so you can't prove delivery.",
         "fields": [
-          "amount"
+          "hasTracking",
+          "evidenceTypeNeeded"
         ]
       },
       {
-        "text": "The hold amount is negative (-43.12 EUR), which looks unusual. Check it in PayPal.",
-        "fields": [
-          "holdAmount"
-        ]
-      }
-    ],
-    "removed": [
-      "Seller protection eligibility probably won't help without proof of delivery.",
-      "Whether the item matches the listing is unknown (null), which lowers confidence. You must respond by 2026-11-23."
-    ]
-  },
-  "PP-R-NVP-10196239": {
-    "recommendation": "YOUR_CALL",
-    "confidence": "LOW",
-    "claims": [
-      {
-        "text": "Buyer says the item is significantly not as described.",
-        "fields": [
-          "reason"
-        ]
-      },
-      {
-        "text": "The item does not match your listing, which weakens a defense.",
-        "fields": [
-          "matchesListing",
-          "reason"
-        ]
-      },
-      {
-        "text": "The case is marked seller-protection eligible, but the listing mismatch undercuts it.",
-        "fields": [
-          "sellerProtectionEligible",
-          "matchesListing"
-        ]
-      },
-      {
-        "text": "The dispute is for 85 EUR, with 81.76 EUR on hold (listed as -81.76).",
+        "text": "The disputed amount is EUR 60, and PayPal is holding EUR 57.61 of it.",
         "fields": [
           "amount",
           "holdAmount"
         ]
       },
       {
-        "text": "You can still respond. The deadline is 2026-11-23 10:00 UTC.",
+        "text": "PayPal is waiting for your response, which is due by 23 Nov 2026.",
         "fields": [
-          "canRespond",
           "status",
+          "canRespond",
           "responseDueAt"
         ]
       }
     ],
     "removed": [
-      "Tracking status is missing (null), which lowers confidence."
+      "Seller protection only helps if you can prove delivery, so it likely won't save this case."
     ]
+  },
+  "PP-R-FGC-10196238": {
+    "recommendation": "REFUND",
+    "confidence": "HIGH",
+    "claims": [
+      {
+        "text": "The buyer says the item was not received.",
+        "fields": [
+          "reason"
+        ]
+      },
+      {
+        "text": "PayPal needs proof of fulfillment to rule for you.",
+        "fields": [
+          "evidenceTypeNeeded"
+        ]
+      },
+      {
+        "text": "You have no tracking, so you cannot prove delivery.",
+        "fields": [
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "Seller protection is unlikely to help without proof of fulfillment.",
+        "fields": [
+          "sellerProtectionEligible",
+          "evidenceTypeNeeded",
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "PayPal is holding EUR 43.12, net of fees, on this EUR 45 sale.",
+        "fields": [
+          "holdAmount",
+          "amount"
+        ]
+      },
+      {
+        "text": "You can still respond until 2026-11-23 10:00 UTC.",
+        "fields": [
+          "canRespond",
+          "responseDueAt"
+        ]
+      }
+    ],
+    "removed": []
+  },
+  "PP-R-NVP-10196239": {
+    "recommendation": "REFUND",
+    "confidence": "HIGH",
+    "claims": [
+      {
+        "text": "The buyer says the item is significantly not as described.",
+        "fields": [
+          "reason"
+        ]
+      },
+      {
+        "text": "You confirmed the item does not match your listing, so you have no grounds to fight.",
+        "fields": [
+          "matchesListing"
+        ]
+      },
+      {
+        "text": "The dispute is for EUR 85.00.",
+        "fields": [
+          "amount"
+        ]
+      },
+      {
+        "text": "PayPal is holding EUR 81.76 from your balance, net of fees.",
+        "fields": [
+          "holdAmount"
+        ]
+      },
+      {
+        "text": "PayPal is waiting for your response, and you can still respond.",
+        "fields": [
+          "status",
+          "canRespond"
+        ]
+      },
+      {
+        "text": "Respond by 23 Nov 2026, 10:00 UTC.",
+        "fields": [
+          "responseDueAt"
+        ]
+      }
+    ],
+    "removed": []
   }
 }
