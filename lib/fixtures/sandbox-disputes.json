@@ -9,14 +9,23 @@
     },
     "disputed_transactions": [
       {
-        "seller_transaction_id": "4A183454PG821393D"
+        "seller_transaction_id": "35W222794X4866508"
       }
     ],
     "create_time": "2026-11-03T10:00:00Z",
     "seller_response_due_date": "2026-11-23T10:00:00Z",
     "seller_protection": {
       "status": "ELIGIBLE"
-    }
+    },
+    "fund_movements": [
+      {
+        "type": "HOLD_PLACED",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "-57.61"
+        }
+      }
+    ]
   },
   {
     "dispute_id": "PP-R-FGC-10196238",
