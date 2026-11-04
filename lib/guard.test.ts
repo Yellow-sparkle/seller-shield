@@ -37,3 +37,9 @@ test("if nothing is grounded, the result is YOUR_CALL", () => {
   const out = applyGuard({ recommendation: "REFUND", confidence: "HIGH", claims: [{ text: "Refund.", fields: [] }] }, facts);
   assert.equal(out.recommendation, "YOUR_CALL");
 });
+
+test("removes a claim that predicts the outcome, even with a real field", () => {
+  assert.equal(isGrounded({ text: "Seller protection favors fighting.", fields: ["sellerProtectionEligible"] }, facts), false);
+  assert.equal(isGrounded({ text: "With proof you would likely win.", fields: ["sellerProtectionEligible"] }, facts), false);
+  assert.equal(isGrounded({ text: "Seller protection is eligible.", fields: ["sellerProtectionEligible"] }, facts), true);
+});
