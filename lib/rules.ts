@@ -28,6 +28,7 @@ export function responseEligibility(c: Case, now: Date = new Date()): Eligibilit
   }
   const days = daysUntilDue(c, now);
   if (days === null) return { canRespond: false, reason: "NO_DUE_DATE" };
-  if (days < 0) return { canRespond: false, reason: "OVERDUE" };
+  // Compare the real timestamp: a deadline passed a few hours ago rounds to 0 days, so the day count alone is not enough.
+  if (days < 0 || Date.parse(c.responseDueAt as string) < now.getTime()) return { canRespond: false, reason: "OVERDUE" };
   return { canRespond: true, daysLeft: days };
 }
