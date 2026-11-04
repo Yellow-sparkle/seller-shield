@@ -33,3 +33,11 @@ test("a closed dispute cannot be answered", () => {
 test("unknown reason has no evidence type", () => {
   assert.equal(requiredEvidence("UNKNOWN"), null);
 });
+
+test("FGC sandbox dispute: seller ID, protection and net hold match the live response", () => {
+  const f = (fixtures as object[]).find((x) => (x as { dispute_id: string }).dispute_id === "PP-R-FGC-10196238");
+  const c = toCase(f as never);
+  assert.equal(c.transactionId, "7RX812769J8875301");
+  assert.equal(c.sellerProtectionEligible, true);
+  assert.deepEqual(c.holdAmount, { currency: "EUR", value: -43.12 });
+});

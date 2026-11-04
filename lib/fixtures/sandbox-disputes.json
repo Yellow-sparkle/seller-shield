@@ -3,27 +3,62 @@
     "dispute_id": "PP-R-GJM-10196233",
     "reason": "INR",
     "status": "WAITING_FOR_SELLER_RESPONSE",
-    "dispute_amount": { "currency_code": "EUR", "value": "60.00" },
-    "disputed_transactions": [{ "seller_transaction_id": "4A183454PG821393D" }],
+    "dispute_amount": {
+      "currency_code": "EUR",
+      "value": "60.00"
+    },
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "4A183454PG821393D"
+      }
+    ],
     "create_time": "2026-11-03T10:00:00Z",
     "seller_response_due_date": "2026-11-23T10:00:00Z",
-    "seller_protection": { "status": "ELIGIBLE" }
+    "seller_protection": {
+      "status": "ELIGIBLE"
+    }
   },
   {
     "dispute_id": "PP-R-FGC-10196238",
     "reason": "INR",
     "status": "WAITING_FOR_SELLER_RESPONSE",
-    "dispute_amount": { "currency_code": "EUR", "value": "45.00" },
-    "disputed_transactions": [{ "seller_transaction_id": "5D621630RG616221V" }],
+    "dispute_amount": {
+      "currency_code": "EUR",
+      "value": "45.00"
+    },
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "7RX812769J8875301"
+      }
+    ],
     "create_time": "2026-11-03T10:00:00Z",
-    "seller_response_due_date": "2026-11-23T10:00:00Z"
+    "seller_response_due_date": "2026-11-23T10:00:00Z",
+    "seller_protection": {
+      "status": "ELIGIBLE"
+    },
+    "fund_movements": [
+      {
+        "type": "HOLD_PLACED",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "-43.12"
+        }
+      }
+    ]
   },
   {
     "dispute_id": "PP-R-NVP-10196239",
     "reason": "SNAD",
     "status": "WAITING_FOR_SELLER_RESPONSE",
-    "dispute_amount": { "currency_code": "EUR", "value": "85.00" },
-    "disputed_transactions": [{ "seller_transaction_id": "0JH27316PV1712529" }],
+    "dispute_amount": {
+      "currency_code": "EUR",
+      "value": "85.00"
+    },
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "0JH27316PV1712529"
+      }
+    ],
     "create_time": "2026-11-03T10:00:00Z",
     "seller_response_due_date": "2026-11-23T10:00:00Z"
   }
