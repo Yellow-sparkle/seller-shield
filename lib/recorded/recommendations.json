@@ -1,1 +1,119 @@
-{}
+{
+  "PP-R-GJM-10196233": {
+    "recommendation": "YOUR_CALL",
+    "confidence": "LOW",
+    "claims": [
+      {
+        "text": "Buyer says the item was not received (INR).",
+        "fields": [
+          "reason"
+        ]
+      },
+      {
+        "text": "PayPal wants proof of fulfillment, but you have no tracking to provide.",
+        "fields": [
+          "evidenceTypeNeeded",
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "Dispute is EUR 60, and EUR 57.61 is currently held.",
+        "fields": [
+          "amount",
+          "holdAmount"
+        ]
+      },
+      {
+        "text": "You can still respond until 2026-11-23 if you find other proof of shipment.",
+        "fields": [
+          "canRespond",
+          "responseDueAt",
+          "status"
+        ]
+      }
+    ],
+    "removed": [
+      "Seller protection eligibility likely won't help without proof of fulfillment.",
+      "Whether the item matches the listing is unknown (null), which lowers confidence."
+    ]
+  },
+  "PP-R-FGC-10196238": {
+    "recommendation": "YOUR_CALL",
+    "confidence": "LOW",
+    "claims": [
+      {
+        "text": "The buyer says the item never arrived.",
+        "fields": [
+          "reason"
+        ]
+      },
+      {
+        "text": "PayPal wants proof of fulfillment, but there is no tracking to provide.",
+        "fields": [
+          "evidenceTypeNeeded",
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "The disputed amount is EUR 45.",
+        "fields": [
+          "amount"
+        ]
+      },
+      {
+        "text": "The hold amount is negative (-43.12 EUR), which looks unusual. Check it in PayPal.",
+        "fields": [
+          "holdAmount"
+        ]
+      }
+    ],
+    "removed": [
+      "Seller protection eligibility probably won't help without proof of delivery.",
+      "Whether the item matches the listing is unknown (null), which lowers confidence. You must respond by 2026-11-23."
+    ]
+  },
+  "PP-R-NVP-10196239": {
+    "recommendation": "YOUR_CALL",
+    "confidence": "LOW",
+    "claims": [
+      {
+        "text": "Buyer says the item is significantly not as described.",
+        "fields": [
+          "reason"
+        ]
+      },
+      {
+        "text": "The item does not match your listing, which weakens a defense.",
+        "fields": [
+          "matchesListing",
+          "reason"
+        ]
+      },
+      {
+        "text": "The case is marked seller-protection eligible, but the listing mismatch undercuts it.",
+        "fields": [
+          "sellerProtectionEligible",
+          "matchesListing"
+        ]
+      },
+      {
+        "text": "The dispute is for 85 EUR, with 81.76 EUR on hold (listed as -81.76).",
+        "fields": [
+          "amount",
+          "holdAmount"
+        ]
+      },
+      {
+        "text": "You can still respond. The deadline is 2026-11-23 10:00 UTC.",
+        "fields": [
+          "canRespond",
+          "status",
+          "responseDueAt"
+        ]
+      }
+    ],
+    "removed": [
+      "Tracking status is missing (null), which lowers confidence."
+    ]
+  }
+}
