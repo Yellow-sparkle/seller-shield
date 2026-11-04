@@ -23,6 +23,7 @@ type Row = {
   status: string;
   recommendation: string;
   reasons: string;
+  decision: string;
 };
 
 // Recorded Opus answers (see scripts/live-check.ts --record). Shown without a live call.
@@ -50,6 +51,7 @@ function toRow(raw: object, now: Date): Row {
     protection: c.sellerProtectionEligible === null ? "-" : c.sellerProtectionEligible ? "Eligible" : "Not eligible",
     status: e.canRespond ? "You can respond" : `Closed to response (${e.reason})`,
     ...recommendationFor(c.disputeId),
+    decision: "Not decided",
   };
 }
 
@@ -64,6 +66,14 @@ const columns: ColDef<Row>[] = [
   { field: "status", headerName: "Status", flex: 2 },
   { field: "recommendation", headerName: "AI recommendation", flex: 2 },
   { field: "reasons", headerName: "Why (cited facts)", flex: 4, wrapText: true, autoHeight: true },
+  {
+    field: "decision",
+    headerName: "Seller decision",
+    flex: 1.5,
+    editable: true,
+    cellEditor: "agSelectCellEditor",
+    cellEditorParams: { values: ["Not decided", "Accept refund", "Fight", "Reject recommendation"] },
+  },
 ];
 
 const theme = themeQuartz;
@@ -82,6 +92,9 @@ export default function CaseScreen() {
       <div style={{ height: 260 }}>
         <AgGridReact<Row> theme={theme} rowData={rows} columnDefs={columns} domLayout="autoHeight" />
       </div>
+      <p style={{ color: "#555", fontSize: 14 }}>
+        The seller decision is saved in this browser session only. Nothing is sent to PayPal yet.
+      </p>
     </main>
   );
 }
