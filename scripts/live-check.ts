@@ -11,6 +11,9 @@ if (!process.env.ANTHROPIC_API_KEY) {
   process.exit(1);
 }
 
+const record = process.argv.includes("--record");
+const saved: Record<string, unknown> = {};
+
 for (const raw of fixtures as object[]) {
   const c = toCase(raw as never);
   const e = responseEligibility(c);
@@ -20,4 +23,11 @@ for (const raw of fixtures as object[]) {
   console.log("Claims kept:");
   for (const cl of r.claims) console.log(" -", cl.text, "[" + cl.fields.join(", ") + "]");
   if (r.removed.length) console.log("Removed (ungrounded):", r.removed.map((x) => x.text));
+  saved[c.disputeId] = { recommendation: r.recommendation, confidence: r.confidence, claims: r.claims, removed: r.removed.map((x) => x.text) };
+}
+
+if (record) {
+  const { writeFileSync } = await import("node:fs");
+  writeFileSync("lib/recorded/recommendations.json", JSON.stringify(saved, null, 2) + "\n");
+  console.log("\nSaved to lib/recorded/recommendations.json");
 }
