@@ -7,6 +7,7 @@ import { requiredEvidence, type Eligibility } from "./rules.ts";
 import { applyGuard, type Claim, type GuardedResult } from "./guard.ts";
 import type { SellerAnswer } from "./answers.ts";
 import { FACT_NOTES } from "./facts.ts";
+import { inrProofRule } from "./proof.ts";
 
 export const MODEL = "claude-opus-5-5";
 
@@ -20,6 +21,9 @@ export function factsFor(c: Case, e: Eligibility, answer: SellerAnswer = {}): Re
   return {
     hasTracking: answer.hasTracking ?? null,
     matchesListing: answer.matchesListing ?? null,
+    delivered: answer.delivered ?? null,
+    deliveryDate: answer.deliveryDate ?? null,
+    deliveredToTransactionAddress: answer.deliveredToTransactionAddress ?? null,
     reason: c.reason,
     status: c.status,
     amount: c.amount,
@@ -85,7 +89,14 @@ export async function recommend(
     .map((b) => b.text)
     .join("");
   // Grounding guard: drop any claim whose listed fields are missing or null.
-  return enforceEligibility(applyGuard(parseRecommendation(text), factsFor(c, e, answer)), e);
+  const guarded = applyGuard(parseRecommendation(text), factsFor(c, e, answer));
+  return enforceEligibility(applyProofRule(guarded, c, answer), e);
+}
+
+// Deterministic INR proof rule (lib/proof.ts): no tracking means REFUND; unconfirmed delivery means YOUR_CALL.
+export function applyProofRule<T extends { recommendation: string; confidence: string }>(r: T, c: Case, answer: SellerAnswer): T {
+  const forced = inrProofRule(c, answer);
+  return forced ? { ...r, recommendation: forced, confidence: forced === "REFUND" ? "HIGH" : "LOW" } : r;
 }
 
 // Deterministic rule: if the seller cannot respond (under review, overdue, closed, no due date),
