@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef } from "ag-grid-community";
 import { toCase, daysUntilDue } from "../lib/dispute.ts";
-import { protectionLabel, responseEligibility } from "../lib/rules.ts";
+import { decideBy, protectionLabel, responseEligibility } from "../lib/rules.ts";
 import fixtures from "../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../lib/recorded/recommendations.json" with { type: "json" };
 
@@ -20,6 +20,7 @@ type Row = {
   deadline: string;
   daysLeft: number | null;
   protection: string;
+  decideBy: string;
   status: string;
   recommendation: string;
   reasons: string;
@@ -49,6 +50,13 @@ function toRow(raw: object, now: Date): Row {
     deadline: c.responseDueAt ? c.responseDueAt.slice(0, 10) : "-",
     daysLeft: daysUntilDue(c, now),
     protection: protectionLabel(c),
+    decideBy: (() => {
+      const d = decideBy(c, now);
+      if (d.state === "unknown") return "-";
+      if (d.state === "passed") return `Passed (${d.date}). PayPal decides`;
+      if (d.state === "warn") return `Decide now, due ${d.date}`;
+      return `Decide by ${d.date}`;
+    })(),
     status: e.canRespond ? "You can respond" : `Closed to response (${e.reason})`,
     ...recommendationFor(c.disputeId),
     decision: "Not decided",
@@ -61,6 +69,7 @@ const columns: ColDef<Row>[] = [
   { field: "amount", headerName: "Amount", flex: 1 },
   { field: "hold", headerName: "Held", flex: 2 },
   { field: "deadline", headerName: "Respond by", flex: 1 },
+  { field: "decideBy", headerName: "Decide by", flex: 2 },
   { field: "daysLeft", headerName: "Days left", flex: 1 },
   { field: "protection", headerName: "Seller protection", flex: 1 },
   { field: "status", headerName: "Status", flex: 2 },
