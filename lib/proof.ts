@@ -31,23 +31,28 @@ export function proofConditions(answer: SellerAnswer = {}): ProofConditions {
 
 // INR rule (case 1 spec, Kate, 5 Nov 2026):
 // - No tracking: REFUND.
-// - Tracking, not yet delivered: WAIT. Until one day before the response due date the seller waits
-//   and checks tracking daily (YOUR_CALL, LOW). From one day before the due date, with still no
-//   delivery: REFUND (the spec's SELLER REFUND branch, one day early to be safe).
+// - Tracking, not yet delivered: YOUR_CALL (LOW). The seller waits and checks tracking daily. One day
+//   before the response due date, the seller is prompted to refund (see inrWaitNote).
 // - Delivered but not proven (date or address missing or not matching): YOUR_CALL.
 // - Full proof: null, the model may FIGHT.
-export function inrProofRule(c: Case, answer: SellerAnswer = {}, now: Date = new Date()): "REFUND" | "YOUR_CALL" | null {
+export function inrProofRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YOUR_CALL" | null {
   if (c.reason !== "INR") return null;
   const p = proofConditions(answer);
   if (p.tracking === "not met") return "REFUND";
   if (p.tracking === "unknown") return null;
   const proven = p.delivered === "met" && p.deliveryDate === "met" && p.addressMatch === "met";
-  if (proven) return null;
-  if (p.delivered !== "met") {
-    const due = c.responseDueAt ? Date.parse(c.responseDueAt) : NaN;
-    if (!Number.isNaN(due) && now.getTime() >= due - 86_400_000) return "REFUND";
+  return proven ? null : "YOUR_CALL";
+}
+
+// Prompt for the seller on an undelivered INR case with tracking. Null when no prompt applies.
+export function inrWaitNote(c: Case, answer: SellerAnswer = {}, now: Date = new Date()): string | null {
+  if (c.reason !== "INR" || proofConditions(answer).tracking !== "met" || answer.delivered === true) return null;
+  const due = c.responseDueAt ? Date.parse(c.responseDueAt) : NaN;
+  if (Number.isNaN(due)) return null;
+  if (now.getTime() >= due - 86_400_000) {
+    return "Not delivered one day before the due date. Refund now, unless the parcel has arrived.";
   }
-  return "YOUR_CALL";
+  return "Wait: tracking added, not delivered yet. Check tracking daily.";
 }
 
 // Deadline for shipment proof: 2 days after PayPal's notice. Null if the notice date is unknown.

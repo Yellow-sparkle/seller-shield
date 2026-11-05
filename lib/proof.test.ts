@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { chargebackRule, inrProofRule, proofConditions, snadRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
+import { chargebackRule, inrProofRule, inrWaitNote, proofConditions, snadRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
 import { applyProofRule } from "./recommend.ts";
 
 const inr = toCase({ dispute_id: "X", reason: "INR", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "40.00" } });
@@ -135,17 +135,20 @@ const inrDue = (due: string) => toCase({ dispute_id: "I1", reason: "INR", status
 
 test("case 1 WAIT: tracking, not delivered, due date far off: YOUR_CALL (wait)", () => {
   const c = inrDue("2026-11-20T10:00:00Z");
-  assert.equal(inrProofRule(c, { hasTracking: true }, new Date("2026-11-10T10:00:00Z")), "YOUR_CALL");
+  assert.equal(inrProofRule(c, { hasTracking: true }), "YOUR_CALL");
+  assert.match(inrWaitNote(c, { hasTracking: true }, new Date("2026-11-10T10:00:00Z")) ?? "", /Wait/);
 });
 
-test("case 1: tracking, not delivered, one day before the due date: REFUND (Kate, 5 Nov 2026)", () => {
+test("case 1: tracking, not delivered, last day: still YOUR_CALL, with a prompt to refund", () => {
   const c = inrDue("2026-11-20T10:00:00Z");
-  assert.equal(inrProofRule(c, { hasTracking: true }, new Date("2026-11-19T10:00:00Z")), "REFUND");
-  assert.equal(inrProofRule(c, { hasTracking: true }, new Date("2026-11-19T09:59:00Z")), "YOUR_CALL");
+  assert.equal(inrProofRule(c, { hasTracking: true }), "YOUR_CALL");
+  assert.match(inrWaitNote(c, { hasTracking: true }, new Date("2026-11-19T10:00:00Z")) ?? "", /Refund now/);
+  assert.match(inrWaitNote(c, { hasTracking: true }, new Date("2026-11-10T10:00:00Z")) ?? "", /Wait/);
+  assert.equal(inrWaitNote(c, { hasTracking: true, delivered: true }, new Date("2026-11-19T10:00:00Z")), null);
 });
 
 test("case 1: delivered but address not matching stays YOUR_CALL at the deadline", () => {
   const c = inrDue("2026-11-20T10:00:00Z");
   const a = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
-  assert.equal(inrProofRule(c, a, new Date("2026-11-19T12:00:00Z")), "YOUR_CALL");
+  assert.equal(inrProofRule(c, a), "YOUR_CALL");
 });
