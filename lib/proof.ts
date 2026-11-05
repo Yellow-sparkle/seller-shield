@@ -109,3 +109,9 @@ export function snadRule(c: Case, answer: SellerAnswer = {}): "FIGHT" | "REFUND"
 export function chargebackRule(c: Case): "YOUR_CALL" | null {
   return c.lifeCycleStage === "CHARGEBACK" ? "YOUR_CALL" : null;
 }
+
+// The forced answer from the deterministic rules, or null when the model decides.
+// Order matters only where rules overlap; they are mutually exclusive by reason and protection.
+export function forcedRecommendation(c: Case, answer: SellerAnswer = {}, now: Date = new Date()): "FIGHT" | "REFUND" | "YOUR_CALL" | null {
+  return chargebackRule(c) ?? inrProofRule(c, answer) ?? unauthorisedNotCoveredRule(c, answer) ?? unauthorisedProofRule(c, answer, now) ?? snadRule(c, answer);
+}

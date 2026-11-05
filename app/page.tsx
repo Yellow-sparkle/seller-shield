@@ -7,6 +7,8 @@ import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef } from "ag-grid-community";
 import { toCase, daysUntilDue } from "../lib/dispute.ts";
 import { decideBy, protectionLabel, responseEligibility } from "../lib/rules.ts";
+import { forcedRecommendation, inrWaitNote } from "../lib/proof.ts";
+import { sellerAnswers } from "../lib/answers.ts";
 import fixtures from "../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../lib/recorded/recommendations.json" with { type: "json" };
 
@@ -24,22 +26,36 @@ type Row = {
   status: string;
   recommendation: string;
   reasons: string;
+  nextStep: string;
   decision: string;
 };
 
 // Recorded Opus answers (see scripts/live-check.ts --record). Shown without a live call.
-function recommendationFor(id: string): { recommendation: string; reasons: string } {
+// The deterministic rules (lib/proof.ts) override the recorded answer, as they do in recommend().
+function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnType<typeof responseEligibility>, now: Date): { recommendation: string; reasons: string; nextStep: string } {
   const r = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[] }>)[id];
-  if (!r) return { recommendation: "Not recorded yet", reasons: "-" };
+  const answer = sellerAnswers[id] ?? {};
+  const nextStep = inrWaitNote(c, answer, now) ?? "-";
+  const forced = e.canRespond ? forcedRecommendation(c, answer, now) : "YOUR_CALL";
+  if (forced) {
+    return {
+      recommendation: `${forced} (${forced === "YOUR_CALL" ? "low" : "high"} confidence, rule)`,
+      reasons: "Set by a deterministic rule (lib/proof.ts).",
+      nextStep,
+    };
+  }
+  if (!r) return { recommendation: "Not recorded yet", reasons: "-", nextStep };
   return {
     recommendation: `${r.recommendation} (${r.confidence.toLowerCase()} confidence)`,
     reasons: r.claims.map((c) => c.text).join(" "),
+    nextStep,
   };
 }
 
 function toRow(raw: object, now: Date): Row {
   const c = toCase(raw as never);
   const e = responseEligibility(c, now);
+  const rec = recommendationFor(c.disputeId, c, e, now);
   return {
     id: c.disputeId,
     reason: c.reason,
@@ -58,7 +74,7 @@ function toRow(raw: object, now: Date): Row {
       return `Decide by ${d.date}`;
     })(),
     status: e.canRespond ? "You can respond" : `Closed to response (${e.reason})`,
-    ...recommendationFor(c.disputeId),
+    ...rec,
     decision: "Not decided",
   };
 }
@@ -75,6 +91,7 @@ const columns: ColDef<Row>[] = [
   { field: "status", headerName: "Status", flex: 2 },
   { field: "recommendation", headerName: "AI recommendation", flex: 2 },
   { field: "reasons", headerName: "Why (cited facts)", flex: 4, wrapText: true, autoHeight: true },
+  { field: "nextStep", headerName: "Next step", flex: 3, wrapText: true, autoHeight: true },
   {
     field: "decision",
     headerName: "Seller decision",
