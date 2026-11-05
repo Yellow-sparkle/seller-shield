@@ -35,7 +35,7 @@ type Row = {
 function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnType<typeof responseEligibility>, now: Date): { recommendation: string; reasons: string; nextStep: string } {
   const r = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[] }>)[id];
   const answer = sellerAnswers[id] ?? {};
-  const underReview = c.status === "UNDER_REVIEW";
+  const underReview = c.status === "UNDER_REVIEW" && answer.hasTracking === true;
   const nextStep = underReview
     ? "Under PayPal review. Guidance by tracking: delivered means do not refund; not delivered means refund outside the dispute (PayPal may still hold the funds, not confirmed)."
     : inrWaitNote(c, answer, now) ?? "-";
