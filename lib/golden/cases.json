@@ -290,7 +290,7 @@
   },
   {
     "id": "G09",
-    "note": "Synthetic. PayPal has already moved the case to review: nothing to answer, so the seller decides.",
+    "note": "Synthetic (case 9). INR, tracking exists, PayPal has moved the case to review: the seller cannot respond, so the rule gives YOUR_CALL. Seller's guidance (Kate, 5 Nov 2026): delivered per tracking means do not refund; not delivered means refund.",
     "expected": "YOUR_CALL",
     "answer": {
       "hasTracking": true
