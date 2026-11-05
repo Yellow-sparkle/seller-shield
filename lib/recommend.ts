@@ -7,7 +7,7 @@ import { requiredEvidence, type Eligibility } from "./rules.ts";
 import { applyGuard, type Claim, type GuardedResult } from "./guard.ts";
 import type { SellerAnswer } from "./answers.ts";
 import { FACT_NOTES } from "./facts.ts";
-import { inrProofRule, snadRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
+import { chargebackRule, inrProofRule, snadRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
 
 export const MODEL = "claude-opus-5-5";
 
@@ -95,9 +95,10 @@ export async function recommend(
 
 // Deterministic proof rules (lib/proof.ts): INR no tracking means REFUND; unconfirmed delivery or a missed unauthorised deadline means YOUR_CALL;
 // unauthorised and not covered means REFUND unless the seller has shipping evidence;
-// SNAD with a matching item means FIGHT (the sandbox protection flag does not count).
+// SNAD with a matching item means FIGHT (the sandbox protection flag does not count), and a non-matching item means REFUND;
+// a card-issuer chargeback always means YOUR_CALL.
 export function applyProofRule<T extends { recommendation: string; confidence: string }>(r: T, c: Case, answer: SellerAnswer): T {
-  const forced = inrProofRule(c, answer) ?? unauthorisedNotCoveredRule(c, answer) ?? unauthorisedProofRule(c, answer) ?? snadRule(c, answer);
+  const forced = chargebackRule(c) ?? inrProofRule(c, answer) ?? unauthorisedNotCoveredRule(c, answer) ?? unauthorisedProofRule(c, answer) ?? snadRule(c, answer);
   return forced ? { ...r, recommendation: forced, confidence: forced === "YOUR_CALL" ? "LOW" : "HIGH" } : r;
 }
 

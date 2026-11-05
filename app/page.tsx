@@ -87,6 +87,64 @@ const columns: ColDef<Row>[] = [
 
 const theme = themeQuartz;
 
+// Evidence to attach before a FIGHT (case 5 gap 2, Kate, 5 Nov 2026). The checkbox state is kept in
+// this browser only, per case. If storage is blocked, the boxes still work for the session.
+const EVIDENCE_ITEMS = ["Listing photos (as shown to the buyer)", "Parcel photos (the item received)", "Short note on why the item matches the listing"];
+const EVIDENCE_KEY = "seller-shield-evidence";
+
+function readEvidence(): Record<string, boolean[]> {
+  try {
+    return JSON.parse(window.localStorage.getItem(EVIDENCE_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeEvidence(v: Record<string, boolean[]>) {
+  try {
+    window.localStorage.setItem(EVIDENCE_KEY, JSON.stringify(v));
+  } catch {
+    // Storage blocked: the boxes keep their state until the page reloads.
+  }
+}
+
+function EvidenceChecklist({ rows }: { rows: Row[] }) {
+  const fights = rows.filter((r) => r.recommendation.startsWith("FIGHT"));
+  const [checked, setChecked] = useState<Record<string, boolean[]>>({});
+  useEffect(() => setChecked(readEvidence()), []);
+  if (fights.length === 0) return null;
+  return (
+    <section style={{ marginTop: 24 }}>
+      <h2 style={{ fontSize: 18, marginBottom: 4 }}>Evidence before you fight</h2>
+      <p style={{ marginTop: 0, color: "#555", fontSize: 14 }}>Attach these to PayPal before you respond to a case the AI recommends fighting.</p>
+      {fights.map((r) => {
+        const boxes = checked[r.id] ?? EVIDENCE_ITEMS.map(() => false);
+        return (
+          <div key={r.id} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
+            <strong>{r.id}</strong>
+            {EVIDENCE_ITEMS.map((item, i) => (
+              <label key={item} style={{ display: "block", marginTop: 6 }}>
+                <input
+                  type="checkbox"
+                  checked={boxes[i]}
+                  onChange={(e) => {
+                    const next = [...boxes];
+                    next[i] = e.target.checked;
+                    const all = { ...checked, [r.id]: next };
+                    setChecked(all);
+                    writeEvidence(all);
+                  }}
+                />{" "}
+                {item}
+              </label>
+            ))}
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
 export default function CaseScreen() {
   // Dates are computed after mount, so the server render does not depend on the clock.
   const [rows, setRows] = useState<Row[]>([]);
@@ -101,6 +159,7 @@ export default function CaseScreen() {
       <div style={{ height: 260 }}>
         <AgGridReact<Row> theme={theme} rowData={rows} columnDefs={columns} domLayout="autoHeight" />
       </div>
+      <EvidenceChecklist rows={rows} />
       <p style={{ color: "#555", fontSize: 14 }}>
         The seller decision is saved in this browser session only. Nothing is sent to PayPal yet.
       </p>

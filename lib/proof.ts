@@ -79,11 +79,17 @@ export function unauthorisedNotCoveredRule(c: Case, answer: SellerAnswer = {}): 
 }
 
 // SNAD (case 5, Kate, 5 Nov 2026): SNAD is excluded in the published PT terms, so PayPal's sandbox
-// "ELIGIBLE" flag does not count. Item matches the listing: FIGHT. Match unknown: YOUR_CALL.
-// Item does not match: null (the model decides; golden G06 expects REFUND).
-export function snadRule(c: Case, answer: SellerAnswer = {}): "FIGHT" | "YOUR_CALL" | null {
+// "ELIGIBLE" flag does not count. Matches the listing: FIGHT. Does not match: REFUND.
+// Partly matches or unknown: YOUR_CALL (the seller decides).
+export function snadRule(c: Case, answer: SellerAnswer = {}): "FIGHT" | "REFUND" | "YOUR_CALL" | null {
   if (c.reason !== "SNAD") return null;
   if (answer.matchesListing === true) return "FIGHT";
-  if (answer.matchesListing === undefined) return "YOUR_CALL";
-  return null;
+  if (answer.matchesListing === false) return "REFUND";
+  return "YOUR_CALL";
+}
+
+// Card-issuer route (case 1 chargeback variant, Kate, 5 Nov 2026): the buyer went to their card
+// issuer, so Seller Protection does not apply and the bank decides. The seller decides (YOUR_CALL).
+export function chargebackRule(c: Case): "YOUR_CALL" | null {
+  return c.lifeCycleStage === "CHARGEBACK" ? "YOUR_CALL" : null;
 }

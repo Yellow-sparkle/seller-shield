@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { inrProofRule, proofConditions, snadRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
+import { chargebackRule, inrProofRule, proofConditions, snadRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
 import { applyProofRule } from "./recommend.ts";
 
 const inr = toCase({ dispute_id: "X", reason: "INR", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "40.00" } });
@@ -105,11 +105,27 @@ test("SNAD, item matches: FIGHT even though the sandbox flag says ELIGIBLE (case
   assert.equal(r.confidence, "HIGH");
 });
 
-test("SNAD, match unknown: YOUR_CALL; item does not match: left to the model", () => {
+test("SNAD, match unknown or partly matches: YOUR_CALL", () => {
   assert.equal(snadRule(snadCase, {}), "YOUR_CALL");
-  assert.equal(snadRule(snadCase, { matchesListing: false }), null);
+  assert.equal(snadRule(snadCase, { matchesListing: "partly" }), "YOUR_CALL");
+});
+
+test("SNAD, item does not match: REFUND (HIGH), even though the sandbox flag says ELIGIBLE (case 5 gap 1)", () => {
+  assert.equal(snadRule(snadCase, { matchesListing: false }), "REFUND");
+  const r = applyProofRule({ recommendation: "FIGHT", confidence: "HIGH" }, snadCase, { matchesListing: false });
+  assert.equal(r.recommendation, "REFUND");
+  assert.equal(r.confidence, "HIGH");
 });
 
 test("snadRule ignores other reasons", () => {
   assert.equal(snadRule(inr, { matchesListing: true }), null);
+});
+
+test("card-issuer chargeback: YOUR_CALL whatever the answers say (case 1 chargeback variant)", () => {
+  const cb = toCase({ dispute_id: "CB", reason: "SNAD", status: "OPEN", dispute_life_cycle_stage: "CHARGEBACK",
+    dispute_amount: { currency_code: "EUR", value: "25.00" }, seller_protection: { status: "ELIGIBLE" } });
+  assert.equal(chargebackRule(cb), "YOUR_CALL");
+  const r = applyProofRule({ recommendation: "FIGHT", confidence: "HIGH" }, cb, { matchesListing: true });
+  assert.equal(r.recommendation, "YOUR_CALL");
+  assert.equal(chargebackRule(snadCase), null);
 });

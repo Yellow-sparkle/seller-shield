@@ -2,7 +2,7 @@
 // They become facts the model may cite. Nothing here comes from PayPal or a shop.
 export type SellerAnswer = {
   hasTracking?: boolean;
-  matchesListing?: boolean;
+  matchesListing?: boolean | "partly"; // true: matches, "partly": partly matches, false: does not match
   delivered?: boolean; // carrier tracking shows "delivered"
   deliveryDate?: string; // date shown by the carrier, e.g. "2026-10-14"
   deliveredToTransactionAddress?: boolean;

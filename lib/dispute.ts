@@ -14,6 +14,7 @@ export type Case = {
   responseDueAt: string | null;
   sellerProtectionEligible: boolean | null;
   holdAmount: { currency: string; value: number } | null;
+  lifeCycleStage: string | null; // e.g. INQUIRY, CHARGEBACK; CHARGEBACK means the buyer went to the card issuer
 };
 
 type Money = { currency_code?: string; value?: string };
@@ -28,6 +29,7 @@ type RawDispute = {
   seller_response_due_date?: string;
   seller_protection?: { status?: string };
   fund_movements?: { type?: string; amount?: Money }[];
+  dispute_life_cycle_stage?: string;
 };
 
 const KNOWN_REASONS: CaseReason[] = ["INR", "SNAD", "UNAUTHORISED", "OTHER"];
@@ -59,6 +61,7 @@ export function toCase(raw: RawDispute): Case {
         ? null
         : raw.seller_protection.status !== "NOT_ELIGIBLE",
     holdAmount: toMoney(hold?.amount),
+    lifeCycleStage: raw.dispute_life_cycle_stage ?? null,
   };
 }
 
