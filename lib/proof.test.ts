@@ -225,3 +225,11 @@ test("OTHER reason is forced YOUR_CALL (G07, Kate, 5 Nov 2026)", () => {
   const r = applyProofRule({ recommendation: "FIGHT", confidence: "HIGH" }, other, {});
   assert.equal(r.recommendation, "YOUR_CALL");
 });
+
+test("unauthorised past the deadline: REFUND whatever the tracking (Kate, 5 Nov 2026)", () => {
+  const u = toCase({ dispute_id: "UF", reason: "UNAUTHORISED", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "75.00" } });
+  const now = new Date("2026-11-05T00:00:00Z");
+  assert.equal(unauthorisedProofRule(u, { noticeDate: "2026-11-01", hasTracking: false }, now), "REFUND");
+  assert.equal(unauthorisedProofRule(u, { noticeDate: "2026-11-01" }, now), "REFUND");
+  assert.equal(unauthorisedProofRule(u, { noticeDate: "2026-11-01", hasTracking: true }, now), "REFUND");
+});

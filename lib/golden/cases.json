@@ -550,5 +550,80 @@
         }
       ]
     }
+  },
+  {
+    "id": "G16",
+    "note": "Synthetic (case 11 A, Kate, 5 Nov 2026). Unauthorised: shipped after the 2-day deadline. Refund, whatever the tracking (fraud).",
+    "expected": "REFUND",
+    "answer": {
+      "noticeDate": "2026-10-30",
+      "shipmentDate": "2026-11-03",
+      "hasTracking": true,
+      "shippedToTransactionAddress": true
+    },
+    "dispute": {
+      "reason": "UNAUTHORISED",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "75.00"
+      },
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-72.20"
+          }
+        }
+      ],
+      "dispute_id": "G-16",
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G16TXN"
+        }
+      ]
+    }
+  },
+  {
+    "id": "G17",
+    "note": "Synthetic (case 11 B, Kate, 5 Nov 2026). Unauthorised: no shipping proof by the 2-day deadline. Refund, whatever the tracking (fraud).",
+    "expected": "REFUND",
+    "answer": {
+      "noticeDate": "2026-10-30"
+    },
+    "dispute": {
+      "reason": "UNAUTHORISED",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "75.00"
+      },
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-72.20"
+          }
+        }
+      ],
+      "dispute_id": "G-17",
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G17TXN"
+        }
+      ]
+    }
   }
 ]

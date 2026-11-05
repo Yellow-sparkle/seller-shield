@@ -94,11 +94,10 @@ export function unauthorisedProofRule(c: Case, answer: SellerAnswer = {}, now: D
     const shipped = Date.parse(answer.shipmentDate);
     if (!Number.isNaN(shipped) && shipped > deadline.getTime()) return "REFUND";
   }
-  if (answer.hasTracking === false || answer.shippedToTransactionAddress === false) return "YOUR_CALL";
+  // Deadline passed with no proof on file: REFUND, whatever the tracking (Kate, 5 Nov 2026: fraud, refund in both cases).
   const proven = answer.hasTracking === true && !!answer.shipmentDate && answer.shippedToTransactionAddress === true;
-  if (proven) return null;
-  // Deadline passed with no proof on file: refund.
-  if (now.getTime() > deadline.getTime()) return "REFUND";
+  if (!proven && now.getTime() > deadline.getTime()) return "REFUND";
+  if (answer.hasTracking === false || answer.shippedToTransactionAddress === false) return "YOUR_CALL";
   return null;
 }
 
