@@ -193,7 +193,21 @@ export default function CaseScreen() {
   // Rows are built after mount (the clock). Seller cause and evidence typed on the screen are kept per case, for this session.
   const [now, setNow] = useState<Date | null>(null);
   const [overrides, setOverrides] = useState<Record<string, Override>>({});
-  useEffect(() => setNow(new Date()), []);
+  useEffect(() => {
+    setNow(new Date());
+    try {
+      setOverrides(JSON.parse(window.localStorage.getItem("seller-shield-overrides") ?? "{}"));
+    } catch {
+      // Storage blocked: start with no typed answers.
+    }
+  }, []);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("seller-shield-overrides", JSON.stringify(overrides));
+    } catch {
+      // Storage blocked: answers last until the page reloads.
+    }
+  }, [overrides]);
   const rows: Row[] = now
     ? (fixtures as object[]).map((f) => {
         const id = toCase(f as never).disputeId;

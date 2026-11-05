@@ -78,6 +78,7 @@ export async function recommend(
   e: Eligibility,
   answer: SellerAnswer = {},
   client: Anthropic = new Anthropic(), // reads ANTHROPIC_API_KEY from the environment
+  now: Date = new Date(), // the clock for the date-based rules (pinned in the golden check)
 ): Promise<GuardedResult> {
   const response = await client.messages.create({
     model: MODEL,
@@ -90,15 +91,15 @@ export async function recommend(
     .join("");
   // Grounding guard: drop any claim whose listed fields are missing or null.
   const guarded = applyGuard(parseRecommendation(text), factsFor(c, e, answer));
-  return enforceEligibility(applyProofRule(guarded, c, answer), e);
+  return enforceEligibility(applyProofRule(guarded, c, answer, now), e);
 }
 
 // Deterministic proof rules (lib/proof.ts): INR no tracking means REFUND; unconfirmed delivery or a missed unauthorised deadline means YOUR_CALL;
 // unauthorised and not covered means REFUND unless the seller has shipping evidence;
 // SNAD with a matching item means FIGHT (the sandbox protection flag does not count), and a non-matching item means REFUND;
 // a card-issuer chargeback always means YOUR_CALL.
-export function applyProofRule<T extends { recommendation: string; confidence: string }>(r: T, c: Case, answer: SellerAnswer): T {
-  const forced = forcedRecommendation(c, answer);
+export function applyProofRule<T extends { recommendation: string; confidence: string }>(r: T, c: Case, answer: SellerAnswer, now: Date = new Date()): T {
+  const forced = forcedRecommendation(c, answer, now);
   return forced ? { ...r, recommendation: forced, confidence: forced === "YOUR_CALL" ? "LOW" : "HIGH" } : r;
 }
 

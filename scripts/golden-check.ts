@@ -15,11 +15,13 @@ if (!process.env.ANTHROPIC_API_KEY) {
 type G = { id: string; expected: string; answer: Record<string, boolean>; dispute: object };
 const RED_FLAG = new Set(["G02", "G04", "G06", "G08", "G09", "G10", "G11"]);
 const redFlagOnly = process.argv.includes("--red-flag");
-const selected = (cases as G[]).filter((g) => !redFlagOnly || RED_FLAG.has(g.id));
+// Pinned clock so the date-based cases do not flip over time (override with CHECK_NOW).
+const NOW = new Date(process.env.CHECK_NOW ?? "2026-11-05T12:00:00Z");
+const selected = (cases as unknown as G[]).filter((g) => !redFlagOnly || RED_FLAG.has(g.id));
 let hit = 0;
 for (const g of selected) {
   const c = toCase(g.dispute as never);
-  const r = await recommend(c, responseEligibility(c), g.answer);
+  const r = await recommend(c, responseEligibility(c, NOW), g.answer, undefined, NOW);
   const ok = r.recommendation === g.expected;
   if (ok) hit++;
   console.log(`${ok ? "MATCH " : "MISS  "} ${g.id} expected ${g.expected} got ${r.recommendation} (${r.confidence})`);

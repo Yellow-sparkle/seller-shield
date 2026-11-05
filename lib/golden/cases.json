@@ -553,7 +553,7 @@
   },
   {
     "id": "G16",
-    "note": "Synthetic (case 11 A, Kate, 5 Nov 2026). Unauthorised: shipped after the 2-day deadline. Refund, whatever the tracking (fraud).",
+    "note": "Synthetic (case 11 A, Kate, 5 Nov 2026). Unauthorised: shipped after the 2-day deadline. Refund, whatever the tracking (not fraud: an unauthorised transaction).",
     "expected": "REFUND",
     "answer": {
       "noticeDate": "2026-10-30",
@@ -592,7 +592,7 @@
   },
   {
     "id": "G17",
-    "note": "Synthetic (case 11 B, Kate, 5 Nov 2026). Unauthorised: no shipping proof by the 2-day deadline. Refund, whatever the tracking (fraud).",
+    "note": "Synthetic (case 11 B, Kate, 5 Nov 2026). Unauthorised: no shipping proof by the 2-day deadline. Refund, whatever the tracking (not fraud: an unauthorised transaction).",
     "expected": "REFUND",
     "answer": {
       "noticeDate": "2026-10-30"
@@ -622,6 +622,79 @@
       "disputed_transactions": [
         {
           "seller_transaction_id": "G17TXN"
+        }
+      ]
+    }
+  },
+  {
+    "id": "G18",
+    "note": "Synthetic (case 1 WAIT). INR, tracking added, not delivered yet, before one day before the due date: wait, YOUR_CALL (Kate, 5 Nov 2026).",
+    "expected": "YOUR_CALL",
+    "answer": {
+      "hasTracking": true
+    },
+    "dispute": {
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ],
+      "dispute_id": "G-18",
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G18TXN"
+        }
+      ]
+    }
+  },
+  {
+    "id": "G19",
+    "note": "Synthetic (G15 path). A PayPal reason our code does not know; the seller says the buyer is right, with evidence: REFUND (Kate, 5 Nov 2026).",
+    "expected": "REFUND",
+    "answer": {
+      "whoIsRight": "buyer",
+      "rightEvidence": "order and carrier records"
+    },
+    "dispute": {
+      "dispute_id": "G-19",
+      "reason": "NEW_PAYPAL_REASON",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "30.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G19TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-27.90"
+          }
         }
       ]
     }
