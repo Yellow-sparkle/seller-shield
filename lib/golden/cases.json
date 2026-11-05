@@ -1,10 +1,13 @@
 [
   {
     "id": "G01",
-    "note": "Synthetic. INR, tracking exists, protection eligible: proof of delivery should win.",
+    "note": "Synthetic. INR, tracking exists, carrier shows delivered on 2026-10-14 to the transaction address, protection eligible: proof of delivery wins, so FIGHT.",
     "expected": "FIGHT",
     "answer": {
-      "hasTracking": true
+      "hasTracking": true,
+      "delivered": true,
+      "deliveryDate": "2026-10-14",
+      "deliveredToTransactionAddress": true
     },
     "dispute": {
       "dispute_id": "G-01",
