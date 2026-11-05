@@ -66,3 +66,14 @@ export function unauthorisedProofRule(c: Case, answer: SellerAnswer = {}, now: D
   if (now.getTime() > deadline.getTime()) return "YOUR_CALL";
   return null;
 }
+
+// Unauthorised, not covered by Seller Protection (case 4, Kate, 5 Nov 2026):
+// REFUND by default. YOUR_CALL only when the seller has shipping evidence to weigh
+// (tracking, a shipment date, or a shipment to the transaction address).
+// Buyer-authorisation evidence has no field yet, so it is not counted here.
+// Null when protection is eligible or unknown: the eligible path (case 3) applies instead.
+export function unauthorisedNotCoveredRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YOUR_CALL" | null {
+  if (c.reason !== "UNAUTHORISED" || c.sellerProtectionEligible !== false) return null;
+  const hasEvidence = answer.hasTracking === true || !!answer.shipmentDate || answer.shippedToTransactionAddress === true;
+  return hasEvidence ? "YOUR_CALL" : "REFUND";
+}

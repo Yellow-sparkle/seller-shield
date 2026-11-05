@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { buildPrompt, enforceEligibility, parseRecommendation } from "./recommend.ts";
+import { applyProofRule, buildPrompt, enforceEligibility, parseRecommendation } from "./recommend.ts";
 
 const c = toCase({ dispute_id: "X", reason: "INR", status: "OPEN",
   dispute_amount: { currency_code: "EUR", value: "60.00" } });
@@ -47,4 +47,12 @@ test("the recommender prompt says tracking alone is not proof of delivery", () =
   const p = buildPrompt(c, { canRespond: true, daysLeft: 20 });
   assert.match(p, /not proof of delivery/);
   assert.match(p, /no tracking recorded/);
+});
+
+test("case 4: unauthorised, not covered, no evidence is forced to REFUND", () => {
+  const u4 = toCase({ dispute_id: "G04", reason: "UNAUTHORISED", status: "WAITING_FOR_SELLER_RESPONSE",
+    dispute_amount: { currency_code: "EUR", value: "75.00" }, seller_response_due_date: "2026-11-22T10:00:00Z",
+    seller_protection: { status: "NOT_ELIGIBLE" } });
+  const r = applyProofRule({ recommendation: "FIGHT", confidence: "HIGH" }, u4, { hasTracking: false });
+  assert.equal(r.recommendation, "REFUND");
 });

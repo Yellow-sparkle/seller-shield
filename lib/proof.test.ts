@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { inrProofRule, proofConditions, unauthorisedProofRule } from "./proof.ts";
+import { inrProofRule, proofConditions, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
 import { applyProofRule } from "./recommend.ts";
 
 const inr = toCase({ dispute_id: "X", reason: "INR", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "40.00" } });
@@ -66,4 +66,32 @@ test("unauthorised: deadline passed with no proof on file is YOUR_CALL", () => {
 test("unauthorised: a failed tracking condition is YOUR_CALL", () => {
   const u = toCase({ dispute_id: "U", reason: "UNAUTHORISED", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "75.00" } });
   assert.equal(unauthorisedProofRule(u, { noticeDate: "2026-11-01", hasTracking: false }, new Date("2026-11-01T12:00:00Z")), "YOUR_CALL");
+});
+
+const uNotCovered = toCase({ dispute_id: "U4", reason: "UNAUTHORISED", status: "OPEN",
+  dispute_amount: { currency_code: "EUR", value: "75.00" }, seller_protection: { status: "NOT_ELIGIBLE" } });
+const uEligible = toCase({ dispute_id: "U3", reason: "UNAUTHORISED", status: "OPEN",
+  dispute_amount: { currency_code: "EUR", value: "75.00" }, seller_protection: { status: "ELIGIBLE" } });
+
+test("unauthorised, not covered, no evidence: REFUND by default (case 4)", () => {
+  assert.equal(unauthorisedNotCoveredRule(uNotCovered, { hasTracking: false }), "REFUND");
+  assert.equal(unauthorisedNotCoveredRule(uNotCovered, {}), "REFUND");
+});
+
+test("unauthorised, not covered, with shipping evidence: YOUR_CALL", () => {
+  assert.equal(unauthorisedNotCoveredRule(uNotCovered, { hasTracking: true }), "YOUR_CALL");
+  assert.equal(unauthorisedNotCoveredRule(uNotCovered, { shipmentDate: "2026-10-30" }), "YOUR_CALL");
+  assert.equal(unauthorisedNotCoveredRule(uNotCovered, { shippedToTransactionAddress: true }), "YOUR_CALL");
+});
+
+test("the not-covered rule does not touch eligible or unknown protection", () => {
+  assert.equal(unauthorisedNotCoveredRule(uEligible, { hasTracking: false }), null);
+  const u = toCase({ dispute_id: "U5", reason: "UNAUTHORISED", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "75.00" } });
+  assert.equal(unauthorisedNotCoveredRule(u, { hasTracking: false }), null);
+});
+
+test("applyProofRule forces REFUND with HIGH confidence for case 4", () => {
+  const r = applyProofRule({ recommendation: "FIGHT", confidence: "HIGH" }, uNotCovered, { hasTracking: false });
+  assert.equal(r.recommendation, "REFUND");
+  assert.equal(r.confidence, "HIGH");
 });
