@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { inrProofRule, proofConditions, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
+import { inrProofRule, proofConditions, snadRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
 import { applyProofRule } from "./recommend.ts";
 
 const inr = toCase({ dispute_id: "X", reason: "INR", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "40.00" } });
@@ -94,4 +94,22 @@ test("applyProofRule forces REFUND with HIGH confidence for case 4", () => {
   const r = applyProofRule({ recommendation: "FIGHT", confidence: "HIGH" }, uNotCovered, { hasTracking: false });
   assert.equal(r.recommendation, "REFUND");
   assert.equal(r.confidence, "HIGH");
+});
+
+const snadCase = toCase({ dispute_id: "S5", reason: "SNAD", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "25.00" }, seller_protection: { status: "ELIGIBLE" } });
+
+test("SNAD, item matches: FIGHT even though the sandbox flag says ELIGIBLE (case 5)", () => {
+  assert.equal(snadRule(snadCase, { matchesListing: true }), "FIGHT");
+  const r = applyProofRule({ recommendation: "REFUND", confidence: "HIGH" }, snadCase, { matchesListing: true });
+  assert.equal(r.recommendation, "FIGHT");
+  assert.equal(r.confidence, "HIGH");
+});
+
+test("SNAD, match unknown: YOUR_CALL; item does not match: left to the model", () => {
+  assert.equal(snadRule(snadCase, {}), "YOUR_CALL");
+  assert.equal(snadRule(snadCase, { matchesListing: false }), null);
+});
+
+test("snadRule ignores other reasons", () => {
+  assert.equal(snadRule(inr, { matchesListing: true }), null);
 });

@@ -77,3 +77,13 @@ export function unauthorisedNotCoveredRule(c: Case, answer: SellerAnswer = {}): 
   const hasEvidence = answer.hasTracking === true || !!answer.shipmentDate || answer.shippedToTransactionAddress === true;
   return hasEvidence ? "YOUR_CALL" : "REFUND";
 }
+
+// SNAD (case 5, Kate, 5 Nov 2026): SNAD is excluded in the published PT terms, so PayPal's sandbox
+// "ELIGIBLE" flag does not count. Item matches the listing: FIGHT. Match unknown: YOUR_CALL.
+// Item does not match: null (the model decides; golden G06 expects REFUND).
+export function snadRule(c: Case, answer: SellerAnswer = {}): "FIGHT" | "YOUR_CALL" | null {
+  if (c.reason !== "SNAD") return null;
+  if (answer.matchesListing === true) return "FIGHT";
+  if (answer.matchesListing === undefined) return "YOUR_CALL";
+  return null;
+}
