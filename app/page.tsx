@@ -42,7 +42,9 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
   const underReview = c.status === "UNDER_REVIEW" && answer.hasTracking === true;
   const nextStep = underReview
     ? "Under PayPal review. Guidance by tracking: delivered means do not refund; not delivered means refund outside the dispute (PayPal may still hold the funds, not confirmed)."
-    : inrWaitNote(c, answer, now) ?? "-";
+    : !responseEligibility(c, now).canRespond && responseEligibility(c, now).reason === "NO_DUE_DATE"
+      ? "No response due date in our data. Check the deadline in PayPal before acting."
+      : inrWaitNote(c, answer, now) ?? "-";
   const forced = e.canRespond ? forcedRecommendation(c, answer, now) : "YOUR_CALL";
   if (forced) {
     return {
