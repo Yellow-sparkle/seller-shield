@@ -46,11 +46,12 @@ export function inrProofRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YO
 
 // Prompt for the seller on an undelivered INR case with tracking. Null when no prompt applies.
 export function inrWaitNote(c: Case, answer: SellerAnswer = {}, now: Date = new Date()): string | null {
-  if (c.reason !== "INR" || proofConditions(answer).tracking !== "met" || answer.delivered === true) return null;
+  if (c.reason !== "INR" || c.lifeCycleStage === "CHARGEBACK") return null;
+  if (proofConditions(answer).tracking !== "met" || answer.delivered === true) return null;
   const due = c.responseDueAt ? Date.parse(c.responseDueAt) : NaN;
   if (Number.isNaN(due)) return null;
   if (now.getTime() >= due - 86_400_000) {
-    return "Not delivered one day before the due date. Refund now, unless the parcel has arrived.";
+    return "Not delivered one day before the due date. Check the tracking link, then refund unless the parcel has arrived.";
   }
   return "Wait: tracking added, not delivered yet. Check tracking daily.";
 }

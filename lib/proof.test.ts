@@ -142,7 +142,7 @@ test("case 1 WAIT: tracking, not delivered, due date far off: YOUR_CALL (wait)",
 test("case 1: tracking, not delivered, last day: still YOUR_CALL, with a prompt to refund", () => {
   const c = inrDue("2026-11-20T10:00:00Z");
   assert.equal(inrProofRule(c, { hasTracking: true }), "YOUR_CALL");
-  assert.match(inrWaitNote(c, { hasTracking: true }, new Date("2026-11-19T10:00:00Z")) ?? "", /Refund now/);
+  assert.match(inrWaitNote(c, { hasTracking: true }, new Date("2026-11-19T10:00:00Z")) ?? "", /Check the tracking link/);
   assert.match(inrWaitNote(c, { hasTracking: true }, new Date("2026-11-10T10:00:00Z")) ?? "", /Wait/);
   assert.equal(inrWaitNote(c, { hasTracking: true, delivered: true }, new Date("2026-11-19T10:00:00Z")), null);
 });
@@ -151,4 +151,10 @@ test("case 1: delivered but address not matching stays YOUR_CALL at the deadline
   const c = inrDue("2026-11-20T10:00:00Z");
   const a = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
   assert.equal(inrProofRule(c, a), "YOUR_CALL");
+});
+
+test("case 1: no wait note once the buyer has gone to the card issuer", () => {
+  const cb = toCase({ dispute_id: "CB1", reason: "INR", status: "OPEN", dispute_life_cycle_stage: "CHARGEBACK",
+    dispute_amount: { currency_code: "EUR", value: "40.00" }, seller_response_due_date: "2026-11-20T10:00:00Z" });
+  assert.equal(inrWaitNote(cb, { hasTracking: true }, new Date("2026-11-19T10:00:00Z")), null);
 });
