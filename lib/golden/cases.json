@@ -220,7 +220,7 @@
   },
   {
     "id": "G07",
-    "note": "Synthetic. OTHER reason: no rule in our policy, so the seller decides.",
+    "note": "Synthetic (case 7). OTHER reason: no rule in our policy, so the seller decides. Wording (Kate, 5 Nov 2026): 'days to respond' means days left to respond, from the due date. 'Proof window' is only the case 3 notice rule.",
     "expected": "YOUR_CALL",
     "answer": {},
     "dispute": {
