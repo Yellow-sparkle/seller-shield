@@ -73,7 +73,11 @@ function toRow(raw: object, now: Date): Row {
       if (d.state === "warn") return `Decide now, due ${d.date}`;
       return `Decide by ${d.date}`;
     })(),
-    status: e.canRespond ? "You can respond" : `Closed to response (${e.reason})`,
+    status: e.canRespond
+      ? "You can respond"
+      : e.reason === "NO_DUE_DATE"
+        ? "Due date unknown"
+        : `Closed to response (${e.reason}). You can still refund the buyer, but PayPal may still hold the funds (not confirmed).`,
     ...rec,
     decision: "Not decided",
   };

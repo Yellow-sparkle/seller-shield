@@ -80,3 +80,10 @@ test("decide-by: warns two days before the due date, and reports when it has pas
   assert.equal(decideBy(c, new Date(due + 1 * day)).state, "passed");
   assert.equal(decideBy(c, new Date(due - 1 * day)).date, (c.responseDueAt as string).slice(0, 10));
 });
+
+test("response: a deadline less than an hour away counts as passed (cut-off margin, case 8)", () => {
+  const c = toCase({ dispute_id: "M", reason: "INR", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "10.00" },
+    seller_response_due_date: "2026-11-20T10:00:00Z" });
+  assert.equal(responseEligibility(c, new Date("2026-11-20T09:30:00Z")).canRespond, false);
+  assert.equal(responseEligibility(c, new Date("2026-11-20T08:30:00Z")).canRespond, true);
+});

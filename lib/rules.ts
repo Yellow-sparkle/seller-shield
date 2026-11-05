@@ -29,7 +29,9 @@ export function responseEligibility(c: Case, now: Date = new Date()): Eligibilit
   const days = daysUntilDue(c, now);
   if (days === null) return { canRespond: false, reason: "NO_DUE_DATE" };
   // Compare the real timestamp: a deadline passed a few hours ago rounds to 0 days, so the day count alone is not enough.
-  if (days < 0 || Date.parse(c.responseDueAt as string) < now.getTime()) return { canRespond: false, reason: "OVERDUE" };
+  // One-hour margin before PayPal's cut-off, since the stored due date is UTC (case 8 gap 3, Kate, 5 Nov 2026).
+  const CUTOFF_MARGIN_MS = 60 * 60 * 1000;
+  if (days < 0 || Date.parse(c.responseDueAt as string) - CUTOFF_MARGIN_MS < now.getTime()) return { canRespond: false, reason: "OVERDUE" };
   return { canRespond: true, daysLeft: days };
 }
 
