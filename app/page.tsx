@@ -35,7 +35,10 @@ type Row = {
 function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnType<typeof responseEligibility>, now: Date): { recommendation: string; reasons: string; nextStep: string } {
   const r = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[] }>)[id];
   const answer = sellerAnswers[id] ?? {};
-  const nextStep = inrWaitNote(c, answer, now) ?? "-";
+  const underReview = c.status === "UNDER_REVIEW";
+  const nextStep = underReview
+    ? "Under PayPal review. Guidance by tracking: delivered means do not refund; not delivered means refund outside the dispute (PayPal may still hold the funds, not confirmed)."
+    : inrWaitNote(c, answer, now) ?? "-";
   const forced = e.canRespond ? forcedRecommendation(c, answer, now) : "YOUR_CALL";
   if (forced) {
     return {
@@ -77,6 +80,8 @@ function toRow(raw: object, now: Date): Row {
       ? "You can respond"
       : e.reason === "NO_DUE_DATE"
         ? "Due date unknown"
+        : c.status === "UNDER_REVIEW"
+        ? "Under PayPal review. You can't respond in the dispute."
         : `Closed to response (${e.reason}). You can still refund the buyer, but PayPal may still hold the funds (not confirmed).`,
     ...rec,
     decision: "Not decided",
