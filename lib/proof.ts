@@ -43,7 +43,11 @@ export function inrProofRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YO
   // More than one parcel: one parcel's tracking can't prove the whole order arrived (case 1, Kate, 5 Nov 2026).
   if ((answer.parcelCount ?? 1) > 1) return "YOUR_CALL";
   const proven = p.delivered === "met" && p.deliveryDate === "met" && p.addressMatch === "met";
-  return proven ? null : "YOUR_CALL";
+  if (proven) return null;
+  // Address mismatch caused by the seller (shipped to the wrong address): REFUND (Kate, 5 Nov 2026).
+  // Caused by the buyer, or cause unknown: the seller decides.
+  if (p.addressMatch === "not met" && answer.addressMismatchCause === "seller") return "REFUND";
+  return "YOUR_CALL";
 }
 
 // Prompt for the seller on an INR case with tracking that is not yet proven (case 1, Kate, 5 Nov 2026).

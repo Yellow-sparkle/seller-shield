@@ -173,3 +173,17 @@ test("case 1: no wait note once the buyer has gone to the card issuer", () => {
     dispute_amount: { currency_code: "EUR", value: "40.00" }, seller_response_due_date: "2026-11-20T10:00:00Z" });
   assert.equal(inrWaitNote(cb, { hasTracking: true }, new Date("2026-11-19T10:00:00Z")), null);
 });
+
+test("case 1/10: address mismatch caused by the seller is REFUND", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  const base = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
+  assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "seller" }), "REFUND");
+});
+
+test("case 1/10: address mismatch caused by the buyer or unknown stays YOUR_CALL", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  const base = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
+  assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "buyer" }), "YOUR_CALL");
+  assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "unknown" }), "YOUR_CALL");
+  assert.equal(inrProofRule(c, base), "YOUR_CALL");
+});
