@@ -6,6 +6,9 @@ export type SellerAnswer = {
   delivered?: boolean; // carrier tracking shows "delivered"
   deliveryDate?: string; // date shown by the carrier, e.g. "2026-10-14"
   deliveredToTransactionAddress?: boolean;
+  noticeDate?: string; // PayPal's notice about an unauthorised claim, entered by the seller (YYYY-MM-DD)
+  shipmentDate?: string; // date the seller shipped the item (YYYY-MM-DD)
+  shippedToTransactionAddress?: boolean;
 };
 
 export const sellerAnswers: Record<string, SellerAnswer> = {

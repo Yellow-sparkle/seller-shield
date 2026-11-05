@@ -7,7 +7,7 @@ import { requiredEvidence, type Eligibility } from "./rules.ts";
 import { applyGuard, type Claim, type GuardedResult } from "./guard.ts";
 import type { SellerAnswer } from "./answers.ts";
 import { FACT_NOTES } from "./facts.ts";
-import { inrProofRule } from "./proof.ts";
+import { inrProofRule, unauthorisedProofRule } from "./proof.ts";
 
 export const MODEL = "claude-opus-5-5";
 
@@ -93,9 +93,9 @@ export async function recommend(
   return enforceEligibility(applyProofRule(guarded, c, answer), e);
 }
 
-// Deterministic INR proof rule (lib/proof.ts): no tracking means REFUND; unconfirmed delivery means YOUR_CALL.
+// Deterministic proof rules (lib/proof.ts): INR no tracking means REFUND; unconfirmed delivery or a missed unauthorised deadline means YOUR_CALL.
 export function applyProofRule<T extends { recommendation: string; confidence: string }>(r: T, c: Case, answer: SellerAnswer): T {
-  const forced = inrProofRule(c, answer);
+  const forced = inrProofRule(c, answer) ?? unauthorisedProofRule(c, answer);
   return forced ? { ...r, recommendation: forced, confidence: forced === "REFUND" ? "HIGH" : "LOW" } : r;
 }
 
