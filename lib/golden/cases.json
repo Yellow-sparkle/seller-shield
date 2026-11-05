@@ -516,7 +516,7 @@
   },
   {
     "id": "G15",
-    "note": "Synthetic. A reason PayPal may add later that our code does not know: the seller decides. (Moved from G10 when G10 became case 10, Kate, 5 Nov 2026.)",
+    "note": "Synthetic (G15). A PayPal reason our code does not know. Seller says who is right, with evidence: buyer right gives REFUND; seller right or no evidence gives YOUR_CALL (Kate, 5 Nov 2026). This case has no answer, so YOUR_CALL.",
     "expected": "YOUR_CALL",
     "answer": {},
     "dispute": {

@@ -10,6 +10,8 @@ export type SellerAnswer = {
   shipmentDate?: string; // date the seller shipped the item (YYYY-MM-DD)
   shippedToTransactionAddress?: boolean;
   deliverySource?: string; // where the seller checked the delivery facts, e.g. the carrier tracking page (seller-entered for the pilot)
+  whoIsRight?: "buyer" | "seller"; // for an unknown PayPal reason: who the seller judges to be right (Kate, 5 Nov 2026)
+  rightEvidence?: string; // evidence for who is right. Needed for the answer to count.
   causeEvidence?: string; // evidence for the cause, e.g. a carrier scan or the shipping label. Needed for seller or buyer.
   addressMismatchCause?: "seller" | "buyer" | "unknown"; // who caused a delivery-address mismatch (Kate, 5 Nov 2026)
   parcelCount?: number; // number of parcels in the order; more than one means the seller decides

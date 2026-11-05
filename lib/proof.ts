@@ -132,5 +132,15 @@ export function chargebackRule(c: Case): "YOUR_CALL" | null {
 // The forced answer from the deterministic rules, or null when the model decides.
 // Order matters only where rules overlap; they are mutually exclusive by reason and protection.
 export function forcedRecommendation(c: Case, answer: SellerAnswer = {}, now: Date = new Date()): "FIGHT" | "REFUND" | "YOUR_CALL" | null {
-  return chargebackRule(c) ?? inrProofRule(c, answer) ?? unauthorisedNotCoveredRule(c, answer) ?? unauthorisedProofRule(c, answer, now) ?? snadRule(c, answer);
+  return chargebackRule(c) ?? inrProofRule(c, answer) ?? unauthorisedNotCoveredRule(c, answer) ?? unauthorisedProofRule(c, answer, now) ?? snadRule(c, answer) ?? unknownReasonRule(c, answer);
+}
+
+// Unknown PayPal reason (G15, Kate, 5 Nov 2026): the app can't judge who is right, so the seller says.
+// Buyer is right (with evidence): REFUND. Seller is right (with evidence): YOUR_CALL, the seller decides.
+// No answer, or no evidence: YOUR_CALL.
+export function unknownReasonRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YOUR_CALL" | null {
+  if (c.reason !== "UNKNOWN") return null;
+  if (!answer.rightEvidence) return "YOUR_CALL";
+  if (answer.whoIsRight === "buyer") return "REFUND";
+  return "YOUR_CALL";
 }

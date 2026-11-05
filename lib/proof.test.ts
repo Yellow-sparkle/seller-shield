@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { chargebackRule, inrProofRule, inrWaitNote, proofConditions, snadRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
+import { chargebackRule, inrProofRule, inrWaitNote, proofConditions, snadRule, unknownReasonRule, unauthorisedNotCoveredRule, unauthorisedProofRule } from "./proof.ts";
 import { applyProofRule } from "./recommend.ts";
 
 const inr = toCase({ dispute_id: "X", reason: "INR", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "40.00" } });
@@ -201,4 +201,20 @@ test("case 1/10: the address-mismatch note asks for the cause and says refund is
   assert.match(note, /Who caused it/);
   assert.match(note, /Refund is final/);
   assert.match(note, /locker or relative/);
+});
+
+const unk = toCase({ dispute_id: "U15", reason: "NEW_PAYPAL_REASON", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "30.00" } });
+
+test("unknown reason: buyer right with evidence is REFUND (G15, Kate, 5 Nov 2026)", () => {
+  assert.equal(unknownReasonRule(unk, { whoIsRight: "buyer", rightEvidence: "carrier scan" }), "REFUND");
+});
+
+test("unknown reason: seller right with evidence, or no evidence, is YOUR_CALL", () => {
+  assert.equal(unknownReasonRule(unk, { whoIsRight: "seller", rightEvidence: "order record" }), "YOUR_CALL");
+  assert.equal(unknownReasonRule(unk, { whoIsRight: "buyer" }), "YOUR_CALL");
+  assert.equal(unknownReasonRule(unk, {}), "YOUR_CALL");
+});
+
+test("unknown reason rule does not touch known reasons", () => {
+  assert.equal(unknownReasonRule(inr, { whoIsRight: "buyer", rightEvidence: "x" }), null);
 });
