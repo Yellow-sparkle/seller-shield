@@ -40,7 +40,9 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
   const r = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[] }>)[id];
   const answer: SellerAnswer = { ...(sellerAnswers[id] ?? {}), ...override };
   const underReview = c.status === "UNDER_REVIEW" && answer.hasTracking === true;
-  const nextStep = underReview
+  const nextStep = c.lifeCycleStage === "CHARGEBACK"
+    ? "Card-issuer chargeback: the bank decides. A refund within 20 hours of a pre-chargeback alert avoids the chargeback fee (PayPal, disputes overview)."
+    : underReview
     ? "Under PayPal review. Guidance by tracking: delivered means do not refund; not delivered means refund outside the dispute (PayPal may still hold the funds, not confirmed)."
     : !e.canRespond && e.reason === "NO_DUE_DATE"
       ? "No response due date in our data. Check the deadline in PayPal before acting."
@@ -61,13 +63,23 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
   };
 }
 
+// Reason labels on the screen: PayPal's issue names (disputes overview). OTHER covers billing or
+// subscription errors, requests for details and misdirected transactions (Kate, 5 Nov 2026).
+const REASON_LABEL: Record<string, string> = {
+  INR: "Item not received (INR)",
+  SNAD: "Significantly not as described (SNAD)",
+  UNAUTHORISED: "Unauthorised transaction",
+  OTHER: "Other: billing, details or misdirected",
+  UNKNOWN: "Unknown reason",
+};
+
 function toRow(raw: object, now: Date, override: Override = {}): Row {
   const c = toCase(raw as never);
   const e = responseEligibility(c, now);
   const rec = recommendationFor(c.disputeId, c, e, now, override);
   return {
     id: c.disputeId,
-    reason: c.reason,
+    reason: REASON_LABEL[c.reason] ?? c.reason,
     amount: c.amount ? `${c.amount.value.toFixed(2)} ${c.amount.currency}` : "-",
     hold: c.holdAmount
       ? `${Math.abs(c.holdAmount.value).toFixed(2)} ${c.holdAmount.currency} (net of PayPal fees)`
