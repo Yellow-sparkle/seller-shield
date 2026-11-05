@@ -19,7 +19,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 type G = { id: string; answer: Record<string, boolean>; dispute: object };
 const client = new Anthropic();
 let total = 0;
-for (const g of cases as G[]) {
+for (const g of cases as unknown as G[]) {
   const c = toCase(g.dispute as never);
   const e = responseEligibility(c);
   const r = await recommend(c, e, g.answer, client);
