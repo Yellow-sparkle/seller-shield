@@ -29,15 +29,25 @@ export function proofConditions(answer: SellerAnswer = {}): ProofConditions {
   };
 }
 
-// INR rule: no tracking gives REFUND; tracking without confirmed delivery gives YOUR_CALL;
-// full proof leaves the decision to the model (null).
-export function inrProofRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YOUR_CALL" | null {
+// INR rule (case 1 spec, Kate, 5 Nov 2026):
+// - No tracking: REFUND.
+// - Tracking, not yet delivered: WAIT. Until one day before the response due date the seller waits
+//   and checks tracking daily (YOUR_CALL, LOW). From one day before the due date, with still no
+//   delivery: REFUND (the spec's SELLER REFUND branch, one day early to be safe).
+// - Delivered but not proven (date or address missing or not matching): YOUR_CALL.
+// - Full proof: null, the model may FIGHT.
+export function inrProofRule(c: Case, answer: SellerAnswer = {}, now: Date = new Date()): "REFUND" | "YOUR_CALL" | null {
   if (c.reason !== "INR") return null;
   const p = proofConditions(answer);
   if (p.tracking === "not met") return "REFUND";
   if (p.tracking === "unknown") return null;
   const proven = p.delivered === "met" && p.deliveryDate === "met" && p.addressMatch === "met";
-  return proven ? null : "YOUR_CALL";
+  if (proven) return null;
+  if (p.delivered !== "met") {
+    const due = c.responseDueAt ? Date.parse(c.responseDueAt) : NaN;
+    if (!Number.isNaN(due) && now.getTime() >= due - 86_400_000) return "REFUND";
+  }
+  return "YOUR_CALL";
 }
 
 // Deadline for shipment proof: 2 days after PayPal's notice. Null if the notice date is unknown.

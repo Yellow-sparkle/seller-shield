@@ -129,3 +129,23 @@ test("card-issuer chargeback: YOUR_CALL whatever the answers say (case 1 chargeb
   assert.equal(r.recommendation, "YOUR_CALL");
   assert.equal(chargebackRule(snadCase), null);
 });
+
+const inrDue = (due: string) => toCase({ dispute_id: "I1", reason: "INR", status: "OPEN", dispute_life_cycle_stage: "INQUIRY",
+  dispute_amount: { currency_code: "EUR", value: "40.00" }, seller_response_due_date: due, seller_protection: { status: "ELIGIBLE" } });
+
+test("case 1 WAIT: tracking, not delivered, due date far off: YOUR_CALL (wait)", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  assert.equal(inrProofRule(c, { hasTracking: true }, new Date("2026-11-10T10:00:00Z")), "YOUR_CALL");
+});
+
+test("case 1: tracking, not delivered, one day before the due date: REFUND (Kate, 5 Nov 2026)", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  assert.equal(inrProofRule(c, { hasTracking: true }, new Date("2026-11-19T10:00:00Z")), "REFUND");
+  assert.equal(inrProofRule(c, { hasTracking: true }, new Date("2026-11-19T09:59:00Z")), "YOUR_CALL");
+});
+
+test("case 1: delivered but address not matching stays YOUR_CALL at the deadline", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  const a = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
+  assert.equal(inrProofRule(c, a, new Date("2026-11-19T12:00:00Z")), "YOUR_CALL");
+});
