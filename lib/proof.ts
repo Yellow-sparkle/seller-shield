@@ -46,7 +46,9 @@ export function inrProofRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YO
   if (proven) return null;
   // Address mismatch caused by the seller (shipped to the wrong address): REFUND (Kate, 5 Nov 2026).
   // Caused by the buyer, or cause unknown: the seller decides.
-  if (p.addressMatch === "not met" && answer.addressMismatchCause === "seller") return "REFUND";
+  // A cause counts only with evidence; without it the cause is treated as unknown.
+  const cause = answer.causeEvidence ? answer.addressMismatchCause : "unknown";
+  if (p.addressMatch === "not met" && cause === "seller") return "REFUND";
   return "YOUR_CALL";
 }
 
@@ -62,6 +64,9 @@ export function inrWaitNote(c: Case, answer: SellerAnswer = {}, now: Date = new 
   const due = c.responseDueAt ? Date.parse(c.responseDueAt) : NaN;
   if (Number.isNaN(due)) return null;
   const lastDay = now.getTime() >= due - 86_400_000;
+  if (answer.delivered === true && answer.deliveredToTransactionAddress === false) {
+    return "Delivered to a different address. Who caused it? Seller's mistake gives REFUND (needs evidence, such as a carrier scan or the shipping label). Buyer's mistake or unknown gives YOUR_CALL. A locker or relative may be a valid delivery. Refund is final: if the item arrives later, the money stays with the buyer.";
+  }
   if (answer.delivered === true) {
     return lastDay ? "Delivery date or address not confirmed one day before the due date. Check the tracking link before the due date." : "Delivery date or address not confirmed yet. Check the tracking link.";
   }

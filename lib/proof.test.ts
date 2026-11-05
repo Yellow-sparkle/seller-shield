@@ -158,7 +158,7 @@ test("case 1: delivered but address not confirmed, last day: prompt to check, st
   const c = inrDue("2026-11-20T10:00:00Z");
   const a = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
   assert.equal(inrProofRule(c, a), "YOUR_CALL");
-  assert.match(inrWaitNote(c, a, new Date("2026-11-19T10:00:00Z")) ?? "", /not confirmed one day before/);
+  assert.match(inrWaitNote(c, a, new Date("2026-11-19T10:00:00Z")) ?? "", /Who caused it/);
 });
 
 test("case 1: more than one parcel is YOUR_CALL, even with full proof", () => {
@@ -177,7 +177,7 @@ test("case 1: no wait note once the buyer has gone to the card issuer", () => {
 test("case 1/10: address mismatch caused by the seller is REFUND", () => {
   const c = inrDue("2026-11-20T10:00:00Z");
   const base = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
-  assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "seller" }), "REFUND");
+  assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "seller", causeEvidence: "carrier scan" }), "REFUND");
 });
 
 test("case 1/10: address mismatch caused by the buyer or unknown stays YOUR_CALL", () => {
@@ -186,4 +186,19 @@ test("case 1/10: address mismatch caused by the buyer or unknown stays YOUR_CALL
   assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "buyer" }), "YOUR_CALL");
   assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "unknown" }), "YOUR_CALL");
   assert.equal(inrProofRule(c, base), "YOUR_CALL");
+});
+
+test("case 1/10: a seller cause without evidence is treated as unknown (YOUR_CALL)", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  const base = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
+  assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "seller" }), "YOUR_CALL");
+  assert.equal(inrProofRule(c, { ...base, addressMismatchCause: "seller", causeEvidence: "carrier scan" }), "REFUND");
+});
+
+test("case 1/10: the address-mismatch note asks for the cause and says refund is final", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  const note = inrWaitNote(c, { hasTracking: true, delivered: true, deliveredToTransactionAddress: false }, new Date("2026-11-10T10:00:00Z")) ?? "";
+  assert.match(note, /Who caused it/);
+  assert.match(note, /Refund is final/);
+  assert.match(note, /locker or relative/);
 });

@@ -4,11 +4,11 @@
 // The grid shows facts only. Recommendations are not wired here yet.
 import { useEffect, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef } from "ag-grid-community";
+import { AllCommunityModule, ModuleRegistry, themeQuartz, type CellValueChangedEvent, type ColDef } from "ag-grid-community";
 import { toCase, daysUntilDue } from "../lib/dispute.ts";
 import { decideBy, protectionLabel, responseEligibility } from "../lib/rules.ts";
 import { forcedRecommendation, inrWaitNote } from "../lib/proof.ts";
-import { sellerAnswers } from "../lib/answers.ts";
+import { sellerAnswers, type SellerAnswer } from "../lib/answers.ts";
 import fixtures from "../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../lib/recorded/recommendations.json" with { type: "json" };
 
@@ -27,14 +27,18 @@ type Row = {
   recommendation: string;
   reasons: string;
   nextStep: string;
+  cause: string;
+  evidence: string;
   decision: string;
 };
 
+type Override = Partial<SellerAnswer>;
+
 // Recorded Opus answers (see scripts/live-check.ts --record). Shown without a live call.
 // The deterministic rules (lib/proof.ts) override the recorded answer, as they do in recommend().
-function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnType<typeof responseEligibility>, now: Date): { recommendation: string; reasons: string; nextStep: string } {
+function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnType<typeof responseEligibility>, now: Date, override: Override): { recommendation: string; reasons: string; nextStep: string } {
   const r = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[] }>)[id];
-  const answer = sellerAnswers[id] ?? {};
+  const answer: SellerAnswer = { ...(sellerAnswers[id] ?? {}), ...override };
   const underReview = c.status === "UNDER_REVIEW" && answer.hasTracking === true;
   const nextStep = underReview
     ? "Under PayPal review. Guidance by tracking: delivered means do not refund; not delivered means refund outside the dispute (PayPal may still hold the funds, not confirmed)."
@@ -55,10 +59,10 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
   };
 }
 
-function toRow(raw: object, now: Date): Row {
+function toRow(raw: object, now: Date, override: Override = {}): Row {
   const c = toCase(raw as never);
   const e = responseEligibility(c, now);
-  const rec = recommendationFor(c.disputeId, c, e, now);
+  const rec = recommendationFor(c.disputeId, c, e, now, override);
   return {
     id: c.disputeId,
     reason: c.reason,
@@ -84,6 +88,8 @@ function toRow(raw: object, now: Date): Row {
         ? "Under PayPal review. You can't respond in the dispute."
         : `Closed to response (${e.reason}). You can still refund the buyer, but PayPal may still hold the funds (not confirmed).`,
     ...rec,
+    cause: override.addressMismatchCause ?? "unknown",
+    evidence: override.causeEvidence ?? "",
     decision: "Not decided",
   };
 }
@@ -101,6 +107,15 @@ const columns: ColDef<Row>[] = [
   { field: "recommendation", headerName: "AI recommendation", flex: 2 },
   { field: "reasons", headerName: "Why (cited facts)", flex: 4, wrapText: true, autoHeight: true },
   { field: "nextStep", headerName: "Next step", flex: 3, wrapText: true, autoHeight: true },
+  {
+    field: "cause",
+    headerName: "Address mismatch cause",
+    flex: 1.5,
+    editable: true,
+    cellEditor: "agSelectCellEditor",
+    cellEditorParams: { values: ["unknown", "seller", "buyer"] },
+  },
+  { field: "evidence", headerName: "Cause evidence", flex: 2, editable: true },
   {
     field: "decision",
     headerName: "Seller decision",
@@ -173,17 +188,34 @@ function EvidenceChecklist({ rows }: { rows: Row[] }) {
 
 export default function CaseScreen() {
   // Dates are computed after mount, so the server render does not depend on the clock.
-  const [rows, setRows] = useState<Row[]>([]);
-  useEffect(() => {
-    const now = new Date();
-    setRows((fixtures as object[]).map((f) => toRow(f, now)));
-  }, []);
+  // Rows are built after mount (the clock). Seller cause and evidence typed on the screen are kept per case, for this session.
+  const [now, setNow] = useState<Date | null>(null);
+  const [overrides, setOverrides] = useState<Record<string, Override>>({});
+  useEffect(() => setNow(new Date()), []);
+  const rows: Row[] = now
+    ? (fixtures as object[]).map((f) => {
+        const id = toCase(f as never).disputeId;
+        return toRow(f, now, overrides[id] ?? {});
+      })
+    : [];
+  const onCellValueChanged = (e: CellValueChangedEvent<Row>) => {
+    if (e.colDef.field !== "cause" && e.colDef.field !== "evidence") return;
+    const d = e.data;
+    if (!d) return;
+    setOverrides((prev) => ({
+      ...prev,
+      [d.id]: {
+        addressMismatchCause: (d.cause as "seller" | "buyer" | "unknown") ?? "unknown",
+        causeEvidence: d.evidence || undefined,
+      },
+    }));
+  };
   return (
     <main style={{ padding: 16, maxWidth: 1100, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22, marginBottom: 4 }}>Seller Shield: open disputes</h1>
       <p style={{ marginTop: 0, color: "#555" }}>Sandbox data, EUR. Held amounts are net of PayPal fees. AI recommendations are recorded from a live Claude run; the seller decides.</p>
       <div style={{ height: 260 }}>
-        <AgGridReact<Row> theme={theme} rowData={rows} columnDefs={columns} domLayout="autoHeight" />
+        <AgGridReact<Row> theme={theme} rowData={rows} columnDefs={columns} domLayout="autoHeight" onCellValueChanged={onCellValueChanged} />
       </div>
       <EvidenceChecklist rows={rows} />
       <p style={{ color: "#555", fontSize: 14 }}>

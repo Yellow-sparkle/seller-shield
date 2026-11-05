@@ -10,6 +10,7 @@ export type SellerAnswer = {
   shipmentDate?: string; // date the seller shipped the item (YYYY-MM-DD)
   shippedToTransactionAddress?: boolean;
   deliverySource?: string; // where the seller checked the delivery facts, e.g. the carrier tracking page (seller-entered for the pilot)
+  causeEvidence?: string; // evidence for the cause, e.g. a carrier scan or the shipping label. Needed for seller or buyer.
   addressMismatchCause?: "seller" | "buyer" | "unknown"; // who caused a delivery-address mismatch (Kate, 5 Nov 2026)
   parcelCount?: number; // number of parcels in the order; more than one means the seller decides
 };
