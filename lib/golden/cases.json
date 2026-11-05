@@ -326,12 +326,19 @@
   },
   {
     "id": "G10",
-    "note": "Synthetic. A reason PayPal may add later that our code does not know: the seller decides.",
-    "expected": "YOUR_CALL",
-    "answer": {},
+    "note": "Synthetic (case 10). INR, tracking delivered to a different address, caused by the seller: REFUND (Kate, 5 Nov 2026).",
+    "expected": "REFUND",
+    "answer": {
+      "hasTracking": true,
+      "delivered": true,
+      "deliveryDate": "2026-11-12",
+      "deliveredToTransactionAddress": false,
+      "addressMismatchCause": "seller",
+      "causeEvidence": "carrier scan"
+    },
     "dispute": {
       "dispute_id": "G-10",
-      "reason": "NEW_PAYPAL_REASON",
+      "reason": "INR",
       "status": "WAITING_FOR_SELLER_RESPONSE",
       "dispute_amount": {
         "currency_code": "EUR",
@@ -461,6 +468,81 @@
           "amount": {
             "currency_code": "EUR",
             "value": "-23.10"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "G14",
+    "note": "Synthetic (case 10, buyer side). INR, tracking delivered to a different address, caused by the buyer: the seller decides (Kate, 5 Nov 2026).",
+    "expected": "YOUR_CALL",
+    "answer": {
+      "hasTracking": true,
+      "delivered": true,
+      "deliveryDate": "2026-11-12",
+      "deliveredToTransactionAddress": false,
+      "addressMismatchCause": "buyer",
+      "causeEvidence": "buyer's locker address"
+    },
+    "dispute": {
+      "dispute_id": "G-14",
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "30.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G14TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-27.90"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "G15",
+    "note": "Synthetic. A reason PayPal may add later that our code does not know: the seller decides. (Moved from G10 when G10 became case 10, Kate, 5 Nov 2026.)",
+    "expected": "YOUR_CALL",
+    "answer": {},
+    "dispute": {
+      "dispute_id": "G-10",
+      "reason": "NEW_PAYPAL_REASON",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "30.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G10TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-27.90"
           }
         }
       ]
