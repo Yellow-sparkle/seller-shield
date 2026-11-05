@@ -9,6 +9,8 @@ export type SellerAnswer = {
   noticeDate?: string; // PayPal's notice about an unauthorised claim, entered by the seller (YYYY-MM-DD)
   shipmentDate?: string; // date the seller shipped the item (YYYY-MM-DD)
   shippedToTransactionAddress?: boolean;
+  deliverySource?: string; // where the seller checked the delivery facts, e.g. the carrier tracking page (seller-entered for the pilot)
+  parcelCount?: number; // number of parcels in the order; more than one means the seller decides
 };
 
 export const sellerAnswers: Record<string, SellerAnswer> = {

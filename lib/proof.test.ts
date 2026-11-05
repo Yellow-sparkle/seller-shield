@@ -144,13 +144,28 @@ test("case 1: tracking, not delivered, last day: still YOUR_CALL, with a prompt 
   assert.equal(inrProofRule(c, { hasTracking: true }), "YOUR_CALL");
   assert.match(inrWaitNote(c, { hasTracking: true }, new Date("2026-11-19T10:00:00Z")) ?? "", /Check the tracking link/);
   assert.match(inrWaitNote(c, { hasTracking: true }, new Date("2026-11-10T10:00:00Z")) ?? "", /Wait/);
-  assert.equal(inrWaitNote(c, { hasTracking: true, delivered: true }, new Date("2026-11-19T10:00:00Z")), null);
+  assert.match(inrWaitNote(c, { hasTracking: true, delivered: true }, new Date("2026-11-19T10:00:00Z")) ?? "", /not confirmed/);
+  assert.equal(inrWaitNote(c, { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: true }, new Date("2026-11-19T10:00:00Z")), null);
 });
 
 test("case 1: delivered but address not matching stays YOUR_CALL at the deadline", () => {
   const c = inrDue("2026-11-20T10:00:00Z");
   const a = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
   assert.equal(inrProofRule(c, a), "YOUR_CALL");
+});
+
+test("case 1: delivered but address not confirmed, last day: prompt to check, still YOUR_CALL", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  const a = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: false };
+  assert.equal(inrProofRule(c, a), "YOUR_CALL");
+  assert.match(inrWaitNote(c, a, new Date("2026-11-19T10:00:00Z")) ?? "", /not confirmed one day before/);
+});
+
+test("case 1: more than one parcel is YOUR_CALL, even with full proof", () => {
+  const c = inrDue("2026-11-20T10:00:00Z");
+  const a = { hasTracking: true, delivered: true, deliveryDate: "2026-11-12", deliveredToTransactionAddress: true, parcelCount: 2 };
+  assert.equal(inrProofRule(c, a), "YOUR_CALL");
+  assert.equal(inrProofRule(c, { ...a, parcelCount: 1 }), null);
 });
 
 test("case 1: no wait note once the buyer has gone to the card issuer", () => {

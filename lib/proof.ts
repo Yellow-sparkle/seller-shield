@@ -40,19 +40,28 @@ export function inrProofRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YO
   const p = proofConditions(answer);
   if (p.tracking === "not met") return "REFUND";
   if (p.tracking === "unknown") return null;
+  // More than one parcel: one parcel's tracking can't prove the whole order arrived (case 1, Kate, 5 Nov 2026).
+  if ((answer.parcelCount ?? 1) > 1) return "YOUR_CALL";
   const proven = p.delivered === "met" && p.deliveryDate === "met" && p.addressMatch === "met";
   return proven ? null : "YOUR_CALL";
 }
 
-// Prompt for the seller on an undelivered INR case with tracking. Null when no prompt applies.
+// Prompt for the seller on an INR case with tracking that is not yet proven (case 1, Kate, 5 Nov 2026).
+// Not delivered: wait, then prompt to refund one day before the due date.
+// Delivered but date or address not confirmed: prompt to check one day before the due date. Never a refund.
+// Null when no prompt applies (no tracking, full proof, card-issuer chargeback, or no due date).
 export function inrWaitNote(c: Case, answer: SellerAnswer = {}, now: Date = new Date()): string | null {
   if (c.reason !== "INR" || c.lifeCycleStage === "CHARGEBACK") return null;
-  if (proofConditions(answer).tracking !== "met" || answer.delivered === true) return null;
+  if (proofConditions(answer).tracking !== "met") return null;
+  const proven = answer.delivered === true && !!answer.deliveryDate && answer.deliveredToTransactionAddress === true;
+  if (proven) return null;
   const due = c.responseDueAt ? Date.parse(c.responseDueAt) : NaN;
   if (Number.isNaN(due)) return null;
-  if (now.getTime() >= due - 86_400_000) {
-    return "Not delivered one day before the due date. Check the tracking link, then refund unless the parcel has arrived.";
+  const lastDay = now.getTime() >= due - 86_400_000;
+  if (answer.delivered === true) {
+    return lastDay ? "Delivery date or address not confirmed one day before the due date. Check the tracking link before the due date." : "Delivery date or address not confirmed yet. Check the tracking link.";
   }
+  if (lastDay) return "Not delivered one day before the due date. Check the tracking link, then refund unless the parcel has arrived.";
   return "Wait: tracking added, not delivered yet. Check tracking daily.";
 }
 
