@@ -139,6 +139,8 @@ export function forcedRecommendation(c: Case, answer: SellerAnswer = {}, now: Da
 // Buyer is right (with evidence): REFUND. Seller is right (with evidence): YOUR_CALL, the seller decides.
 // No answer, or no evidence: YOUR_CALL.
 export function unknownReasonRule(c: Case, answer: SellerAnswer = {}): "REFUND" | "YOUR_CALL" | null {
+  // OTHER (G07, Kate, 5 Nov 2026): no rule in our policy, so the seller decides.
+  if (c.reason === "OTHER") return "YOUR_CALL";
   if (c.reason !== "UNKNOWN") return null;
   if (!answer.rightEvidence) return "YOUR_CALL";
   if (answer.whoIsRight === "buyer") return "REFUND";

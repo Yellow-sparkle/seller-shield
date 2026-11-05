@@ -76,10 +76,13 @@
   },
   {
     "id": "G03",
-    "note": "Synthetic. UNAUTHORISED with tracking, protection eligible: fight with proof.",
+    "note": "Synthetic. UNAUTHORISED with tracking, protection eligible, shipped within 2 days of PayPal's notice to the transaction address: fight with proof (Kate, 5 Nov 2026: notice date added).",
     "expected": "FIGHT",
     "answer": {
-      "hasTracking": true
+      "hasTracking": true,
+      "noticeDate": "2026-11-01",
+      "shipmentDate": "2026-11-02",
+      "shippedToTransactionAddress": true
     },
     "dispute": {
       "dispute_id": "G-03",

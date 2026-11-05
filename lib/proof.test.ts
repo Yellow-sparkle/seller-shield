@@ -218,3 +218,10 @@ test("unknown reason: seller right with evidence, or no evidence, is YOUR_CALL",
 test("unknown reason rule does not touch known reasons", () => {
   assert.equal(unknownReasonRule(inr, { whoIsRight: "buyer", rightEvidence: "x" }), null);
 });
+
+test("OTHER reason is forced YOUR_CALL (G07, Kate, 5 Nov 2026)", () => {
+  const other = toCase({ dispute_id: "O7", reason: "OTHER", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "30.00" } });
+  assert.equal(unknownReasonRule(other, {}), "YOUR_CALL");
+  const r = applyProofRule({ recommendation: "FIGHT", confidence: "HIGH" }, other, {});
+  assert.equal(r.recommendation, "YOUR_CALL");
+});
