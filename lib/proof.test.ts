@@ -47,10 +47,10 @@ test("unauthorised: shipped by the deadline with full proof lets the model decid
   assert.equal(unauthorisedProofRule(u, ok, new Date("2026-11-03T00:00:00Z")), null);
 });
 
-test("unauthorised: shipped after the deadline is YOUR_CALL", () => {
+test("unauthorised: shipped after the deadline is REFUND (Kate, 5 Nov 2026)", () => {
   const u = toCase({ dispute_id: "U", reason: "UNAUTHORISED", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "75.00" } });
   const late = { hasTracking: true, noticeDate: "2026-11-01", shipmentDate: "2026-11-04", shippedToTransactionAddress: true };
-  assert.equal(unauthorisedProofRule(u, late, new Date("2026-11-05T00:00:00Z")), "YOUR_CALL");
+  assert.equal(unauthorisedProofRule(u, late, new Date("2026-11-05T00:00:00Z")), "REFUND");
 });
 
 test("unauthorised: no notice date means no rule (the screen asks for it)", () => {
@@ -58,9 +58,9 @@ test("unauthorised: no notice date means no rule (the screen asks for it)", () =
   assert.equal(unauthorisedProofRule(u, { hasTracking: true }, new Date("2026-11-05T00:00:00Z")), null);
 });
 
-test("unauthorised: deadline passed with no proof on file is YOUR_CALL", () => {
+test("unauthorised: deadline passed with no proof on file is REFUND (Kate, 5 Nov 2026)", () => {
   const u = toCase({ dispute_id: "U", reason: "UNAUTHORISED", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "75.00" } });
-  assert.equal(unauthorisedProofRule(u, { noticeDate: "2026-11-01" }, new Date("2026-11-05T00:00:00Z")), "YOUR_CALL");
+  assert.equal(unauthorisedProofRule(u, { noticeDate: "2026-11-01" }, new Date("2026-11-05T00:00:00Z")), "REFUND");
 });
 
 test("unauthorised: a failed tracking condition is YOUR_CALL", () => {
