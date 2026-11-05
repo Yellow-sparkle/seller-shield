@@ -254,7 +254,7 @@
   },
   {
     "id": "G08",
-    "note": "Synthetic. Deadline passed two days ago: the seller cannot respond, so the seller decides.",
+    "note": "Synthetic (case 8). Tracking exists, but the response deadline passed two days ago: PayPal decides without the seller, so the rule gives YOUR_CALL. The seller can still decide to refund the buyer or contact them outside the dispute.",
     "expected": "YOUR_CALL",
     "answer": {
       "hasTracking": true
