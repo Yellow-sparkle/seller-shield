@@ -19,6 +19,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 type G = { id: string; answer: Record<string, boolean>; dispute: object };
 const client = new Anthropic();
 let total = 0;
+let unreadable = 0;
 for (const g of cases as unknown as G[]) {
   const c = toCase(g.dispute as never);
   const e = responseEligibility(c);
@@ -29,10 +30,17 @@ for (const g of cases as unknown as G[]) {
     messages: [{ role: "user", content: judgePrompt(factsFor(c, e, g.answer), r.claims) }],
   });
   const text = reply.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
-  const j = parseJudgement(text);
+  let j;
+  try {
+    j = parseJudgement(text);
+  } catch (err) {
+    unreadable++;
+    console.log(`${g.id} judge output unreadable (${err instanceof Error ? err.message : "unknown error"})`);
+    continue;
+  }
   const rate = supportRate(j);
   total++;
   console.log(`${g.id} support ${(rate * 100).toFixed(0)}% plainEnglish=${j.plainEnglish} noPrediction=${j.noPrediction}`);
   for (const v of j.verdicts) if (!v.supported) console.log(`     - NOT SUPPORTED: ${v.claim} (${v.reason})`);
 }
-console.log(`\nJudged ${total} cases with ${JUDGE_MODEL}. Calibrate against hand labels before trusting the scores.`);
+console.log(`\nJudged ${total} cases with ${JUDGE_MODEL}${unreadable ? ` (${unreadable} unreadable, not counted)` : ""}. Calibrate against hand labels before trusting the scores.`);

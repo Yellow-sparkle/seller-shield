@@ -26,11 +26,34 @@ export function judgePrompt(facts: Record<string, unknown>, claims: { text: stri
   ].join("\n");
 }
 
-export function parseJudgement(text: string): Judgement {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start < 0 || end < start) throw new Error("No JSON object in judge reply");
-  const raw = JSON.parse(text.slice(start, end + 1)) as Partial<Judgement>;
+// Every balanced {...} block in the text, in order. Strings are respected so braces inside quotes don't count.
+function jsonBlocks(text: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let start = -1;
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "{") {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (ch === "}" && depth > 0) {
+      depth--;
+      if (depth === 0) out.push(text.slice(start, i + 1));
+    }
+  }
+  return out;
+}
+
+function toJudgement(raw: Partial<Judgement>): Judgement {
   if (!Array.isArray(raw.verdicts)) throw new Error("Missing verdicts");
   for (const v of raw.verdicts) {
     if (typeof v.supported !== "boolean" || typeof v.claim !== "string") throw new Error("Bad verdict");
@@ -39,6 +62,22 @@ export function parseJudgement(text: string): Judgement {
     throw new Error("Missing plainEnglish or noPrediction");
   }
   return { verdicts: raw.verdicts as Verdict[], plainEnglish: raw.plainEnglish, noPrediction: raw.noPrediction };
+}
+
+// The judge sometimes sends a JSON answer, then a "correction" and a second JSON answer.
+// We use the last block that is a valid judgement, so a correction replaces the first answer.
+export function parseJudgement(text: string): Judgement {
+  const blocks = jsonBlocks(text);
+  if (blocks.length === 0) throw new Error("No JSON object in judge reply");
+  let lastError: unknown = null;
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    try {
+      return toJudgement(JSON.parse(blocks[i]) as Partial<Judgement>);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("No valid judgement in judge reply");
 }
 
 // Share of claims the judge marks supported. Empty claims count as 1 (nothing to contradict).

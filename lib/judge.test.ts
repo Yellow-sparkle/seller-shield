@@ -31,3 +31,16 @@ test("the judge prompt carries the fee and tracking notes", () => {
   assert.match(p, /net of PayPal fees/);
   assert.match(p, /not proof of delivery/);
 });
+
+test("a correction after the first answer replaces it", () => {
+  const first = '{"verdicts":[{"claim":"a","supported":false,"reason":"x"}],"plainEnglish":true,"noPrediction":true}';
+  const second = '{"verdicts":[{"claim":"a","supported":true,"reason":"ok {not a brace}"}],"plainEnglish":true,"noPrediction":true}';
+  const j = parseJudgement(first + "\nCorrection: the verdict should be true. Corrected JSON:\n" + second);
+  assert.equal(j.verdicts[0].supported, true);
+});
+
+test("a broken trailing block falls back to the last valid judgement", () => {
+  const good = '{"verdicts":[],"plainEnglish":true,"noPrediction":true}';
+  const j = parseJudgement(good + " then {not json}");
+  assert.deepEqual(j.verdicts, []);
+});
