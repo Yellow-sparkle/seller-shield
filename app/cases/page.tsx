@@ -390,13 +390,26 @@ function passesFilters(r: Row, chips: string[]): boolean {
   return true;
 }
 
+// Sample cause and evidence for the demo screens (see ?sample=1 above). Shown only in memory.
+const SAMPLE_OVERRIDES: Record<string, Override> = {
+  "PP-R-GJM-10196233": { addressMismatchCause: "buyer", causeEvidence: "Buyer message of 12 Oct asks for a new address" },
+  "PP-R-SRZ-10196872": { addressMismatchCause: "seller", causeEvidence: "Carrier scan shows delivery to the address the buyer gave" },
+};
+
 export default function CaseScreen() {
   // Dates are computed after mount, so the server render does not depend on the clock.
   // Rows are built after mount (the clock). Seller cause and evidence typed on the screen are kept per case, for this session.
   const [now, setNow] = useState<Date | null>(null);
   const [overrides, setOverrides] = useState<Record<string, Override>>({});
+  // /cases?sample=1 shows the sample cause and evidence in memory only. Nothing is saved, and /cases clears it.
+  const [sampleMode, setSampleMode] = useState(false);
   useEffect(() => {
     setNow(new Date());
+    if (new URLSearchParams(window.location.search).get("sample") === "1") {
+      setSampleMode(true);
+      setOverrides(SAMPLE_OVERRIDES);
+      return;
+    }
     try {
       setOverrides(JSON.parse(window.localStorage.getItem("seller-shield-overrides") ?? "{}"));
     } catch {
@@ -404,12 +417,13 @@ export default function CaseScreen() {
     }
   }, []);
   useEffect(() => {
+    if (sampleMode) return;
     try {
       window.localStorage.setItem("seller-shield-overrides", JSON.stringify(overrides));
     } catch {
       // Storage blocked: answers last until the page reloads.
     }
-  }, [overrides]);
+  }, [overrides, sampleMode]);
   const [focusId, setFocusId] = useState<string | null>(null);
   useEffect(() => {
     const read = () => setFocusId(decodeURIComponent(window.location.hash.slice(1)) || null);
@@ -451,6 +465,15 @@ export default function CaseScreen() {
   return (
     <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22, marginBottom: 4 }}>Dispute cases</h1>
+      {sampleMode ? (
+        <p role="status" style={{ margin: "0 0 8px", fontSize: 14 }}>
+          Showing sample cause and evidence (not saved). <a href="/cases" style={{ color: "#0070ba", fontWeight: 600 }}>Clear sample</a>
+        </p>
+      ) : (
+        <p style={{ margin: "0 0 8px", fontSize: 14 }}>
+          <a href="/cases?sample=1" style={{ color: "#0070ba", fontWeight: 600 }}>Show sample cause and evidence</a>
+        </p>
+      )}
       {focusId && rows.length > 0 && !rows.some((r) => r.id === focusId) && <p role="status">Case {focusId} is not in the sandbox data.</p>}
       <div role="group" aria-label="Filter cases" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", margin: "12px 0" }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: "#003087", marginRight: 4 }}>Filter cases:</span>
