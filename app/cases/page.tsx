@@ -115,8 +115,8 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
 const rowSelection: RowSelectionOptions<Row> = { mode: "multiRow", checkboxes: true, headerCheckbox: true };
 
 // Plain labels for the case read (Kate, 6 Nov 2026). The internal codes stay in the data; only the screen changes.
-// The name of this column is still open: Kate is choosing from the options in the thread.
-const CASE_READ_LABEL = "Our read of the case";
+// The column name is "Case strength" (Kate, 6 Nov 2026).
+const CASE_READ_LABEL = "Case strength";
 
 function readStyle(value: string): { label: string; color: string; bg: string } {
   if (value.startsWith("FIGHT")) return { label: "Strong case", color: "#1d6b3f", bg: "#e3f4ea" };
