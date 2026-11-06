@@ -2,7 +2,7 @@
 
 // Case screen (PRD F3). Lists the sandbox disputes with the recorded AI recommendation.
 // A link such as /cases#PP-R-... (from the orders grid or the health scan) highlights that case.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type CellValueChangedEvent, type ColDef, type RowSelectionOptions } from "ag-grid-community";
 import { toCase, daysUntilDue } from "../../lib/dispute.ts";
@@ -326,6 +326,36 @@ function DraftCard({ row, initial }: { row: Row; initial: string }) {
   );
 }
 
+// Filters above the grid, in the same style as Orders and tracking. Strength and status chips each match any
+// selected option; the deadline chip must also hold. Quick filter searches every column.
+const FILTERS: { id: string; label: string; group: "strength" | "status" | "deadline" }[] = [
+  { id: "strong", label: "Strong case", group: "strength" },
+  { id: "mixed", label: "Mixed", group: "strength" },
+  { id: "weak", label: "Weak case", group: "strength" },
+  { id: "canRespond", label: "You can respond", group: "status" },
+  { id: "closed", label: "Closed to response", group: "status" },
+  { id: "due7", label: "Due in 7 days", group: "deadline" },
+];
+
+function matchesFilter(r: Row, id: string): boolean {
+  if (id === "strong") return r.recommendation.startsWith("FIGHT");
+  if (id === "weak") return r.recommendation.startsWith("REFUND");
+  if (id === "mixed") return r.recommendation.startsWith("YOUR_CALL");
+  if (id === "canRespond") return r.canRespond;
+  if (id === "closed") return !r.canRespond;
+  if (id === "due7") return r.daysLeft !== null && r.daysLeft <= 7;
+  return true;
+}
+
+function passesFilters(r: Row, chips: string[]): boolean {
+  for (const group of ["strength", "status"] as const) {
+    const picked = FILTERS.filter((f) => f.group === group && chips.includes(f.id));
+    if (picked.length > 0 && !picked.some((f) => matchesFilter(r, f.id))) return false;
+  }
+  if (chips.includes("due7") && !matchesFilter(r, "due7")) return false;
+  return true;
+}
+
 export default function CaseScreen() {
   // Dates are computed after mount, so the server render does not depend on the clock.
   // Rows are built after mount (the clock). Seller cause and evidence typed on the screen are kept per case, for this session.
@@ -364,6 +394,13 @@ export default function CaseScreen() {
     [now, overrides],
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [chips, setChips] = useState<string[]>([]);
+  const [quick, setQuick] = useState("");
+  const gridRef = useRef<AgGridReact<Row>>(null);
+  useEffect(() => {
+    gridRef.current?.api?.onFilterChanged();
+  }, [chips]);
+  const toggleChip = (id: string) => setChips((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
   const selectedRows = rows.filter((r) => selectedIds.includes(r.id));
   const onCellValueChanged = (e: CellValueChangedEvent<Row>) => {
     if (e.colDef.field !== "cause" && e.colDef.field !== "evidence") return;
@@ -381,8 +418,20 @@ export default function CaseScreen() {
     <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22, marginBottom: 4 }}>Dispute cases</h1>
       {focusId && rows.length > 0 && !rows.some((r) => r.id === focusId) && <p role="status">Case {focusId} is not in the sandbox data.</p>}
+      <div role="group" aria-label="Filter cases" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", margin: "12px 0" }}>
+        {FILTERS.map((f) => (
+          <button key={f.id} onClick={() => toggleChip(f.id)} aria-pressed={chips.includes(f.id)} style={{ padding: "5px 12px", borderRadius: 999, border: chips.includes(f.id) ? "1px solid #003087" : "1px solid #b8c7da", background: chips.includes(f.id) ? "#003087" : "#eef3f9", color: chips.includes(f.id) ? "#ffffff" : "#003087", fontSize: 13, fontWeight: 500 }}>
+            {f.label}
+          </button>
+        ))}
+        <input value={quick} onChange={(e) => setQuick(e.target.value)} placeholder="Quick filter" aria-label="Quick filter" style={{ padding: "5px 12px", minWidth: 200, borderRadius: 999, border: "1px solid #b8c7da", background: "#ffffff", fontSize: 13, color: "#003087" }} />
+      </div>
       <div>
         <AgGridReact<Row>
+          ref={gridRef}
+          quickFilterText={quick}
+          isExternalFilterPresent={() => chips.length > 0}
+          doesExternalFilterPass={(node) => (node.data ? passesFilters(node.data, chips) : true)}
           key={focusId ?? "none"}
           theme={theme}
           rowData={rows}
