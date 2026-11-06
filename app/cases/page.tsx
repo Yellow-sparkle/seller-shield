@@ -114,6 +114,26 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
 // Ticked cases drive the lower sections, the same way ticked orders drive Review on the orders screen.
 const rowSelection: RowSelectionOptions<Row> = { mode: "multiRow", checkboxes: true, headerCheckbox: true };
 
+// Plain labels for the case read (Kate, 6 Nov 2026). The internal codes stay in the data; only the screen changes.
+// The name of this column is still open: Kate is choosing from the options in the thread.
+const CASE_READ_LABEL = "Our read of the case";
+
+function readStyle(value: string): { label: string; color: string; bg: string } {
+  if (value.startsWith("FIGHT")) return { label: "Strong case", color: "#1d6b3f", bg: "#e3f4ea" };
+  if (value.startsWith("REFUND")) return { label: "Weak case", color: "#a3231b", bg: "#fbe4e2" };
+  if (value.startsWith("YOUR_CALL")) return { label: "Mixed: your decision", color: "#7a4f00", bg: "#fff4d6" };
+  return { label: "Not checked yet", color: "#4a5568", bg: "#edf1f6" };
+}
+
+function ReadBadge({ value }: { value: string }) {
+  const s = readStyle(value);
+  return (
+    <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, background: s.bg, color: s.color, fontWeight: 600, fontSize: 13, whiteSpace: "nowrap" }}>
+      {s.label}
+    </span>
+  );
+}
+
 const columns: ColDef<Row>[] = [
   { field: "id", headerName: "Dispute", flex: 2, minWidth: 190 },
   { field: "reason", headerName: "Reason", flex: 1 },
@@ -124,7 +144,7 @@ const columns: ColDef<Row>[] = [
   { field: "daysLeft", headerName: "Days left", flex: 1 },
   { field: "protection", headerName: "Seller protection", flex: 1 },
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
-  { field: "recommendation", headerName: "AI recommendation", flex: 2 },
+  { field: "recommendation", headerName: CASE_READ_LABEL, flex: 2, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
   { field: "reasons", headerName: "Why (cited facts)", flex: 4, minWidth: 320, wrapText: true, autoHeight: true },
   { field: "nextStep", headerName: "Next step", flex: 3, minWidth: 260, wrapText: true, autoHeight: true },
   {
@@ -170,15 +190,14 @@ function writeEvidence(v: Record<string, boolean[]>) {
 }
 
 function EvidenceChecklist({ rows }: { rows: Row[] }) {
-  const fights = rows.filter((r) => r.recommendation.startsWith("FIGHT"));
   const [checked, setChecked] = useState<Record<string, boolean[]>>({});
   useEffect(() => setChecked(readEvidence()), []);
-  if (fights.length === 0) return null;
+  if (rows.length === 0) return null;
   return (
     <section style={{ marginTop: 24 }}>
-      <h2 style={{ fontSize: 18, marginBottom: 4 }}>Evidence before you fight</h2>
-      <p style={{ marginTop: 0, color: "#555", fontSize: 14 }}>Attach these to PayPal before you respond to a case the AI recommends fighting.</p>
-      {fights.map((r) => {
+      <h2 style={{ fontSize: 18, marginBottom: 4 }}>Documents</h2>
+      <p style={{ marginTop: 0, color: "#555", fontSize: 14 }}>Tick what you have attached in PayPal. Files from the buyer appear here once PayPal returns them.</p>
+      {rows.map((r) => {
         const boxes = checked[r.id] ?? EVIDENCE_ITEMS.map(() => false);
         return (
           <div key={r.id} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
@@ -259,7 +278,7 @@ function DraftCard({ row, initial }: { row: Row; initial: string }) {
 
   return (
     <div id={`act-${row.id}`} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
-      <strong>{row.id}</strong> <span style={{ color: "#555", fontSize: 14 }}>AI recommendation: {row.recommendation}</span>
+      <strong>{row.id}</strong> <ReadBadge value={row.recommendation} />
       <textarea
         aria-label={`Reply to the buyer for ${row.id}`}
         value={text}
