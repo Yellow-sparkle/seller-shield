@@ -56,3 +56,10 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - Note on the receipt: "Credit has been processed and claim is now closed. Please refer Dispute ID PP-R-JGU-10196814."
 - The seller-side refund ID (37L47556W72439357) and the buyer-side ID (33W35855HM198123K) are different IDs for the same refund.
 - The buyer receipt says the claim is closed, but the API read at 11:53 CET still said UNDER_REVIEW. Re-read the case to see whether the status has updated.
+
+## Final read (11:54 UTC, update_time)
+- status: RESOLVED. dispute_state: RESOLVED. dispute_outcome: RESOLVED_BUYER_FAVOUR, reason SELLER_ISSUED_REFUND, amount_refunded 15.00 EUR.
+- The status moved from UNDER_REVIEW (11:53) to RESOLVED (11:54), after the buyer receipt showed the claim as closed.
+- money_movements unchanged: seller DEBIT 15.00 and 0.86 settlement fee; buyer CREDIT 15.00.
+- fund_movements: the 14.14 HOLD_PLACED entry is still listed. No hold-release entry appears.
+- Seller balance reported by Kate: "4810" (unit still to confirm: 48,10 EUR or 4.810 EUR).
