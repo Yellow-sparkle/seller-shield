@@ -46,17 +46,25 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
   const answer: SellerAnswer = { ...(sellerAnswers[id] ?? {}), ...override };
   const underReview = c.status === "UNDER_REVIEW" && answer.hasTracking === true;
   const nextStep = c.lifeCycleStage === "CHARGEBACK"
-    ? "Card-issuer chargeback: the bank decides. A refund within 20 hours of a pre-chargeback alert avoids the chargeback fee (PayPal, disputes overview)."
+    ? "The card issuer decides. A refund within 20 hours of a pre-chargeback alert avoids the chargeback fee."
     : underReview
-    ? "Under PayPal review. Guidance by tracking: delivered means do not refund; not delivered means refund outside the dispute (PayPal may still hold the funds, not confirmed)."
+    ? "Wait for PayPal's decision. Do not refund while it is under review."
     : !e.canRespond && e.reason === "NO_DUE_DATE"
       ? "No response due date in our data. Check the deadline in PayPal before acting."
-      : inrWaitNote(c, answer, now) ?? "-";
+      : !e.canRespond
+        ? "Refund the buyer if you accept the claim. PayPal decides the rest."
+        : answer.hasTracking === false
+          ? "Add tracking, then reply before the due date."
+          : answer.hasTracking === true
+            ? "Send the tracking and proof of delivery as evidence before the due date."
+            : inrWaitNote(c, answer, now) ?? "-";
   const forced = e.canRespond ? forcedRecommendation(c, answer, now) : "YOUR_CALL";
   if (forced) {
+    const verdict = forced === "FIGHT" ? "The evidence on file supports your side." : forced === "REFUND" ? "The evidence on file supports the buyer." : "The evidence on file does not settle it. You decide.";
+    const tracking = answer.hasTracking === true ? "A tracking number is on the order." : answer.hasTracking === false ? "No tracking number is on the order." : "";
     return {
       recommendation: `${forced} (${forced === "YOUR_CALL" ? "low" : "high"} confidence, rule)`,
-      reasons: "Set by a deterministic rule (lib/proof.ts).",
+      reasons: [tracking, verdict].filter(Boolean).join(" "),
       nextStep,
     };
   }
@@ -136,6 +144,13 @@ function ReadBadge({ value }: { value: string }) {
   );
 }
 
+function ProtectionBadge({ value }: { value: string }) {
+  const tone = value.startsWith("Eligible") ? { color: "#1d6b3f", bg: "#e3f4ea" } : value.startsWith("Not") ? { color: "#a3231b", bg: "#fbe4e2" } : { color: "#4a5568", bg: "#edf1f6" };
+  // Long explanations stay in the tooltip; the badge shows the short label.
+  const short = value.startsWith("Not covered") ? "Not covered" : value;
+  return <span title={value} style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, background: tone.bg, color: tone.color, fontWeight: 600, fontSize: 13, whiteSpace: "nowrap" }}>{short}</span>;
+}
+
 const columns: ColDef<Row>[] = [
   { field: "id", headerName: "Dispute", flex: 2, minWidth: 190 },
   { field: "reason", headerName: "Reason", flex: 1 },
@@ -145,7 +160,7 @@ const columns: ColDef<Row>[] = [
   { field: "deadline", headerName: "Respond by", flex: 1 },
   { field: "decideBy", headerName: "Decide by", flex: 2 },
   { field: "daysLeft", headerName: "Days left", flex: 1 },
-  { field: "protection", headerName: "Seller protection", flex: 1 },
+  { field: "protection", headerName: "Seller protection", flex: 1, cellRenderer: (p: { value: string }) => <ProtectionBadge value={p.value} /> },
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
   { field: "recommendation", headerName: CASE_READ_LABEL, flex: 2, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
   { field: "reasons", headerName: "Why (cited facts)", flex: 4, minWidth: 320, wrapText: true, autoHeight: true },
@@ -154,11 +169,12 @@ const columns: ColDef<Row>[] = [
     field: "cause",
     headerName: "Address mismatch cause",
     flex: 1.5,
+    valueFormatter: (p) => (p.value === "seller" ? "Seller" : p.value === "buyer" ? "Buyer" : "Not added yet"),
     editable: true,
     cellEditor: "agSelectCellEditor",
     cellEditorParams: { values: ["unknown", "seller", "buyer"] },
   },
-  { field: "evidence", headerName: "Cause evidence", flex: 2, editable: true },
+  { field: "evidence", headerName: "Cause evidence", flex: 2, editable: true, valueFormatter: (p) => (p.value ? String(p.value) : "Not added yet") },
   {
     field: "decision",
     headerName: "Seller decision",
@@ -199,7 +215,6 @@ function EvidenceChecklist({ rows }: { rows: Row[] }) {
   return (
     <section style={{ marginTop: 24 }}>
       <h2 style={{ fontSize: 18, marginBottom: 4 }}>Documents</h2>
-      <p style={{ marginTop: 0, color: "#555", fontSize: 14 }}>Tick what you have attached in PayPal. Files from the buyer appear here once PayPal returns them.</p>
       {rows.map((r) => {
         const boxes = checked[r.id] ?? EVIDENCE_ITEMS.map(() => false);
         return (
@@ -302,7 +317,7 @@ function DraftCard({ row, initial }: { row: Row; initial: string }) {
         </button>
         {copied && <span style={{ color: "#555", fontSize: 14 }}>Copied.</span>}
       </div>
-      {!row.canRespond && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>PayPal doesn&apos;t accept a reply on this case now. {row.status}</p>}
+      {!row.canRespond && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>Replies are closed in PayPal for this case.</p>}
       {pending && (
         <div role="dialog" aria-label="Approve before sending" style={{ marginTop: 8, padding: 10, borderRadius: 6, background: "#fff4d6", border: "1px solid #e8c56b" }}>
           <p style={{ margin: "0 0 6px" }}>
