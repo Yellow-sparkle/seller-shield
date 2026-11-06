@@ -12,10 +12,14 @@ if (!process.env.ANTHROPIC_API_KEY) {
 }
 
 const record = process.argv.includes("--record");
+// --only PP-R-... runs one dispute and merges it into the saved file, so the others keep their recorded answers.
+const onlyIdx = process.argv.indexOf("--only");
+const only = onlyIdx > -1 ? process.argv[onlyIdx + 1] : undefined;
 const saved: Record<string, unknown> = {};
 
 for (const raw of fixtures as object[]) {
   const c = toCase(raw as never);
+  if (only && c.disputeId !== only) continue;
   const e = responseEligibility(c);
   console.log(`\n=== ${c.disputeId} | ${c.reason} | ${c.amount?.value} ${c.amount?.currency}`);
   const r = await recommend(c, e, sellerAnswers[c.disputeId] ?? {});
@@ -27,7 +31,9 @@ for (const raw of fixtures as object[]) {
 }
 
 if (record) {
-  const { writeFileSync } = await import("node:fs");
-  writeFileSync("lib/recorded/recommendations.json", JSON.stringify(saved, null, 2) + "\n");
+  const { writeFileSync, readFileSync } = await import("node:fs");
+  const path = "lib/recorded/recommendations.json";
+  const existing = only ? JSON.parse(readFileSync(path, "utf8")) : {};
+  writeFileSync(path, JSON.stringify({ ...existing, ...saved }, null, 2) + "\n");
   console.log("\nSaved to lib/recorded/recommendations.json");
 }
