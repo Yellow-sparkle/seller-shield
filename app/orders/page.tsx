@@ -64,8 +64,8 @@ export default function OrdersPage() {
     setStatus("Sending to PayPal sandbox...");
     try {
       const res = await fetch("/api/tracking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lines }) });
-      const data = (await res.json()) as { ok: boolean; status?: number; error?: string };
-      setStatus(data.ok ? `PayPal sandbox accepted ${lines.length} tracking update(s) (HTTP ${data.status}).` : `Not sent: ${data.error ?? `PayPal returned HTTP ${data.status}`}`);
+      const data = (await res.json()) as { ok: boolean; status?: number; error?: string; body?: string };
+      setStatus(data.ok ? `PayPal sandbox replied HTTP ${data.status}. Sent ${lines.length} update(s). Response: ${data.body ?? "(empty)"}` : `Not sent: ${data.error ?? `PayPal returned HTTP ${data.status}: ${data.body ?? ""}`}`);
     } catch {
       setStatus("Not sent: the request to the server failed.");
     }
