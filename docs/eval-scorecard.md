@@ -31,7 +31,7 @@ Status key: **Pass** meets the target. **Near** is within 10% of the target. **B
 | Style | 100% | Cases judged free of outcome predictions | 19 / 19 (100%) | Pass |
 | Style | 0% | Claims that predict PayPal's decision (3 sandbox cases, regex) | 0 / 18 (0%) | Pass |
 | Style | 100% | Claims citing at least one case fact (3 sandbox cases) | 18 / 18 (100%) | Pass |
-| Code checks | 100% | Unit tests passing | 125 / 125 (100%) | Pass |
+| Code checks | 100% | Unit tests passing | 137 / 137 (100%) | Pass |
 
 ## By dispute reason (golden set)
 
