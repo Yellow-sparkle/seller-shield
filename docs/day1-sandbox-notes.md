@@ -68,3 +68,8 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - Kate's sandbox balance now: 4.810,00 EUR. Balance before the refund: not recorded.
 - Dashboard does not show the 0,86 EUR settlement fee. The API does (DISPUTE_SETTLEMENT_FEE).
 - Net per API: −15,00 refund and −0,86 fee to the seller.
+
+## Open items, updated (6 Nov 2026, 12:03 CET)
+1. Item-not-received reason check: answered. The API accepts MERCHANDISE_OR_SERVICE_NOT_RECEIVED, and the case uses it.
+2. Due-date time zone: the API gives 2026-11-26T11:34:32.869Z. The buyer's message shows 11:34:32 CET in the UI, and its API timestamp is 11:34:32.869Z. So the UI is showing UTC but labelling it CET. Treat the deadline as 26 Nov 2026, 11:34 UTC (12:34 CET). Confirm in the seller UI before relying on it.
+3. Hold release: still open. fund_movements still list the 14.14 EUR HOLD_PLACED debit, and no release line is shown. Confirm by checking the seller balance's on-hold amount in the dashboard.
