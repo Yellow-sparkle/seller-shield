@@ -19,13 +19,12 @@ export default function ScanPage() {
   return (
     <main style={{ padding: 16, width: "100%", maxWidth: 900, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22 }}>Health scan</h1>
-      <p style={{ color: "#4a5568", fontSize: 14, margin: "4px 0 12px" }}>Sandbox. Read-only.{result ? ` As of ${new Date(result.asOf).toLocaleString()}.` : " Loading..."}</p>
+      <p style={{ color: "#4a5568", fontSize: 13, margin: "0 0 16px" }}>{result ? `Read ${new Date(result.asOf).toLocaleString()}` : "Reading PayPal..."}</p>
 
       {result && !result.ok && <p role="alert">Could not read PayPal: {result.error}</p>}
 
       {result?.ok && result.health && (
         <>
-          <p style={{ fontSize: 15, color: "#1f2a37", lineHeight: 1.5, maxWidth: 760 }}>{result.health.copy}</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             <Card title="Money at risk" value={`${result.health.moneyAtRisk.currency} ${result.health.moneyAtRisk.amount.toFixed(2)}`} detail={`${result.health.moneyAtRisk.count} open disputes`} href="/cases" action="Open the dispute cases" />
             <Card

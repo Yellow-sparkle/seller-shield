@@ -115,7 +115,7 @@ const columns: ColDef<Row>[] = [
   { field: "id", headerName: "Dispute", flex: 2, minWidth: 190, pinned: "left" },
   { field: "reason", headerName: "Reason", flex: 1 },
   { field: "amount", headerName: "Amount", flex: 1 },
-  { field: "hold", headerName: "Held", flex: 2 },
+  { field: "hold", headerName: "Held (net of fees)", flex: 2 },
   { field: "deadline", headerName: "Respond by", flex: 1 },
   { field: "decideBy", headerName: "Decide by", flex: 2 },
   { field: "daysLeft", headerName: "Days left", flex: 1 },
@@ -212,9 +212,6 @@ function ReplyDrafts({ rows }: { rows: Row[] }) {
   return (
     <section style={{ marginTop: 24 }}>
       <h2 style={{ fontSize: 18, marginBottom: 4 }}>Reply and act</h2>
-      <p style={{ marginTop: 0, color: "#555", fontSize: 14 }}>
-        Read and edit each draft. Nothing goes to PayPal until you approve it here, and every send goes to the PayPal sandbox.
-      </p>
       {cases.map((r) => {
         const draft = templateReply({ recommendation: r.recommendation, amount: r.amount, orderRef: r.id });
         return <DraftCard key={r.id} row={r} initial={draft.draft} />;
@@ -356,7 +353,6 @@ export default function CaseScreen() {
     <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22, marginBottom: 4 }}>Dispute cases</h1>
       {focusId && rows.length > 0 && !rows.some((r) => r.id === focusId) && <p role="status">Case {focusId} is not in the sandbox data.</p>}
-      <p style={{ marginTop: 0, color: "#555" }}>Sandbox data, EUR. Held amounts are net of PayPal fees. AI recommendations are recorded from a live Claude run; the seller decides.</p>
       <div>
         <AgGridReact<Row>
           key={focusId ?? "none"}
@@ -377,9 +373,6 @@ export default function CaseScreen() {
       </div>
       <EvidenceChecklist rows={rows} />
       <ReplyDrafts rows={rows} />
-      <p style={{ color: "#555", fontSize: 14 }}>
-        The seller decision column is saved in this browser only. PayPal is only changed by the Approve buttons above.
-      </p>
     </main>
   );
 }
