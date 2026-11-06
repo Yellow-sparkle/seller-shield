@@ -152,7 +152,7 @@ function readStyle(value: string): { label: string; color: string; bg: string } 
 function ReadBadge({ value }: { value: string }) {
   const s = readStyle(value);
   return (
-    <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, background: s.bg, color: s.color, fontWeight: 600, fontSize: 13, whiteSpace: "nowrap" }}>
+    <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, background: s.bg, color: s.color, fontWeight: 600, fontSize: 13 }}>
       {s.label}
     </span>
   );
