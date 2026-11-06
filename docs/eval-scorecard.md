@@ -12,7 +12,7 @@
 
 Below KPI: Not as described, 75% on the judge check (one case added evidence examples that are not in the facts).
 
-## Detail
+## Run history and detail
 
 Only measured results are shown. The summary uses the latest live run on 6 Nov 2026, with the golden and judge checks run on the same code (recommender: Claude Opus 5.5, judge: Claude Sonnet 5.5).
 
