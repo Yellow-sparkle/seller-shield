@@ -419,6 +419,7 @@ export default function CaseScreen() {
       <h1 style={{ fontSize: 22, marginBottom: 4 }}>Dispute cases</h1>
       {focusId && rows.length > 0 && !rows.some((r) => r.id === focusId) && <p role="status">Case {focusId} is not in the sandbox data.</p>}
       <div role="group" aria-label="Filter cases" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", margin: "12px 0" }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "#003087", marginRight: 4 }}>Filter cases:</span>
         {FILTERS.map((f) => (
           <button key={f.id} onClick={() => toggleChip(f.id)} aria-pressed={chips.includes(f.id)} style={{ padding: "5px 12px", borderRadius: 999, border: chips.includes(f.id) ? "1px solid #003087" : "1px solid #b8c7da", background: chips.includes(f.id) ? "#003087" : "#eef3f9", color: chips.includes(f.id) ? "#ffffff" : "#003087", fontSize: 13, fontWeight: 500 }}>
             {f.label}
