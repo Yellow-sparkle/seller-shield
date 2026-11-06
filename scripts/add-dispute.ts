@@ -41,4 +41,5 @@ const fixture = toFixture(body);
 const list = JSON.parse(readFileSync(FILE, "utf8")) as Record<string, unknown>[];
 writeFileSync(FILE, JSON.stringify(upsertFixture(list, fixture), null, 2) + "\n");
 console.log(`Saved ${id}: ${fixture.reason}, ${fixture.status}, stage ${fixture.dispute_life_cycle_stage}, due ${fixture.seller_response_due_date}`);
+console.log(`Seller transaction ID: ${(fixture.disputed_transactions as { seller_transaction_id?: string }[])[0]?.seller_transaction_id ?? "not in PayPal's reply"}`);
 console.log(`The file now has ${upsertFixture(list, fixture).length} disputes.`);
