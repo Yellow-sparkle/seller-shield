@@ -190,27 +190,53 @@ export default function OrdersPage() {
       {review && plan && (
         <section ref={reviewRef} style={{ marginBottom: 16, padding: 16, background: "#ffffff", border: "1px solid #d6dee8", borderTop: "4px solid #0070ba", borderRadius: 8 }}>
           <h2 style={{ fontSize: 18, marginTop: 0 }}>Review before sending</h2>
-          <p style={{ color: "#4a5568", marginTop: 0 }}>Enter a carrier and tracking number for each sandbox order. Nothing is sent until you confirm.</p>
-          {review.map((no) => {
-            const o = all.find((x) => x.orderNo === no);
-            const entry = entries[no] ?? { carrier: "", tracking: "" };
-            return (
-              <div key={no} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "8px 0", borderTop: "1px solid #eef1f5" }}>
-                <span style={{ minWidth: 200, fontVariantNumeric: "tabular-nums" }}>{no}{o?.source === "demo" ? " (Demo data)" : ""}</span>
-                <select aria-label={`Carrier for ${no}`} value={entry.carrier} onChange={(e) => setEntry(no, { carrier: e.target.value })} style={{ padding: "6px 8px" }}>
-                  <option value="">Choose carrier</option>
-                  {CARRIER_OPTIONS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                <input aria-label={`Tracking number for ${no}`} value={entry.tracking} onChange={(e) => setEntry(no, { tracking: e.target.value })} placeholder="Tracking number" style={{ padding: "6px 8px", minWidth: 180 }} />
-                {rowStatus[no] && <span role="status" style={{ fontWeight: 600, color: rowStatus[no] === "Tracking added" ? "#1d6b3f" : "#a3231b" }}>{rowStatus[no]}</span>}
-              </div>
-            );
-          })}
-          {plan.skipped.length > 0 && <p style={{ color: "#7a4b00" }}>Not sent: {plan.skipped.map((s) => `${s.orderNo} (${s.reason})`).join("; ")}</p>}
-          <p><strong>Will send ({plan.lines.length}):</strong> {plan.lines.map((l) => `${l.orderNo} to ${l.carrier} ${l.tracking}`).join("; ") || "nothing yet"}</p>
-          <div style={{ display: "flex", gap: 8 }}>
+          <p style={{ color: "#4a5568", marginTop: 0 }}>Choose a carrier and enter a tracking number for each order. Nothing is sent to PayPal until you press Confirm and send.</p>
+          <div role="table" aria-label="Tracking to send" style={{ border: "1px solid #d6dee8", borderRadius: 8, overflow: "hidden" }}>
+            <div role="row" style={{ display: "grid", gridTemplateColumns: "minmax(170px,1.3fr) minmax(130px,0.8fr) minmax(170px,1fr) minmax(150px,1fr)", gap: 12, padding: "8px 12px", background: "#eaf1fb", color: "#003087", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <span role="columnheader">Order</span>
+              <span role="columnheader">Carrier</span>
+              <span role="columnheader">Tracking number</span>
+              <span role="columnheader">Result</span>
+            </div>
+            {review.map((no) => {
+              const o = all.find((x) => x.orderNo === no);
+              const entry = entries[no] ?? { carrier: "", tracking: "" };
+              const result = rowStatus[no];
+              return (
+                <div role="row" key={no} style={{ display: "grid", gridTemplateColumns: "minmax(170px,1.3fr) minmax(130px,0.8fr) minmax(170px,1fr) minmax(150px,1fr)", gap: 12, alignItems: "center", padding: "10px 12px", borderTop: "1px solid #eef1f5", background: "#ffffff" }}>
+                  <span role="cell" style={{ fontVariantNumeric: "tabular-nums", overflowWrap: "anywhere" }}>
+                    {no}
+                    {o?.source === "demo" && <span style={{ display: "block", fontSize: 12, color: "#4a5568" }}>Demo data, not sent</span>}
+                  </span>
+                  <span role="cell">
+                    <select aria-label={`Carrier for ${no}`} value={entry.carrier} onChange={(e) => setEntry(no, { carrier: e.target.value })} style={{ width: "100%", padding: "6px 8px" }}>
+                      <option value="">Choose carrier</option>
+                      {CARRIER_OPTIONS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </span>
+                  <span role="cell">
+                    <input aria-label={`Tracking number for ${no}`} value={entry.tracking} onChange={(e) => setEntry(no, { tracking: e.target.value })} placeholder="Tracking number" style={{ width: "100%", padding: "6px 8px" }} />
+                  </span>
+                  <span role="cell">
+                    {result ? (
+                      <span role="status" style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, fontSize: 13, fontWeight: 600, background: result === "Tracking added" ? "#e3f3ea" : "#fbe6e4", color: result === "Tracking added" ? "#1d6b3f" : "#a3231b" }}>{result}</span>
+                    ) : (
+                      <span style={{ color: "#8a94a6", fontSize: 13 }}>Not sent yet</span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {plan.skipped.length > 0 && (
+            <p style={{ margin: "12px 0 0", padding: "8px 12px", borderRadius: 6, background: "#fdf1d8", color: "#7a4b00", fontSize: 14 }}>
+              Not yet ready: {plan.skipped.map((s) => `${s.orderNo} (${s.reason.toLowerCase()})`).join("; ")}
+            </p>
+          )}
+          <p style={{ margin: "12px 0", fontSize: 14 }}><strong>Will send ({plan.lines.length}):</strong> {plan.lines.map((l) => `${l.orderNo} via ${l.carrier}, ${l.tracking}`).join("; ") || "nothing yet"}</p>
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
             <button disabled={plan.lines.length === 0} onClick={() => confirmSend(plan.lines)} style={{ padding: "8px 14px", background: "#0070ba", color: "#ffffff", border: "none", fontWeight: 600 }}>Confirm and send</button>
             <button onClick={() => { setReview(null); setStatus(null); }} style={{ padding: "8px 14px" }}>Close review</button>
           </div>
