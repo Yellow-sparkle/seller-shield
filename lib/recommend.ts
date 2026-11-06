@@ -24,6 +24,10 @@ export function factsFor(c: Case, e: Eligibility, answer: SellerAnswer = {}): Re
     delivered: answer.delivered ?? null,
     deliveryDate: answer.deliveryDate ?? null,
     deliveredToTransactionAddress: answer.deliveredToTransactionAddress ?? null,
+    // Unauthorised shipment proof (case 3): without these the model can't see the 2-day proof.
+    noticeDate: answer.noticeDate ?? null,
+    shipmentDate: answer.shipmentDate ?? null,
+    shippedToTransactionAddress: answer.shippedToTransactionAddress ?? null,
     reason: c.reason,
     status: c.status,
     amount: c.amount,

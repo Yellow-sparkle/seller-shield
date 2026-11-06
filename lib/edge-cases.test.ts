@@ -115,3 +115,11 @@ test("prompt gives the net-of-fees note and seller answers as facts", () => {
   assert.equal(f.matchesListing, false);
   assert.equal(f.evidenceTypeNeeded, "OTHER");
 });
+
+test("unauthorised shipment proof reaches the model as facts", () => {
+  const c = toCase({ dispute_id: "X", reason: "UNAUTHORISED" });
+  const f = factsFor(c, { canRespond: true, daysLeft: 3 }, { hasTracking: true, noticeDate: "2026-11-01", shipmentDate: "2026-11-02", shippedToTransactionAddress: true });
+  assert.equal(f.noticeDate, "2026-11-01");
+  assert.equal(f.shipmentDate, "2026-11-02");
+  assert.equal(f.shippedToTransactionAddress, true);
+});
