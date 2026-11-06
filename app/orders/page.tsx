@@ -1,9 +1,9 @@
 "use client";
-// Tracking fixer (PRD F2). AG Grid Community only. "Review" builds the list. Only the confirm button sends,
+// Add tracking (PRD F2). AG Grid Community only. "Review" builds the list. Only the confirm button sends,
 // to the PayPal sandbox, through /api/tracking.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type ICellRendererParams, type RowSelectionOptions } from "ag-grid-community";
+import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type GridApi, type ICellRendererParams, type RowSelectionOptions } from "ag-grid-community";
 import { allOrders } from "@/lib/orders-seed";
 import { caseLink, chipsFromQuery, filterOrders, gridSummary, isSelectable, planBulk, protectionLabel, type BulkLine, type FilterChip, type GridSummary, type Order } from "@/lib/orders";
 
@@ -127,6 +127,17 @@ export default function OrdersPage() {
   // The pinned summary row carries the totals for the rows shown. Its cells render them instead of an order.
   // The totals for the rows shown, as a strip above the grid.
 
+  // Selects the filtered sandbox rows in the grid itself, so the grid's ticks match the count.
+  const apiRef = useRef<GridApi<Order> | null>(null);
+  const selectAllFiltered = () => {
+    const api = apiRef.current;
+    if (!api) return;
+    api.deselectAll();
+    api.forEachNodeAfterFilter((node) => {
+      if (node.data && isSelectable(node.data)) node.setSelected(true);
+    });
+  };
+
   const toggle = (id: FilterChip) => setChips((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
   const plan = review ? planBulk(selected.filter((o) => review.includes(o.orderNo)), entries) : null;
@@ -153,13 +164,13 @@ export default function OrdersPage() {
 
   return (
     <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: 22 }}>Tracking fixer</h1>
+      <h1 style={{ fontSize: 22 }}>Add tracking to orders</h1>
       <p style={{ color: "#555" }}>All PayPal calls on this screen go to the sandbox. Demo rows can&apos;t be selected for sending. The top row totals the orders shown.</p>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0" }}>
         {CHIPS.map((c) => (
-          <button key={c.id} onClick={() => toggle(c.id)} aria-pressed={chips.includes(c.id)} style={{ padding: "6px 12px", borderRadius: 16, border: "1px solid #999", background: chips.includes(c.id) ? "#222" : "#fff", color: chips.includes(c.id) ? "#fff" : "#222" }}>
-            {c.label}
+          <button key={c.id} onClick={() => toggle(c.id)} aria-pressed={chips.includes(c.id)} style={{ padding: "5px 12px", borderRadius: 999, border: chips.includes(c.id) ? "1px solid #003087" : "1px solid #b8c7da", background: chips.includes(c.id) ? "#003087" : "#eef3f9", color: chips.includes(c.id) ? "#ffffff" : "#003087", fontSize: 13, fontWeight: 500 }}>
+            {chips.includes(c.id) ? "✓ " : ""}{c.label}
           </button>
         ))}
         <input value={quick} onChange={(e) => setQuick(e.target.value)} placeholder="Quick filter" aria-label="Quick filter" style={{ padding: "6px 10px", minWidth: 200 }} />
@@ -167,8 +178,8 @@ export default function OrdersPage() {
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
         <span>{visible.length} orders shown, {selected.length} selected</span>
-        <button onClick={() => setSelected(visible.filter(isSelectable))} style={{ padding: "6px 10px" }}>Select all filtered</button>
-        <button disabled={selected.length === 0} onClick={() => setReview(selected.map((o) => o.orderNo))} style={{ padding: "6px 10px" }}>Review tracking to send</button>
+        <button onClick={selectAllFiltered} style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid #0070ba", background: "#ffffff", color: "#0070ba", fontWeight: 600 }}>Select all filtered</button>
+        <button disabled={selected.length === 0} onClick={() => setReview(selected.map((o) => o.orderNo))} style={{ padding: "7px 14px", borderRadius: 6, border: "none", background: "#0070ba", color: "#ffffff", fontWeight: 600 }}>Review tracking to send</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
@@ -188,8 +199,9 @@ export default function OrdersPage() {
       </div>
 
       {review && plan && (
-        <section ref={reviewRef} style={{ marginBottom: 16, padding: 16, background: "#ffffff", border: "1px solid #d6dee8", borderTop: "4px solid #0070ba", borderRadius: 8 }}>
-          <h2 style={{ fontSize: 18, marginTop: 0 }}>Review before sending</h2>
+        <section ref={reviewRef} style={{ marginBottom: 16, padding: 16, background: "#e7f1fb", border: "2px solid #0070ba", borderRadius: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#0070ba", textTransform: "uppercase", letterSpacing: "0.06em" }}>Step 2 of 2</div>
+          <h2 style={{ fontSize: 18, marginTop: 2 }}>Review before sending</h2>
           <p style={{ color: "#4a5568", marginTop: 0 }}>Choose a carrier and enter a tracking number for each order. Nothing is sent to PayPal until you press Confirm and send.</p>
           <div role="table" aria-label="Tracking to send" style={{ border: "1px solid #d6dee8", borderRadius: 8, overflow: "hidden" }}>
             <div role="row" style={{ display: "grid", gridTemplateColumns: "minmax(170px,1.3fr) minmax(130px,0.8fr) minmax(170px,1fr) minmax(150px,1fr)", gap: 12, padding: "8px 12px", background: "#eaf1fb", color: "#003087", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
@@ -251,6 +263,7 @@ export default function OrdersPage() {
           columnDefs={columns}
           rowSelection={rowSelection}
           getRowId={(p) => p.data.orderNo}
+          onGridReady={(e) => { apiRef.current = e.api; }}
           onSelectionChanged={(e) => setSelected(e.api.getSelectedRows())}
           defaultColDef={{ sortable: true, filter: true, resizable: true, minWidth: 130, flex: 1 }}
         />
