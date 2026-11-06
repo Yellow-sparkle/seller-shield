@@ -10,7 +10,7 @@ Built for the PayPal AI Hackathon. PayPal sandbox only: EUR, no real buyers or m
 |---|---|---|---|
 | Health scan (home) | `/` | Three cards: money at risk, sandbox orders missing tracking, next reply deadline. Each card opens the rows behind its number. Shows the time it was read, and an error instead of zero if PayPal can't be reached. | Disputes are read live from the PayPal sandbox. Tracking state comes from the order data in the repo. |
 | Tracking fixer | `/orders` | AG Grid of 203 orders with filters (missing tracking, held, not protected, has dispute, sandbox only), quick filter, status pills, a pinned totals row, a "View case" button on disputed orders, row selection and a review step. "Confirm and send" adds tracking in PayPal, and each row shows PayPal's result. | 3 real sandbox orders, plus 200 seeded orders labelled "Demo data" that can't be sent. Sends to the PayPal sandbox only. |
-| Dispute cases | `/cases` | Each dispute with amount, held funds, deadline, seller protection, the AI recommendation with its reasons, an evidence checklist, and a reply draft to copy. | Disputes from `lib/fixtures/sandbox-disputes.json` (copied from PayPal sandbox responses). Recommendations from a recorded live Claude run. Reply drafts come from fixed templates, and nothing is sent. |
+| Dispute cases | `/cases` | Each dispute with amount, held funds, deadline, seller protection, the AI recommendation with its reasons, an evidence checklist, and a reply draft. After the seller approves, the app sends the reply to the buyer or accepts the claim with a refund through PayPal's Disputes API. | Disputes from `lib/fixtures/sandbox-disputes.json` (copied from PayPal sandbox responses). Recommendations from a recorded live Claude run. Reply drafts come from fixed templates. Sends go to the PayPal sandbox only, and only for cases PayPal still accepts a response on. |
 
 How the recommendation works: deterministic rules (`lib/proof.ts`, `lib/rules.ts`) decide eligibility and force an answer where the rules are clear. Otherwise one Claude call returns FIGHT, REFUND or YOUR_CALL, with reasons that cite the case facts they rely on. Reasons without a cited fact, or that predict PayPal's decision, are removed. Low confidence always becomes YOUR_CALL.
 
@@ -52,6 +52,18 @@ Never commit `.env.local`. Files starting with `.env` are listed in `.gitignore`
 node --experimental-strip-types --test lib/*.test.ts
 ```
 
+## Add a new sandbox dispute to the case screen
+
+Open a case as the sandbox buyer (Resolution Center, "Item not received"), then:
+
+```bash
+# Reads the dispute from PayPal (read-only) and adds it to lib/fixtures/sandbox-disputes.json
+node --env-file=.env.local --experimental-strip-types scripts/add-dispute.ts PP-R-XXX-12345678
+
+# Records Claude's recommendation for it, so the case screen shows it
+node --env-file=.env.local --experimental-strip-types scripts/live-check.ts --record
+```
+
 ## Run the AI checks
 
 These call Claude and cost a few cents per case. They need `ANTHROPIC_API_KEY` in `.env.local`.
@@ -73,7 +85,7 @@ How we evaluate the AI: [docs/evaluation.md](docs/evaluation.md). Results: [docs
 
 These are in the product plan but not in this version:
 
-- Sending a reply or evidence to PayPal's Disputes API from the case screen, and attaching files. Replies are copy-only today.
+- Sending evidence files to PayPal's Disputes API. The app sends messages and refunds, not files.
 - Reading tracking status back from PayPal for the health scan.
 
 ## Stack

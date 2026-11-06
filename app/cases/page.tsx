@@ -25,6 +25,7 @@ type Row = {
   protection: string;
   decideBy: string;
   status: string;
+  canRespond: boolean;
   recommendation: string;
   reasons: string;
   nextStep: string;
@@ -95,6 +96,7 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
       if (d.state === "warn") return `Decide now, due ${d.date}`;
       return `Decide by ${d.date}`;
     })(),
+    canRespond: e.canRespond,
     status: e.canRespond
       ? "You can respond"
       : e.reason === "NO_DUE_DATE"
@@ -201,49 +203,106 @@ function EvidenceChecklist({ rows }: { rows: Row[] }) {
   );
 }
 
-// Reply drafts (PRD F3). A template for now, from case facts only. Nothing is sent by this app:
-// the seller copies the text into PayPal themselves, after reading and editing it.
+// Reply drafts and actions (PRD F3). The draft is a template from case facts. The seller edits it, then either
+// copies it or approves a send. Sends go through /api/dispute-action to the PayPal sandbox only, and only after
+// the seller presses an Approve button. Buttons are disabled when PayPal no longer accepts a response.
 function ReplyDrafts({ rows }: { rows: Row[] }) {
   const cases = rows.filter((r) => /^(FIGHT|REFUND|YOUR_CALL)/.test(r.recommendation));
   if (cases.length === 0) return null;
   return (
     <section style={{ marginTop: 24 }}>
-      <h2 style={{ fontSize: 18, marginBottom: 4 }}>Reply drafts</h2>
+      <h2 style={{ fontSize: 18, marginBottom: 4 }}>Reply and act</h2>
       <p style={{ marginTop: 0, color: "#555", fontSize: 14 }}>
-        Read and edit each draft, then copy it into PayPal yourself. This app doesn&apos;t send anything.
+        Read and edit each draft. Nothing goes to PayPal until you approve it here, and every send goes to the PayPal sandbox.
       </p>
       {cases.map((r) => {
         const draft = templateReply({ recommendation: r.recommendation, amount: r.amount, orderRef: r.id });
-        return (
-          <DraftCard key={r.id} id={r.id} initial={draft.draft} />
-        );
+        return <DraftCard key={r.id} row={r} initial={draft.draft} />;
       })}
     </section>
   );
 }
 
-function DraftCard({ id, initial }: { id: string; initial: string }) {
+type Pending = "message" | "refund" | null;
+type Outcome = { ok: boolean; text: string };
+
+function DraftCard({ row, initial }: { row: Row; initial: string }) {
   const [text, setText] = useState(initial);
   const [copied, setCopied] = useState(false);
+  const [pending, setPending] = useState<Pending>(null);
+  const [busy, setBusy] = useState(false);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const refundNote = `Full refund of ${row.amount} accepted by the seller.`;
+
+  const send = async (action: "message" | "refund") => {
+    setBusy(true);
+    setOutcome(null);
+    try {
+      const res = await fetch("/api/dispute-action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ disputeId: row.id, action, text: action === "message" ? text : refundNote }),
+      });
+      const data = (await res.json()) as { ok: boolean; error?: string; status?: number };
+      setOutcome(
+        data.ok
+          ? { ok: true, text: action === "message" ? `Sent to the buyer. PayPal sandbox replied HTTP ${data.status}.` : `Refund accepted. PayPal sandbox replied HTTP ${data.status}.` }
+          : { ok: false, text: `Not sent. ${data.error ?? "PayPal did not accept it."}` },
+      );
+    } catch {
+      setOutcome({ ok: false, text: "Not sent. The request to the server failed." });
+    } finally {
+      setBusy(false);
+      setPending(null);
+    }
+  };
+
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
-      <strong>{id}</strong>
+    <div id={`act-${row.id}`} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
+      <strong>{row.id}</strong> <span style={{ color: "#555", fontSize: 14 }}>AI recommendation: {row.recommendation}</span>
       <textarea
+        aria-label={`Reply to the buyer for ${row.id}`}
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={4}
+        maxLength={2000}
         style={{ display: "block", width: "100%", marginTop: 6, fontFamily: "inherit", fontSize: 14 }}
       />
-      <button
-        type="button"
-        onClick={() => {
-          navigator.clipboard?.writeText(text).then(() => setCopied(true), () => setCopied(false));
-        }}
-        style={{ marginTop: 6 }}
-      >
-        Copy (not sent)
-      </button>
-      {copied && <span style={{ marginLeft: 8, color: "#555", fontSize: 14 }}>Copied. Paste it into PayPal yourself.</span>}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6, alignItems: "center" }}>
+        <button type="button" onClick={() => navigator.clipboard?.writeText(text).then(() => setCopied(true), () => setCopied(false))}>
+          Copy
+        </button>
+        <button type="button" disabled={!row.canRespond || busy} onClick={() => setPending("message")}>
+          Send to buyer...
+        </button>
+        <button type="button" disabled={!row.canRespond || busy} onClick={() => setPending("refund")}>
+          Refund buyer...
+        </button>
+        {copied && <span style={{ color: "#555", fontSize: 14 }}>Copied.</span>}
+      </div>
+      {!row.canRespond && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>PayPal doesn&apos;t accept a reply on this case now. {row.status}</p>}
+      {pending && (
+        <div role="dialog" aria-label="Approve before sending" style={{ marginTop: 8, padding: 10, borderRadius: 6, background: "#fff4d6", border: "1px solid #e8c56b" }}>
+          <p style={{ margin: "0 0 6px" }}>
+            {pending === "message"
+              ? "Send the message above to the buyer through PayPal (sandbox)? The buyer will see it in the dispute."
+              : `Refund the buyer in full (${row.amount}) and close the dispute in PayPal (sandbox)? This can't be undone.`}
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" disabled={busy} onClick={() => send(pending)} style={{ fontWeight: 600 }}>
+              {busy ? "Sending..." : pending === "message" ? "Approve and send" : "Approve refund"}
+            </button>
+            <button type="button" disabled={busy} onClick={() => setPending(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      {outcome && (
+        <p role="status" style={{ marginTop: 6, fontWeight: 600, color: outcome.ok ? "#1d6b3f" : "#a3231b" }}>
+          {outcome.text}
+        </p>
+      )}
     </div>
   );
 }
@@ -319,7 +378,7 @@ export default function CaseScreen() {
       <EvidenceChecklist rows={rows} />
       <ReplyDrafts rows={rows} />
       <p style={{ color: "#555", fontSize: 14 }}>
-        The seller decision is saved in this browser session only. Nothing is sent to PayPal yet.
+        The seller decision column is saved in this browser only. PayPal is only changed by the Approve buttons above.
       </p>
     </main>
   );
