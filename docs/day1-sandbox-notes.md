@@ -80,3 +80,8 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - Refund to buyer: −15,00 EUR, fee 0,00 EUR.
 - Open: is the hold released? Check the on-hold amount on the balance page. If it reads 14,14 EUR, it's not released.
 - Open: the API showed a separate 0,86 EUR DISPUTE_SETTLEMENT_FEE at refund time, but the activity shows the fee was taken at payment. Confirm whether the fee is double-counted.
+
+## Fee question settled (transaction row 8W935552C2660182V)
+- Payment 06/11/2026 10:29: gross 15,00 EUR, fee 0,86 EUR, net 14,14 EUR. Status: Refunded.
+- The 0,86 EUR fee was taken at payment. The API's separate 0,86 EUR DISPUTE_SETTLEMENT_FEE line is most likely the same fee reported again, not an extra charge. Confirm with PayPal support if the API line needs to be trusted for the ledger.
+- Hold still open: the on-hold amount on the balance page is needed.
