@@ -50,3 +50,9 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - fund_movements: the 14.14 HOLD_PLACED debit from 11:37 is still listed. No hold-release entry is listed in this response.
 - Answer for the hold question: a refund settles from the seller balance (15.00 plus a 0.86 settlement fee). The response does not show a separate hold release. Check the seller balance in the dashboard to confirm the net amount.
 - Refund ID: 37L47556W72439357 at 11:52:27.307Z.
+
+## Buyer receipt (11:54 CET)
+- Refund of 15,00 EUR to the buyer's Visa. Buyer-side refund transaction ID: 33W35855HM198123K.
+- Note on the receipt: "Credit has been processed and claim is now closed. Please refer Dispute ID PP-R-JGU-10196814."
+- The seller-side refund ID (37L47556W72439357) and the buyer-side ID (33W35855HM198123K) are different IDs for the same refund.
+- The buyer receipt says the claim is closed, but the API read at 11:53 CET still said UNDER_REVIEW. Re-read the case to see whether the status has updated.
