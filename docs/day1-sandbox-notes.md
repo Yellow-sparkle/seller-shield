@@ -113,3 +113,11 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - transaction_status: REFUNDED. status: UNDER_REVIEW (PayPal review). Stage: INQUIRY.
 - money_movements: buyer CREDIT 45,00; seller DEBIT 45,00 (DISPUTE_SETTLEMENT); seller DEBIT 1,88 (DISPUTE_SETTLEMENT_FEE).
 - Same pattern as the other refunds: the case reads UNDER_REVIEW right after a refund. Check again for RESOLVED.
+
+## Refund read (PP-R-NVP-10196239, 12:32 CET)
+- Item: glazed stoneware vase, order #1063, 85,00 EUR. Reason: not as described (buyer says colour and size differ from listing).
+- Listing photo: Kate's listing used a stock image from the internet, not a photo of the item. Not used as evidence. Listing needs real photos (see chat).
+- Decision: full refund of 85,00 EUR, recommended and confirmed by Kate. Refund ID: 66429548WJ485611V.
+- transaction_status: REFUNDED. status: UNDER_REVIEW. Stage: INQUIRY.
+- money_movements: buyer CREDIT 85,00; seller DEBIT 85,00 (DISPUTE_SETTLEMENT); seller DEBIT 3,24 (DISPUTE_SETTLEMENT_FEE).
+- Open follow-up: replace the stock listing photo with real photos, and check other listings for stock images.
