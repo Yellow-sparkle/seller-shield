@@ -32,10 +32,13 @@ const out: Record<string, FeeRecord> = {};
 for (const d of disputes) {
   const txId = d.disputed_transactions?.[0]?.seller_transaction_id;
   if (!txId) continue;
-  // Transaction Search takes a date window of at most 31 days around the sale. Use 31 days before the dispute, to today.
-  const created = d.create_time ? new Date(d.create_time) : new Date();
-  const start = new Date(created.getTime() - 31 * 86400000).toISOString();
-  const end = new Date().toISOString();
+  // Transaction Search rejects a window longer than 31 days (HTTP 400). Start a day before the dispute opened,
+  // and end at the start plus 31 days or now, whichever is earlier.
+  const DAY = 86400000;
+  const created = d.create_time ? new Date(d.create_time).getTime() : Date.now();
+  const startMs = created - DAY;
+  const start = new Date(startMs).toISOString();
+  const end = new Date(Math.min(startMs + 31 * DAY, Date.now())).toISOString();
   const url = `${BASE}/v1/reporting/transactions?transaction_id=${encodeURIComponent(txId)}&start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}&fields=transaction_info`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   const body = (await res.json().catch(() => ({}))) as { transaction_details?: never[] };
