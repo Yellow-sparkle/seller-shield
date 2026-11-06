@@ -12,6 +12,8 @@ import { sellerAnswers, type SellerAnswer } from "../../lib/answers.ts";
 import { templateReply } from "../../lib/reply.ts";
 import fixtures from "../../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../../lib/recorded/recommendations.json" with { type: "json" };
+import feeFixtures from "../../lib/fixtures/sandbox-fees.json" with { type: "json" };
+import { feeLabel, type FeeRecord } from "../../lib/fees.ts";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -19,7 +21,8 @@ type Row = {
   id: string;
   reason: string;
   amount: string;
-  hold: string;
+  fee: string;
+  afterFees: string;
   deadline: string;
   daysLeft: number | null;
   protection: string;
@@ -83,9 +86,8 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     id: c.disputeId,
     reason: REASON_LABEL[c.reason] ?? c.reason,
     amount: c.amount ? `${c.amount.value.toFixed(2)} ${c.amount.currency}` : "-",
-    hold: c.holdAmount
-      ? `${Math.abs(c.holdAmount.value).toFixed(2)} ${c.holdAmount.currency} (net of PayPal fees)`
-      : "-",
+    fee: feeLabel((feeFixtures as Record<string, FeeRecord>)[c.disputeId], "fee"),
+    afterFees: feeLabel((feeFixtures as Record<string, FeeRecord>)[c.disputeId], "afterFees"),
     deadline: c.responseDueAt ? c.responseDueAt.slice(0, 10) : "-",
     daysLeft: daysUntilDue(c, now),
     protection: protectionLabel(c),
@@ -138,7 +140,8 @@ const columns: ColDef<Row>[] = [
   { field: "id", headerName: "Dispute", flex: 2, minWidth: 190 },
   { field: "reason", headerName: "Reason", flex: 1 },
   { field: "amount", headerName: "Amount", flex: 1 },
-  { field: "hold", headerName: "Held (net of fees)", flex: 2 },
+  { field: "fee", headerName: "PayPal fee", flex: 1 },
+  { field: "afterFees", headerName: "Amount after fees", flex: 1.5 },
   { field: "deadline", headerName: "Respond by", flex: 1 },
   { field: "decideBy", headerName: "Decide by", flex: 2 },
   { field: "daysLeft", headerName: "Days left", flex: 1 },
