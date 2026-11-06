@@ -63,3 +63,8 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - money_movements unchanged: seller DEBIT 15.00 and 0.86 settlement fee; buyer CREDIT 15.00.
 - fund_movements: the 14.14 HOLD_PLACED entry is still listed. No hold-release entry appears.
 - Seller balance reported by Kate: "4810" (unit still to confirm: 48,10 EUR or 4.810 EUR).
+
+## Balance check (open, closed as far as the sandbox allows)
+- Kate's sandbox balance now: 4.810,00 EUR. Balance before the refund: not recorded.
+- Dashboard does not show the 0,86 EUR settlement fee. The API does (DISPUTE_SETTLEMENT_FEE).
+- Net per API: −15,00 refund and −0,86 fee to the seller.
