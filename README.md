@@ -34,7 +34,7 @@ Open http://localhost:3000 for the case screen.
 node --experimental-strip-types --test lib/*.test.ts
 ```
 
-How we evaluate the AI (hallucination, grounding, golden set, style checks): see [docs/evaluation.md](docs/evaluation.md).
+How we evaluate the AI (hallucination, grounding, golden set, style checks): see [docs/evaluation.md](docs/evaluation.md). Results so far: [docs/eval-scorecard.md](docs/eval-scorecard.md).
 
 ## Run the live recommendation check
 
