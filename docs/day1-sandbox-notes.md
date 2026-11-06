@@ -38,3 +38,8 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - allowed_response_options: accept claim (REFUND or PARTIAL_REFUND), make offer (REFUND), provide evidence, send message, escalate.
 - Evidence requested from seller: PROOF_OF_FULFILLMENT.
 - Transaction IDs: buyer side 9L905240W4620471J, seller side 8W935552C2660182V. The same payment.
+
+## Outcome of the test case (6 Nov 2026, 11:52 CET)
+- Kate sent a full refund of 15.00 EUR from the seller side. Refund ID: 37L47556W72439357.
+- The buyer keeps the item. The case should now be closed.
+- Open for the next check: whether the 14.14 EUR hold is released after the refund, and the status and fund_movements that the API now reports for PP-R-JGU-10196814.
