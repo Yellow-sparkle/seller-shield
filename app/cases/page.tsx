@@ -392,8 +392,8 @@ function passesFilters(r: Row, chips: string[]): boolean {
 
 // Sample cause and evidence for the demo screens (see ?sample=1 above). Shown only in memory.
 const SAMPLE_OVERRIDES: Record<string, Override> = {
-  "PP-R-GJM-10196233": { addressMismatchCause: "buyer", causeEvidence: "Buyer message of 12 Oct asks for a new address" },
-  "PP-R-SRZ-10196872": { addressMismatchCause: "seller", causeEvidence: "Carrier scan shows delivery to the address the buyer gave" },
+  "PP-R-GJM-10196233": { addressMismatchCause: "buyer", causeEvidence: "Buyer asked to change the delivery address after the order was placed." },
+  "PP-R-SRZ-10196872": { addressMismatchCause: "seller", causeEvidence: "Carrier scan shows delivery to the address the buyer gave at checkout." },
 };
 
 export default function CaseScreen() {
