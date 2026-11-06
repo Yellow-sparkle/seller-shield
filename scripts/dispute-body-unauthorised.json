@@ -1,1 +1,1 @@
-{"reason":"UNAUTHORISED","disputed_transactions":[{"buyer_transaction_id":"7TJ202491T3326812"}],"dispute_amount":{"currency_code":"EUR","value":"20.00"}}
+{"reason":"UNAUTHORISED","disputed_transactions":[{"seller_transaction_id":"5WB72210GV378703P"}],"dispute_amount":{"currency_code":"EUR","value":"20.00"}}
