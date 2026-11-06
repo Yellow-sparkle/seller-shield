@@ -14,8 +14,20 @@ export type Tracker = {
   notify_buyer: boolean;
 };
 
-// Our carrier names are not PayPal carrier codes yet, so every row is sent as OTHER with the name.
-// Swap in exact PayPal codes from the Carriers reference before a live run.
+// PayPal carrier codes, checked against developer.paypal.com/track-orders/carriers (Nov 2026).
+// Only exact matches are mapped. Anything else is sent as OTHER with the name written out.
+const CARRIER_CODES: Record<string, string> = {
+  DHL: "DHL",
+  UPS: "UPS",
+  DPD: "DPD",
+};
+
+export function carrierCode(name: string): { carrier: string; carrier_name_other?: string } {
+  const code = CARRIER_CODES[name.trim().toUpperCase()];
+  if (code) return { carrier: code };
+  return { carrier: "OTHER", carrier_name_other: name.trim().slice(0, 64) };
+}
+
 export function buildTrackers(lines: BulkLine[]): { trackers: Tracker[] } {
   if (lines.length === 0) throw new Error("No tracking lines to send");
   if (lines.length > 20) throw new Error("PayPal accepts at most 20 trackers per request");
@@ -26,8 +38,7 @@ export function buildTrackers(lines: BulkLine[]): { trackers: Tracker[] } {
       transaction_id: l.orderNo,
       status: "SHIPPED",
       tracking_number: l.tracking,
-      carrier: "OTHER",
-      carrier_name_other: l.carrier.slice(0, 64),
+      ...carrierCode(l.carrier),
       notify_buyer: false,
     };
   });

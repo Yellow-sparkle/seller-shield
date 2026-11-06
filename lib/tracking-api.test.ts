@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildTrackers, TRACKERS_BATCH_PATH, SANDBOX_BASE } from "./tracking-api.ts";
+import { buildTrackers, carrierCode, TRACKERS_BATCH_PATH, SANDBOX_BASE } from "./tracking-api.ts";
+
+test("known carriers use PayPal codes, others use OTHER with the name", () => {
+  assert.deepEqual(carrierCode("UPS"), { carrier: "UPS" });
+  assert.deepEqual(carrierCode("dpd"), { carrier: "DPD" });
+  assert.deepEqual(carrierCode("PostNL"), { carrier: "OTHER", carrier_name_other: "PostNL" });
+});
 
 test("builds a batch body with the spec's required fields", () => {
   const body = buildTrackers([{ orderNo: "35W222794X4866508", carrier: "DHL", tracking: "JD0123" }]);
@@ -9,8 +15,7 @@ test("builds a batch body with the spec's required fields", () => {
       transaction_id: "35W222794X4866508",
       status: "SHIPPED",
       tracking_number: "JD0123",
-      carrier: "OTHER",
-      carrier_name_other: "DHL",
+      carrier: "DHL",
       notify_buyer: false,
     },
   ]);
