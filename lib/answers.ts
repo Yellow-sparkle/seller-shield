@@ -20,5 +20,5 @@ export type SellerAnswer = {
 export const sellerAnswers: Record<string, SellerAnswer> = {
   "PP-R-GJM-10196233": { hasTracking: false },
   "PP-R-FGC-10196238": { hasTracking: false },
-  "PP-R-NVP-10196239": { matchesListing: false },
+  "PP-R-NVP-10196239": { matchesListing: "partly" },
 };
