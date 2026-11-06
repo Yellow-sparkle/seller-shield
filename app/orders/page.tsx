@@ -7,6 +7,9 @@ import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type RowS
 import { allOrders } from "@/lib/orders-seed";
 import { filterOrders, isSelectable, planBulk, protectionLabel, type FilterChip, type Order } from "@/lib/orders";
 
+const CARRIER_OPTIONS = ["DHL", "PostNL", "DPD", "UPS", "Other"];
+type TrackingEntry = { carrier: string; tracking: string };
+
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const theme = themeQuartz;
@@ -39,6 +42,8 @@ export default function OrdersPage() {
   const [quick, setQuick] = useState("");
   const [selected, setSelected] = useState<Order[]>([]);
   const [review, setReview] = useState<string[] | null>(null);
+  const [entries, setEntries] = useState<Record<string, TrackingEntry>>({});
+  const [status, setStatus] = useState<string | null>(null);
 
   const visible = useMemo(() => {
     const byChip = filterOrders(all, chips);
@@ -48,7 +53,12 @@ export default function OrdersPage() {
 
   const toggle = (id: FilterChip) => setChips((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
-  const plan = review ? planBulk(selected, {}) : null;
+  const plan = review ? planBulk(selected.filter((o) => review.includes(o.orderNo)), entries) : null;
+  const setEntry = (orderNo: string, patch: Partial<TrackingEntry>) =>
+    setEntries((e) => {
+      const prev: TrackingEntry = e[orderNo] ?? { carrier: "", tracking: "" };
+      return { ...e, [orderNo]: { ...prev, ...patch } };
+    });
 
   return (
     <main style={{ padding: 16, maxWidth: 1200, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
@@ -85,14 +95,30 @@ export default function OrdersPage() {
       {review && plan && (
         <section style={{ marginTop: 16, padding: 12, border: "1px solid #ccc" }}>
           <h2 style={{ fontSize: 18 }}>Review before sending</h2>
-          <p>Nothing is sent yet. Carrier and tracking entry, and the confirm step, come next. Until then this list only shows what was selected.</p>
-          <ul>
-            {review.map((no) => (
-              <li key={no}>{no}</li>
-            ))}
-          </ul>
-          {plan.skipped.length > 0 && <p>Skipped: {plan.skipped.map((s) => `${s.orderNo} (${s.reason})`).join("; ")}</p>}
-          <button onClick={() => setReview(null)} style={{ padding: "6px 10px" }}>Close review</button>
+          <p>Enter a carrier and tracking number for each sandbox order. Nothing is sent until you confirm.</p>
+          {review.map((no) => {
+            const o = all.find((x) => x.orderNo === no);
+            const entry = entries[no] ?? { carrier: "", tracking: "" };
+            return (
+              <div key={no} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "6px 0" }}>
+                <span style={{ minWidth: 200 }}>{no}{o?.source === "demo" ? " (Demo data)" : ""}</span>
+                <select aria-label={`Carrier for ${no}`} value={entry.carrier} onChange={(e) => setEntry(no, { carrier: e.target.value })} style={{ padding: "4px 6px" }}>
+                  <option value="">Choose carrier</option>
+                  {CARRIER_OPTIONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <input aria-label={`Tracking number for ${no}`} value={entry.tracking} onChange={(e) => setEntry(no, { tracking: e.target.value })} placeholder="Tracking number" style={{ padding: "4px 6px", minWidth: 180 }} />
+              </div>
+            );
+          })}
+          {plan.skipped.length > 0 && <p>Not sent: {plan.skipped.map((s) => `${s.orderNo} (${s.reason})`).join("; ")}</p>}
+          <p><strong>Will send ({plan.lines.length}):</strong> {plan.lines.map((l) => `${l.orderNo} to ${l.carrier} ${l.tracking}`).join("; ") || "nothing yet"}</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button disabled={plan.lines.length === 0} onClick={() => setStatus("Sending is not connected yet. Nothing was sent to PayPal.")} style={{ padding: "6px 10px" }}>Confirm and send</button>
+            <button onClick={() => { setReview(null); setStatus(null); }} style={{ padding: "6px 10px" }}>Close review</button>
+          </div>
+          {status && <p role="status">{status}</p>}
         </section>
       )}
     </main>
