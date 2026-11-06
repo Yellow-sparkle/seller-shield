@@ -46,32 +46,32 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
   const answer: SellerAnswer = { ...(sellerAnswers[id] ?? {}), ...override };
   const underReview = c.status === "UNDER_REVIEW" && answer.hasTracking === true;
   const nextStep = c.lifeCycleStage === "CHARGEBACK"
-    ? "The card issuer decides. A refund within 20 hours of a pre-chargeback alert avoids the chargeback fee."
+    ? "1. The card issuer decides.\n2. A refund within 20 hours of a pre-chargeback alert avoids the chargeback fee."
     : underReview
-    ? "Wait for PayPal's decision. Do not refund while it is under review."
+    ? "1. Wait for PayPal's decision.\n2. Do not refund while it is under review."
     : !e.canRespond && e.reason === "NO_DUE_DATE"
-      ? "No response due date in our data. Check the deadline in PayPal before acting."
+      ? "1. Check the response deadline in PayPal.\n2. No due date in our data."
       : !e.canRespond
-        ? "Refund the buyer if you accept the claim. PayPal decides the rest."
+        ? "1. Refund the buyer if you accept the claim.\n2. PayPal decides the rest."
         : answer.hasTracking === false
-          ? "Add tracking, then reply before the due date."
+          ? "1. Add tracking.\n2. Reply before the due date."
           : answer.hasTracking === true
-            ? "Send the tracking and proof of delivery as evidence before the due date."
-            : inrWaitNote(c, answer, now) ?? "-";
+            ? "1. Send the tracking and proof of delivery as evidence.\n2. Reply before the due date."
+            : inrWaitNote(c, answer, now) ?? "1. Check the tracking for this order.\n2. Reply before the due date.";
   const forced = e.canRespond ? forcedRecommendation(c, answer, now) : "YOUR_CALL";
   if (forced) {
     const verdict = forced === "FIGHT" ? "The evidence on file supports your side." : forced === "REFUND" ? "The evidence on file supports the buyer." : "The evidence on file does not settle it. You decide.";
     const tracking = answer.hasTracking === true ? "A tracking number is on the order." : answer.hasTracking === false ? "No tracking number is on the order." : "";
     return {
       recommendation: `${forced} (${forced === "YOUR_CALL" ? "low" : "high"} confidence, rule)`,
-      reasons: [tracking, verdict].filter(Boolean).join(" "),
+      reasons: [tracking, verdict].filter(Boolean).map((t) => `• ${t}`).join("\n"),
       nextStep,
     };
   }
   if (!r) return { recommendation: "Not recorded yet", reasons: "-", nextStep };
   return {
     recommendation: `${r.recommendation} (${r.confidence.toLowerCase()} confidence)`,
-    reasons: r.claims.map((c) => c.text).join(" "),
+    reasons: r.claims.map((c) => `• ${c.text}`).join("\n"),
     nextStep,
   };
 }
@@ -79,8 +79,8 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
 // Reason labels on the screen: PayPal's issue names (disputes overview). OTHER covers billing or
 // subscription errors, requests for details and misdirected transactions (Kate, 5 Nov 2026).
 const REASON_LABEL: Record<string, string> = {
-  INR: "Item not received (INR)",
-  SNAD: "Significantly not as described (SNAD)",
+  INR: "Item not received",
+  SNAD: "Significantly not as described",
   UNAUTHORISED: "Unauthorised transaction",
   OTHER: "Other: billing, details or misdirected",
   UNKNOWN: "Unknown reason",
@@ -163,8 +163,8 @@ const columns: ColDef<Row>[] = [
   { field: "protection", headerName: "Seller protection", flex: 1, cellRenderer: (p: { value: string }) => <ProtectionBadge value={p.value} /> },
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
   { field: "recommendation", headerName: CASE_READ_LABEL, flex: 2, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
-  { field: "reasons", headerName: "Why (cited facts)", flex: 4, minWidth: 320, wrapText: true, autoHeight: true },
-  { field: "nextStep", headerName: "Next step", flex: 3, minWidth: 260, wrapText: true, autoHeight: true },
+  { field: "reasons", headerName: "Why", flex: 4, minWidth: 320, wrapText: true, autoHeight: true, cellStyle: { whiteSpace: "pre-line", lineHeight: "1.5", paddingTop: 8, paddingBottom: 8 } },
+  { field: "nextStep", headerName: "Next step", flex: 3, minWidth: 260, wrapText: true, autoHeight: true, cellStyle: { whiteSpace: "pre-line", lineHeight: "1.5", paddingTop: 8, paddingBottom: 8 } },
   {
     field: "cause",
     headerName: "Address mismatch cause",
