@@ -35,9 +35,10 @@ type Row = {
   cause: string;
   evidence: string;
   decision: string;
+  buyerFiles: string[];
 };
 
-type Override = Partial<SellerAnswer>;
+type Override = Partial<SellerAnswer> & { decision?: string; buyerFiles?: string[] };
 
 // Recorded Opus answers (see scripts/live-check.ts --record). Shown without a live call.
 // The deterministic rules (lib/proof.ts) override the recorded answer, as they do in recommend().
@@ -130,7 +131,8 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     ...rec,
     cause: override.addressMismatchCause ?? "unknown",
     evidence: override.causeEvidence ?? "",
-    decision: "Not decided",
+    decision: override.decision ?? "Not decided",
+    buyerFiles: override.buyerFiles ?? [],
   };
 }
 
@@ -250,6 +252,18 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
                 {item}
               </label>
             ))}
+            <div style={{ marginTop: 10, fontSize: 14 }}>
+              <strong>From the buyer</strong>
+              {r.buyerFiles.length > 0 ? (
+                <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                  {r.buyerFiles.map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ color: "#555" }}>None loaded from PayPal yet.</div>
+              )}
+            </div>
           </div>
         );
       })}
@@ -392,8 +406,18 @@ function passesFilters(r: Row, chips: string[]): boolean {
 
 // Sample cause and evidence for the demo screens (see ?sample=1 above). Shown only in memory.
 const SAMPLE_OVERRIDES: Record<string, Override> = {
-  "PP-R-GJM-10196233": { addressMismatchCause: "buyer", causeEvidence: "Buyer asked to change the delivery address after the order was placed." },
-  "PP-R-SRZ-10196872": { addressMismatchCause: "seller", causeEvidence: "Carrier scan shows delivery to the address the buyer gave at checkout." },
+  "PP-R-GJM-10196233": {
+    addressMismatchCause: "buyer",
+    causeEvidence: "Buyer asked to change the delivery address after the order was placed.",
+    decision: "Refund the buyer. We do not contest the claim.",
+    buyerFiles: ["damaged_item_photo.jpg", "buyer_message_12_oct.pdf"],
+  },
+  "PP-R-SRZ-10196872": {
+    addressMismatchCause: "seller",
+    causeEvidence: "Carrier scan shows delivery to the address the buyer gave at checkout.",
+    decision: "Fight. Tracking shows delivery to the address on the order.",
+    buyerFiles: ["buyer_photo_of_empty_box.jpg"],
+  },
 };
 
 export default function CaseScreen() {
