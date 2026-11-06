@@ -25,6 +25,7 @@ export default function ScanPage() {
       {result?.ok && result.health && (
         <>
           <p style={{ fontSize: 16 }}>{result.health.copy}</p>
+          <p style={{ fontSize: 13, color: "#555" }}>Demo data: {result.health.demoMissingTracking} seeded orders also lack tracking. These are not counted in the cards.</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             <Card title="Money at risk" value={`${result.health.moneyAtRisk.currency} ${result.health.moneyAtRisk.amount.toFixed(2)}`} detail={`${result.health.moneyAtRisk.count} open disputes`} href="/" />
             <Card

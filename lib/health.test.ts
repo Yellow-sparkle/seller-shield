@@ -61,3 +61,9 @@ test("missing tracking counts only sandbox orders without a tracker", () => {
   assert.equal(h.missingTracking.count, 1);
   assert.equal(h.missingTracking.total, 30);
 });
+
+test("demo orders without tracking are reported separately, not in the card", () => {
+  const h = summarizeHealth([], [order({ orderNo: "D", source: "demo" })], now);
+  assert.equal(h.missingTracking.count, 0);
+  assert.equal(h.demoMissingTracking, 1);
+});

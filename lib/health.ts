@@ -13,6 +13,7 @@ const OPEN = new Set(["OPEN", "WAITING_FOR_SELLER_RESPONSE", "UNDER_REVIEW"]);
 export type Health = {
   moneyAtRisk: { count: number; amount: number; currency: string };
   missingTracking: { count: number; total: number; currency: string };
+  demoMissingTracking: number;
   nextDeadline: { date: string; daysLeft: number } | null;
   copy: string;
 };
@@ -24,6 +25,7 @@ export function summarizeHealth(disputes: HealthDispute[], orders: Order[], now:
 
   const missing = orders.filter((o) => o.source === "sandbox" && !o.tracking);
   const missingTotal = missing.reduce((sum, o) => sum + (Number(o.amount.value) || 0), 0);
+  const demoMissing = orders.filter((o) => o.source === "demo" && !o.tracking).length;
 
   const dues = open
     .map((d) => d.seller_response_due_date)
@@ -37,10 +39,12 @@ export function summarizeHealth(disputes: HealthDispute[], orders: Order[], now:
   const parts = [`${open.length} open disputes, ${currency} ${amount.toFixed(2)} at risk.`];
   parts.push(nextDeadline ? `Nearest reply due in ${nextDeadline.daysLeft} days.` : "No reply deadline found.");
   parts.push(`${missing.length} sandbox orders missing tracking (${currency} ${missingTotal.toFixed(2)}).`);
+  parts.push(`Demo data: ${demoMissing} seeded orders also lack tracking, not counted above.`);
 
   return {
     moneyAtRisk: { count: open.length, amount, currency },
     missingTracking: { count: missing.length, total: missingTotal, currency },
+    demoMissingTracking: demoMissing,
     nextDeadline,
     copy: parts.join(" "),
   };
