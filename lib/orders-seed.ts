@@ -28,9 +28,12 @@ export function demoOrders(count = 200): Order[] {
 }
 
 // Real sandbox orders. Amounts are the dispute amounts (the order total is not in the repo).
+// Tracking matches the test sends that PayPal accepted in the sandbox (see commit history).
 export const sandboxOrders: Order[] = [
   {
     orderNo: "35W222794X4866508",
+    carrier: "DHL",
+    tracking: "TEST1235",
     date: "2026-11-03",
     buyer: "Sandbox buyer",
     amount: { currency: "EUR", value: "60.00" },
@@ -41,6 +44,8 @@ export const sandboxOrders: Order[] = [
   },
   {
     orderNo: "7RX812769J8875301",
+    carrier: "DHL",
+    tracking: "TEST1234567",
     date: "2026-11-03",
     buyer: "Sandbox buyer",
     amount: { currency: "EUR", value: "45.00" },
@@ -51,6 +56,8 @@ export const sandboxOrders: Order[] = [
   },
   {
     orderNo: "11X88937YC2460212",
+    carrier: "DPD",
+    tracking: "TEST1233",
     date: "2026-11-03",
     buyer: "Sandbox buyer",
     amount: { currency: "EUR", value: "85.00" },
