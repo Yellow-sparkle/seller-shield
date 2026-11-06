@@ -1,11 +1,11 @@
 "use client";
-// Tracking fixer (PRD F2). AG Grid Community only. Nothing is sent to PayPal from this screen:
-// "Review" builds the list, and the send step is a separate confirm (not built yet).
+// Tracking fixer (PRD F2). AG Grid Community only. "Review" builds the list. Only the confirm button sends,
+// to the PayPal sandbox, through /api/tracking.
 import { useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type RowSelectionOptions } from "ag-grid-community";
 import { allOrders } from "@/lib/orders-seed";
-import { filterOrders, isSelectable, planBulk, protectionLabel, type FilterChip, type Order } from "@/lib/orders";
+import { filterOrders, isSelectable, planBulk, protectionLabel, type BulkLine, type FilterChip, type Order } from "@/lib/orders";
 
 const CARRIER_OPTIONS = ["DHL", "PostNL", "DPD", "UPS", "Other"];
 type TrackingEntry = { carrier: string; tracking: string };
@@ -59,6 +59,17 @@ export default function OrdersPage() {
       const prev: TrackingEntry = e[orderNo] ?? { carrier: "", tracking: "" };
       return { ...e, [orderNo]: { ...prev, ...patch } };
     });
+
+  const confirmSend = async (lines: BulkLine[]) => {
+    setStatus("Sending to PayPal sandbox...");
+    try {
+      const res = await fetch("/api/tracking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lines }) });
+      const data = (await res.json()) as { ok: boolean; status?: number; error?: string };
+      setStatus(data.ok ? `PayPal sandbox accepted ${lines.length} tracking update(s) (HTTP ${data.status}).` : `Not sent: ${data.error ?? `PayPal returned HTTP ${data.status}`}`);
+    } catch {
+      setStatus("Not sent: the request to the server failed.");
+    }
+  };
 
   return (
     <main style={{ padding: 16, maxWidth: 1200, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
@@ -115,7 +126,7 @@ export default function OrdersPage() {
           {plan.skipped.length > 0 && <p>Not sent: {plan.skipped.map((s) => `${s.orderNo} (${s.reason})`).join("; ")}</p>}
           <p><strong>Will send ({plan.lines.length}):</strong> {plan.lines.map((l) => `${l.orderNo} to ${l.carrier} ${l.tracking}`).join("; ") || "nothing yet"}</p>
           <div style={{ display: "flex", gap: 8 }}>
-            <button disabled={plan.lines.length === 0} onClick={() => setStatus("Sending is not connected yet. Nothing was sent to PayPal.")} style={{ padding: "6px 10px" }}>Confirm and send</button>
+            <button disabled={plan.lines.length === 0} onClick={() => confirmSend(plan.lines)} style={{ padding: "6px 10px" }}>Confirm and send</button>
             <button onClick={() => { setReview(null); setStatus(null); }} style={{ padding: "6px 10px" }}>Close review</button>
           </div>
           {status && <p role="status">{status}</p>}
