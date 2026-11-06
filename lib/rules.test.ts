@@ -16,7 +16,7 @@ test("sandbox fixtures map to the expected evidence type", () => {
 });
 
 test("an open dispute with a future due date can be answered", () => {
-  const c = toCase((fixtures as object[])[0] as never);
+  const c = toCase({ dispute_id: "X", status: "WAITING_FOR_SELLER_RESPONSE", seller_response_due_date: "2026-11-24T00:00:00Z" });
   assert.deepEqual(responseEligibility(c, now), { canRespond: true, daysLeft: 20 });
 });
 

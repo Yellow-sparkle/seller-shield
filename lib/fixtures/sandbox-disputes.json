@@ -2,7 +2,7 @@
   {
     "dispute_id": "PP-R-GJM-10196233",
     "reason": "INR",
-    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "status": "REFUNDED",
     "dispute_amount": {
       "currency_code": "EUR",
       "value": "60.00"
@@ -30,7 +30,7 @@
   {
     "dispute_id": "PP-R-FGC-10196238",
     "reason": "INR",
-    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "status": "REFUNDED",
     "dispute_amount": {
       "currency_code": "EUR",
       "value": "45.00"
@@ -58,7 +58,7 @@
   {
     "dispute_id": "PP-R-NVP-10196239",
     "reason": "SNAD",
-    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "status": "REFUNDED",
     "dispute_amount": {
       "currency_code": "EUR",
       "value": "85.00"
