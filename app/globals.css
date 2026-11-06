@@ -53,13 +53,21 @@ a { color: var(--blue); }
 button:not(:disabled) { cursor: pointer; }
 button {
   font: inherit;
-  border-radius: 6px;
-  border: 1px solid var(--line);
+  border-radius: 999px;
+  border: 1px solid var(--navy);
   background: #ffffff;
   color: var(--navy);
-  padding: 6px 12px;
+  padding: 7px 18px;
+  font-weight: 600;
 }
-button:not(:disabled):hover { border-color: var(--blue); }
+button:not(:disabled):hover { background: #eaf1fb; }
+/* PayPal default button colour is gold #FFC33A with dark text: use it for the main action on each screen. */
+button.primary {
+  background: #ffc439;
+  border-color: #ffc439;
+  color: #2c2e2f;
+}
+button.primary:not(:disabled):hover { background: #f0b82b; border-color: #f0b82b; }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 input, select, textarea { font: inherit; border: 1px solid var(--line); border-radius: 6px; background: #ffffff; padding: 6px 10px; }
 input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }

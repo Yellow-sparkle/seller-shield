@@ -286,7 +286,7 @@ function DraftCard({ row, initial }: { row: Row; initial: string }) {
               : `Refund the buyer in full (${row.amount}) and close the dispute in PayPal (sandbox)? This can't be undone.`}
           </p>
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" disabled={busy} onClick={() => send(pending)} style={{ fontWeight: 600 }}>
+            <button type="button" className="primary" disabled={busy} onClick={() => send(pending)}>
               {busy ? "Sending..." : pending === "message" ? "Approve and send" : "Approve refund"}
             </button>
             <button type="button" disabled={busy} onClick={() => setPending(null)}>

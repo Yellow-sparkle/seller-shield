@@ -167,7 +167,7 @@ export default function OrdersPage() {
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
         <span>{visible.length} orders shown, {selected.length} selected</span>
-        <button aria-disabled={selected.length === 0} onClick={() => { if (selected.length === 0) { setPickMsg("Choose at least one order first. Tick the boxes on the left."); setReview(null); return; } setPickMsg(null); setReview(selected.map((o) => o.orderNo)); }} style={{ opacity: selected.length === 0 ? 0.5 : 1, cursor: "pointer", padding: "7px 14px", borderRadius: 6, border: "none", background: "#0070ba", color: "#ffffff", fontWeight: 600 }}>Review tracking to send</button>
+        <button className="primary" aria-disabled={selected.length === 0} onClick={() => { if (selected.length === 0) { setPickMsg("Choose at least one order first. Tick the boxes on the left."); setReview(null); return; } setPickMsg(null); setReview(selected.map((o) => o.orderNo)); }} style={{ opacity: selected.length === 0 ? 0.5 : 1 }}>Review tracking to send</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
@@ -240,7 +240,7 @@ export default function OrdersPage() {
           )}
           <p style={{ margin: "12px 0", fontSize: 14, color: "#003087" }}><strong>Will send ({plan.lines.length}):</strong> <span style={{ color: "#4a5568" }}>{plan.lines.map((l) => `${l.orderNo} via ${l.carrier}, ${l.tracking}`).join("; ") || "nothing yet"}</span></p>
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-            <button disabled={plan.lines.length === 0} onClick={() => confirmSend(plan.lines)} style={{ padding: "8px 14px", background: "#0070ba", color: "#ffffff", border: "none", fontWeight: 600 }}>Confirm and send</button>
+            <button className="primary" disabled={plan.lines.length === 0} onClick={() => confirmSend(plan.lines)}>Confirm and send</button>
             <button onClick={() => { setReview(null); setStatus(null); }} style={{ padding: "8px 14px" }}>Close review</button>
           </div>
           {status && <p role="status" style={{ marginBottom: 0 }}>{status}</p>}
