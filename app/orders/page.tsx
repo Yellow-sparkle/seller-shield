@@ -105,6 +105,7 @@ export default function OrdersPage() {
   const [review, setReview] = useState<string[] | null>(null);
   const [entries, setEntries] = useState<Record<string, TrackingEntry>>({});
   const [status, setStatus] = useState<string | null>(null);
+  const [pickMsg, setPickMsg] = useState<string | null>(null);
   const [rowStatus, setRowStatus] = useState<Record<string, string>>({});
   const reviewRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -164,8 +165,8 @@ export default function OrdersPage() {
 
   return (
     <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: 22 }}>Add tracking to orders</h1>
-      <p style={{ color: "#555" }}>All PayPal calls on this screen go to the sandbox. Demo rows can&apos;t be selected for sending. The top row totals the orders shown.</p>
+      <h1 style={{ fontSize: 22, margin: "0 0 6px" }}>Add tracking to orders</h1>
+      <p style={{ color: "#4a5568", fontSize: 14, margin: "0 0 16px" }}>All PayPal calls on this screen go to the sandbox. Demo rows can&apos;t be selected for sending. The strip above the grid totals the orders shown.</p>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0" }}>
         {CHIPS.map((c) => (
@@ -173,13 +174,13 @@ export default function OrdersPage() {
             {chips.includes(c.id) ? "✓ " : ""}{c.label}
           </button>
         ))}
-        <input value={quick} onChange={(e) => setQuick(e.target.value)} placeholder="Quick filter" aria-label="Quick filter" style={{ padding: "6px 10px", minWidth: 200 }} />
+        <input value={quick} onChange={(e) => setQuick(e.target.value)} placeholder="Quick filter" aria-label="Quick filter" style={{ padding: "5px 12px", minWidth: 200, borderRadius: 999, border: "1px solid #b8c7da", background: "#ffffff", fontSize: 13, color: "#003087" }} />
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
         <span>{visible.length} orders shown, {selected.length} selected</span>
         <button onClick={selectAllFiltered} style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid #0070ba", background: "#ffffff", color: "#0070ba", fontWeight: 600 }}>Select all filtered</button>
-        <button disabled={selected.length === 0} onClick={() => setReview(selected.map((o) => o.orderNo))} style={{ padding: "7px 14px", borderRadius: 6, border: "none", background: "#0070ba", color: "#ffffff", fontWeight: 600 }}>Review tracking to send</button>
+        <button aria-disabled={selected.length === 0} onClick={() => { if (selected.length === 0) { setPickMsg("Choose at least one order first. Tick its box, or press Select all filtered."); setReview(null); return; } setPickMsg(null); setReview(selected.map((o) => o.orderNo)); }} style={{ opacity: selected.length === 0 ? 0.5 : 1, cursor: "pointer", padding: "7px 14px", borderRadius: 6, border: "none", background: "#0070ba", color: "#ffffff", fontWeight: 600 }}>Review tracking to send</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
@@ -198,11 +199,15 @@ export default function OrdersPage() {
         ))}
       </div>
 
+      {pickMsg && (
+        <p role="alert" style={{ margin: "0 0 12px", padding: "8px 12px", borderRadius: 6, background: "#fdf1d8", color: "#7a4b00", fontSize: 14 }}>{pickMsg}</p>
+      )}
+
       {review && plan && (
         <section ref={reviewRef} style={{ marginBottom: 16, padding: 16, background: "#e7f1fb", border: "2px solid #0070ba", borderRadius: 10 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#0070ba", textTransform: "uppercase", letterSpacing: "0.06em" }}>Step 2 of 2</div>
           <h2 style={{ fontSize: 18, marginTop: 2 }}>Review before sending</h2>
-          <p style={{ color: "#4a5568", marginTop: 0 }}>Choose a carrier and enter a tracking number for each order. Nothing is sent to PayPal until you press Confirm and send.</p>
+          <p style={{ color: "#4a5568", fontSize: 13, margin: "2px 0 12px" }}>Choose a carrier and enter a tracking number for each order. Nothing is sent to PayPal until you press Confirm and send.</p>
           <div role="table" aria-label="Tracking to send" style={{ border: "1px solid #d6dee8", borderRadius: 8, overflow: "hidden" }}>
             <div role="row" style={{ display: "grid", gridTemplateColumns: "minmax(170px,1.3fr) minmax(130px,0.8fr) minmax(170px,1fr) minmax(150px,1fr)", gap: 12, padding: "8px 12px", background: "#eaf1fb", color: "#003087", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
               <span role="columnheader">Order</span>
@@ -247,7 +252,7 @@ export default function OrdersPage() {
               Not yet ready: {plan.skipped.map((s) => `${s.orderNo} (${s.reason.toLowerCase()})`).join("; ")}
             </p>
           )}
-          <p style={{ margin: "12px 0", fontSize: 14 }}><strong>Will send ({plan.lines.length}):</strong> {plan.lines.map((l) => `${l.orderNo} via ${l.carrier}, ${l.tracking}`).join("; ") || "nothing yet"}</p>
+          <p style={{ margin: "12px 0", fontSize: 14, color: "#003087" }}><strong>Will send ({plan.lines.length}):</strong> <span style={{ color: "#4a5568" }}>{plan.lines.map((l) => `${l.orderNo} via ${l.carrier}, ${l.tracking}`).join("; ") || "nothing yet"}</span></p>
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
             <button disabled={plan.lines.length === 0} onClick={() => confirmSend(plan.lines)} style={{ padding: "8px 14px", background: "#0070ba", color: "#ffffff", border: "none", fontWeight: 600 }}>Confirm and send</button>
             <button onClick={() => { setReview(null); setStatus(null); }} style={{ padding: "8px 14px" }}>Close review</button>
@@ -264,7 +269,12 @@ export default function OrdersPage() {
           rowSelection={rowSelection}
           getRowId={(p) => p.data.orderNo}
           onGridReady={(e) => { apiRef.current = e.api; }}
-          onSelectionChanged={(e) => setSelected(e.api.getSelectedRows())}
+          onSelectionChanged={(e) => {
+            const rows = e.api.getSelectedRows();
+            setSelected(rows);
+            if (rows.length > 0) setPickMsg(null);
+            else setReview(null);
+          }}
           defaultColDef={{ sortable: true, filter: true, resizable: true, minWidth: 130, flex: 1 }}
         />
       </div>
