@@ -44,6 +44,7 @@ export default function OrdersPage() {
   const [review, setReview] = useState<string[] | null>(null);
   const [entries, setEntries] = useState<Record<string, TrackingEntry>>({});
   const [status, setStatus] = useState<string | null>(null);
+  const [rowStatus, setRowStatus] = useState<Record<string, string>>({});
 
   const visible = useMemo(() => {
     const byChip = filterOrders(all, chips);
@@ -64,7 +65,11 @@ export default function OrdersPage() {
     setStatus("Sending to PayPal sandbox...");
     try {
       const res = await fetch("/api/tracking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lines }) });
-      const data = (await res.json()) as { ok: boolean; status?: number; error?: string; body?: string };
+      const data = (await res.json()) as { ok: boolean; status?: number; error?: string; body?: string; confirmed?: string[]; errors?: unknown[] };
+      const confirmed = new Set(data.confirmed ?? []);
+      const next: Record<string, string> = {};
+      for (const l of lines) next[l.orderNo] = confirmed.has(l.orderNo) && !(data.errors?.length) ? "Tracking added" : `Not confirmed by PayPal${data.errors?.length ? ": batch errors" : ""}`;
+      setRowStatus(next);
       setStatus(data.ok ? `PayPal sandbox replied HTTP ${data.status}. Sent ${lines.length} update(s). Response: ${data.body ?? "(empty)"}` : `Not sent: ${data.error ?? `PayPal returned HTTP ${data.status}: ${data.body ?? ""}`}`);
     } catch {
       setStatus("Not sent: the request to the server failed.");
@@ -120,6 +125,7 @@ export default function OrdersPage() {
                   ))}
                 </select>
                 <input aria-label={`Tracking number for ${no}`} value={entry.tracking} onChange={(e) => setEntry(no, { tracking: e.target.value })} placeholder="Tracking number" style={{ padding: "4px 6px", minWidth: 180 }} />
+                {rowStatus[no] && <span role="status">{rowStatus[no]}</span>}
               </div>
             );
           })}

@@ -33,7 +33,16 @@ export async function POST(req: Request) {
       body: JSON.stringify(body),
     });
     const text = await res.text();
-    return NextResponse.json({ ok: res.ok, status: res.status, body: text.slice(0, 2000) }, { status: res.ok ? 200 : 502 });
+    let parsed: { tracker_identifiers?: { transaction_id?: string }[]; errors?: unknown[] } = {};
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = {};
+    }
+    const confirmed = (parsed.tracker_identifiers ?? []).map((t) => t.transaction_id).filter((x): x is string => typeof x === "string");
+    const errors = parsed.errors ?? [];
+    const ok = res.ok && errors.length === 0;
+    return NextResponse.json({ ok, status: res.status, body: text.slice(0, 2000), confirmed, errors }, { status: res.ok ? 200 : 502 });
   } catch (err) {
     return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : "Unknown error" }, { status: 400 });
   }
