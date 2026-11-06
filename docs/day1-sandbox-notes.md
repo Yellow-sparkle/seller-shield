@@ -85,3 +85,10 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - Payment 06/11/2026 10:29: gross 15,00 EUR, fee 0,86 EUR, net 14,14 EUR. Status: Refunded.
 - The 0,86 EUR fee was taken at payment. The API's separate 0,86 EUR DISPUTE_SETTLEMENT_FEE line is most likely the same fee reported again, not an extra charge. Confirm with PayPal support if the API line needs to be trusted for the ledger.
 - Hold still open: the on-hold amount on the balance page is needed.
+
+## Hold outcome (transaction activity, 06/11/2026)
+- Temporary Hold of 14,14 EUR (11:37): status Removed. The hold is no longer active.
+- Update from Reversal (11:52), +14,14 EUR: status Canceled. The reversal was not applied as a credit.
+- Refund to buyer (11:52), −15,00 EUR: Completed.
+- Net effect on seller for this payment: +14,14 (payment net), −15,00 (refund), so −0,86 EUR. That matches the 0,86 EUR fee already taken at payment.
+- Answer for the hold question: the hold was removed. The 14,14 EUR is not held any more.
