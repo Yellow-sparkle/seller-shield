@@ -31,8 +31,10 @@ Open http://localhost:3000 for the case screen.
 ## Run the tests
 
 ```bash
-node --experimental-strip-types --test lib/dispute.test.ts lib/rules.test.ts lib/recommend.test.ts lib/guard.test.ts
+node --experimental-strip-types --test lib/*.test.ts
 ```
+
+How we evaluate the AI (hallucination, grounding, golden set, style checks): see [docs/evaluation.md](docs/evaluation.md).
 
 ## Run the live recommendation check
 
