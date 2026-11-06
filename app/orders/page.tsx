@@ -1,7 +1,7 @@
 "use client";
 // Tracking fixer (PRD F2). AG Grid Community only. "Review" builds the list. Only the confirm button sends,
 // to the PayPal sandbox, through /api/tracking.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type ICellRendererParams, type RowSelectionOptions } from "ag-grid-community";
 import { allOrders } from "@/lib/orders-seed";
@@ -45,7 +45,7 @@ const PROTECTION_TONE: Record<Order["protection"], Tone> = { PROTECTED: "good", 
 const rowSelection: RowSelectionOptions<Order> = { mode: "multiRow", checkboxes: true, headerCheckbox: true, isRowSelectable: (node) => (node.data ? isSelectable(node.data) : false) };
 
 const columns: ColDef<Order>[] = [
-  { field: "orderNo", headerName: "Order #", minWidth: 190, pinned: "left", cellRenderer: (p: P) => (isSummary(p) ? <strong>{sumOf(p).orders} orders shown</strong> : p.value) },
+  { field: "orderNo", headerName: "Order #", minWidth: 190, cellRenderer: (p: P) => (isSummary(p) ? <strong>{sumOf(p).orders} orders shown</strong> : p.value) },
   {
     headerName: "Dispute",
     valueGetter: (p) => (p.data?.disputeId ? "Dispute" : ""),
@@ -106,6 +106,10 @@ export default function OrdersPage() {
   const [entries, setEntries] = useState<Record<string, TrackingEntry>>({});
   const [status, setStatus] = useState<string | null>(null);
   const [rowStatus, setRowStatus] = useState<Record<string, string>>({});
+  const reviewRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (review) reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [review]);
 
   const visible = useMemo(() => {
     const byChip = filterOrders(all, chips);
@@ -121,7 +125,7 @@ export default function OrdersPage() {
 
   const summary = useMemo(() => gridSummary(visible), [visible]);
   // The pinned summary row carries the totals for the rows shown. Its cells render them instead of an order.
-  const pinnedTop = useMemo(() => [{ orderNo: `summary-${summary.orders}-${summary.total}-${summary.missingTracking}-${summary.held}-${summary.disputes}`, date: "", buyer: "", amount: { currency: summary.currency, value: String(summary.total) }, protection: "UNKNOWN", held: false, source: "demo", summary } as SummaryRow], [summary]);
+  // The totals for the rows shown, as a strip above the grid.
 
   const toggle = (id: FilterChip) => setChips((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
@@ -167,6 +171,53 @@ export default function OrdersPage() {
         <button disabled={selected.length === 0} onClick={() => setReview(selected.map((o) => o.orderNo))} style={{ padding: "6px 10px" }}>Review tracking to send</button>
       </div>
 
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
+        {[
+          { label: "Orders shown", value: String(summary.orders) },
+          { label: "Total", value: `${summary.total.toFixed(2)} ${summary.currency}` },
+          { label: "Missing tracking", value: String(summary.missingTracking) },
+          { label: "Held", value: String(summary.held) },
+          { label: "With a dispute", value: String(summary.disputes) },
+          { label: "Sandbox orders", value: String(summary.sandbox) },
+        ].map((t) => (
+          <div key={t.label} style={{ background: "#ffffff", border: "1px solid #d6dee8", borderRadius: 8, padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "#4a5568", textTransform: "uppercase", letterSpacing: "0.04em" }}>{t.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#003087", fontVariantNumeric: "tabular-nums" }}>{t.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {review && plan && (
+        <section ref={reviewRef} style={{ marginBottom: 16, padding: 16, background: "#ffffff", border: "1px solid #d6dee8", borderTop: "4px solid #0070ba", borderRadius: 8 }}>
+          <h2 style={{ fontSize: 18, marginTop: 0 }}>Review before sending</h2>
+          <p style={{ color: "#4a5568", marginTop: 0 }}>Enter a carrier and tracking number for each sandbox order. Nothing is sent until you confirm.</p>
+          {review.map((no) => {
+            const o = all.find((x) => x.orderNo === no);
+            const entry = entries[no] ?? { carrier: "", tracking: "" };
+            return (
+              <div key={no} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "8px 0", borderTop: "1px solid #eef1f5" }}>
+                <span style={{ minWidth: 200, fontVariantNumeric: "tabular-nums" }}>{no}{o?.source === "demo" ? " (Demo data)" : ""}</span>
+                <select aria-label={`Carrier for ${no}`} value={entry.carrier} onChange={(e) => setEntry(no, { carrier: e.target.value })} style={{ padding: "6px 8px" }}>
+                  <option value="">Choose carrier</option>
+                  {CARRIER_OPTIONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <input aria-label={`Tracking number for ${no}`} value={entry.tracking} onChange={(e) => setEntry(no, { tracking: e.target.value })} placeholder="Tracking number" style={{ padding: "6px 8px", minWidth: 180 }} />
+                {rowStatus[no] && <span role="status" style={{ fontWeight: 600, color: rowStatus[no] === "Tracking added" ? "#1d6b3f" : "#a3231b" }}>{rowStatus[no]}</span>}
+              </div>
+            );
+          })}
+          {plan.skipped.length > 0 && <p style={{ color: "#7a4b00" }}>Not sent: {plan.skipped.map((s) => `${s.orderNo} (${s.reason})`).join("; ")}</p>}
+          <p><strong>Will send ({plan.lines.length}):</strong> {plan.lines.map((l) => `${l.orderNo} to ${l.carrier} ${l.tracking}`).join("; ") || "nothing yet"}</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button disabled={plan.lines.length === 0} onClick={() => confirmSend(plan.lines)} style={{ padding: "8px 14px", background: "#0070ba", color: "#ffffff", border: "none", fontWeight: 600 }}>Confirm and send</button>
+            <button onClick={() => { setReview(null); setStatus(null); }} style={{ padding: "8px 14px" }}>Close review</button>
+          </div>
+          {status && <p role="status" style={{ marginBottom: 0 }}>{status}</p>}
+        </section>
+      )}
+
       <div style={{ height: 520 }}>
         <AgGridReact<Order>
           theme={theme}
@@ -174,42 +225,11 @@ export default function OrdersPage() {
           columnDefs={columns}
           rowSelection={rowSelection}
           getRowId={(p) => p.data.orderNo}
-          pinnedTopRowData={pinnedTop}
           onSelectionChanged={(e) => setSelected(e.api.getSelectedRows())}
           defaultColDef={{ sortable: true, filter: true, resizable: true, minWidth: 130, flex: 1 }}
         />
       </div>
 
-      {review && plan && (
-        <section style={{ marginTop: 16, padding: 12, border: "1px solid #ccc" }}>
-          <h2 style={{ fontSize: 18 }}>Review before sending</h2>
-          <p>Enter a carrier and tracking number for each sandbox order. Nothing is sent until you confirm.</p>
-          {review.map((no) => {
-            const o = all.find((x) => x.orderNo === no);
-            const entry = entries[no] ?? { carrier: "", tracking: "" };
-            return (
-              <div key={no} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "6px 0" }}>
-                <span style={{ minWidth: 200 }}>{no}{o?.source === "demo" ? " (Demo data)" : ""}</span>
-                <select aria-label={`Carrier for ${no}`} value={entry.carrier} onChange={(e) => setEntry(no, { carrier: e.target.value })} style={{ padding: "4px 6px" }}>
-                  <option value="">Choose carrier</option>
-                  {CARRIER_OPTIONS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                <input aria-label={`Tracking number for ${no}`} value={entry.tracking} onChange={(e) => setEntry(no, { tracking: e.target.value })} placeholder="Tracking number" style={{ padding: "4px 6px", minWidth: 180 }} />
-                {rowStatus[no] && <span role="status">{rowStatus[no]}</span>}
-              </div>
-            );
-          })}
-          {plan.skipped.length > 0 && <p>Not sent: {plan.skipped.map((s) => `${s.orderNo} (${s.reason})`).join("; ")}</p>}
-          <p><strong>Will send ({plan.lines.length}):</strong> {plan.lines.map((l) => `${l.orderNo} to ${l.carrier} ${l.tracking}`).join("; ") || "nothing yet"}</p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button disabled={plan.lines.length === 0} onClick={() => confirmSend(plan.lines)} style={{ padding: "6px 10px" }}>Confirm and send</button>
-            <button onClick={() => { setReview(null); setStatus(null); }} style={{ padding: "6px 10px" }}>Close review</button>
-          </div>
-          {status && <p role="status">{status}</p>}
-        </section>
-      )}
     </main>
   );
 }
