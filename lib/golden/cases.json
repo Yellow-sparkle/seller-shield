@@ -1,74 +1,702 @@
 [
   {
-    "id": "G01", "note": "Synthetic. INR, tracking exists, protection eligible: proof of delivery should win.",
+    "id": "G01",
+    "note": "Synthetic. INR, tracking exists, carrier shows delivered on 2026-10-14 to the transaction address, protection eligible: proof of delivery wins, so FIGHT.",
     "expected": "FIGHT",
-    "answer": { "hasTracking": true },
-    "dispute": { "dispute_id": "G-01", "reason": "INR", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "40.00" }, "disputed_transactions": [{ "seller_transaction_id": "G01TXN" }], "create_time": "2026-11-03T10:00:00Z", "seller_response_due_date": "2026-11-20T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-38.40" } }] }
+    "answer": {
+      "hasTracking": true,
+      "delivered": true,
+      "deliveryDate": "2026-10-14",
+      "deliveredToTransactionAddress": true
+    },
+    "dispute": {
+      "dispute_id": "G-01",
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G01TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G02", "note": "Synthetic. INR, no tracking: nothing proves delivery, so refund.",
+    "id": "G02",
+    "note": "Synthetic. INR, no tracking: nothing proves delivery, so refund.",
     "expected": "REFUND",
-    "answer": { "hasTracking": false },
-    "dispute": { "dispute_id": "G-02", "reason": "INR", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "40.00" }, "disputed_transactions": [{ "seller_transaction_id": "G02TXN" }], "create_time": "2026-11-03T10:00:00Z", "seller_response_due_date": "2026-11-20T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-38.40" } }] }
+    "answer": {
+      "hasTracking": false
+    },
+    "dispute": {
+      "dispute_id": "G-02",
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G02TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G03", "note": "Synthetic. UNAUTHORISED with tracking, protection eligible: fight with proof.",
+    "id": "G03",
+    "note": "Synthetic. UNAUTHORISED with tracking, protection eligible, shipped within 2 days of PayPal's notice to the transaction address: fight with proof (Kate, 5 Nov 2026: notice date added).",
     "expected": "FIGHT",
-    "answer": { "hasTracking": true },
-    "dispute": { "dispute_id": "G-03", "reason": "UNAUTHORISED", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "75.00" }, "disputed_transactions": [{ "seller_transaction_id": "G03TXN" }], "create_time": "2026-11-02T10:00:00Z", "seller_response_due_date": "2026-11-22T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-72.20" } }] }
+    "answer": {
+      "hasTracking": true,
+      "noticeDate": "2026-11-01",
+      "shipmentDate": "2026-11-02",
+      "shippedToTransactionAddress": true
+    },
+    "dispute": {
+      "dispute_id": "G-03",
+      "reason": "UNAUTHORISED",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "75.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G03TXN"
+        }
+      ],
+      "create_time": "2026-11-02T10:00:00Z",
+      "seller_response_due_date": "2026-11-22T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-72.20"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G04", "note": "Synthetic. UNAUTHORISED, no tracking, not protected: refund.",
+    "id": "G04",
+    "note": "Synthetic. UNAUTHORISED, no tracking, not protected: refund.",
     "expected": "REFUND",
-    "answer": { "hasTracking": false },
-    "dispute": { "dispute_id": "G-04", "reason": "UNAUTHORISED", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "75.00" }, "disputed_transactions": [{ "seller_transaction_id": "G04TXN" }], "create_time": "2026-11-02T10:00:00Z", "seller_response_due_date": "2026-11-22T10:00:00Z", "seller_protection": { "status": "NOT_ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-72.20" } }] }
+    "answer": {
+      "hasTracking": false
+    },
+    "dispute": {
+      "dispute_id": "G-04",
+      "reason": "UNAUTHORISED",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "75.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G04TXN"
+        }
+      ],
+      "create_time": "2026-11-02T10:00:00Z",
+      "seller_response_due_date": "2026-11-22T10:00:00Z",
+      "seller_protection": {
+        "status": "NOT_ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-72.20"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G05", "note": "Synthetic. SNAD where the item matches the listing: fight.",
+    "id": "G05",
+    "note": "Synthetic. SNAD where the item matches the listing: fight.",
     "expected": "FIGHT",
-    "answer": { "matchesListing": true },
-    "dispute": { "dispute_id": "G-05", "reason": "SNAD", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "25.00" }, "disputed_transactions": [{ "seller_transaction_id": "G05TXN" }], "create_time": "2026-11-03T10:00:00Z", "seller_response_due_date": "2026-11-20T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-23.10" } }] }
+    "answer": {
+      "matchesListing": true
+    },
+    "dispute": {
+      "dispute_id": "G-05",
+      "reason": "SNAD",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "25.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G05TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-23.10"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G06", "note": "Synthetic. SNAD where the item does not match the listing: refund.",
+    "id": "G06",
+    "note": "Synthetic. SNAD where the item does not match the listing: refund.",
     "expected": "REFUND",
-    "answer": { "matchesListing": false },
-    "dispute": { "dispute_id": "G-06", "reason": "SNAD", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "25.00" }, "disputed_transactions": [{ "seller_transaction_id": "G06TXN" }], "create_time": "2026-11-03T10:00:00Z", "seller_response_due_date": "2026-11-20T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-23.10" } }] }
+    "answer": {
+      "matchesListing": false
+    },
+    "dispute": {
+      "dispute_id": "G-06",
+      "reason": "SNAD",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "25.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G06TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-23.10"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G07", "note": "Synthetic. OTHER reason: no rule in our policy, so the seller decides.",
+    "id": "G07",
+    "note": "Synthetic (case 7). OTHER reason: no rule in our policy, so the seller decides. Wording (Kate, 5 Nov 2026): 'days to respond' means days left to respond, from the due date. 'Proof window' is only the case 3 notice rule.",
     "expected": "YOUR_CALL",
     "answer": {},
-    "dispute": { "dispute_id": "G-07", "reason": "OTHER", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "30.00" }, "disputed_transactions": [{ "seller_transaction_id": "G07TXN" }], "create_time": "2026-11-03T10:00:00Z", "seller_response_due_date": "2026-11-20T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-27.90" } }] }
+    "dispute": {
+      "dispute_id": "G-07",
+      "reason": "OTHER",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "30.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G07TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-27.90"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G08", "note": "Synthetic. Deadline passed two days ago: the seller cannot respond, so the seller decides.",
+    "id": "G08",
+    "note": "Synthetic (case 8). Tracking exists, but the response deadline passed two days ago: PayPal decides without the seller, so the rule gives YOUR_CALL. The seller can still decide to refund the buyer or contact them outside the dispute.",
     "expected": "YOUR_CALL",
-    "answer": { "hasTracking": true },
-    "dispute": { "dispute_id": "G-08", "reason": "INR", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "40.00" }, "disputed_transactions": [{ "seller_transaction_id": "G08TXN" }], "create_time": "2026-10-20T10:00:00Z", "seller_response_due_date": "2026-11-02T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-38.40" } }] }
+    "answer": {
+      "hasTracking": true
+    },
+    "dispute": {
+      "dispute_id": "G-08",
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G08TXN"
+        }
+      ],
+      "create_time": "2026-10-20T10:00:00Z",
+      "seller_response_due_date": "2026-11-02T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G09", "note": "Synthetic. PayPal has already moved the case to review: nothing to answer, so the seller decides.",
+    "id": "G09",
+    "note": "Synthetic (case 9). INR, tracking exists, PayPal has moved the case to review: the seller cannot respond, so the rule gives YOUR_CALL. Seller's guidance (Kate, 5 Nov 2026): delivered per tracking means do not refund; not delivered means refund.",
     "expected": "YOUR_CALL",
-    "answer": { "hasTracking": true },
-    "dispute": { "dispute_id": "G-09", "reason": "INR", "status": "UNDER_REVIEW", "dispute_amount": { "currency_code": "EUR", "value": "40.00" }, "disputed_transactions": [{ "seller_transaction_id": "G09TXN" }], "create_time": "2026-10-30T10:00:00Z", "seller_response_due_date": "2026-11-20T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-38.40" } }] }
+    "answer": {
+      "hasTracking": true
+    },
+    "dispute": {
+      "dispute_id": "G-09",
+      "reason": "INR",
+      "status": "UNDER_REVIEW",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G09TXN"
+        }
+      ],
+      "create_time": "2026-10-30T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G10", "note": "Synthetic. A reason PayPal may add later that our code does not know: the seller decides.",
+    "id": "G10",
+    "note": "Synthetic (case 10). INR, tracking delivered to a different address, caused by the seller: REFUND (Kate, 5 Nov 2026).",
+    "expected": "REFUND",
+    "answer": {
+      "hasTracking": true,
+      "delivered": true,
+      "deliveryDate": "2026-11-12",
+      "deliveredToTransactionAddress": false,
+      "addressMismatchCause": "seller",
+      "causeEvidence": "carrier scan"
+    },
+    "dispute": {
+      "dispute_id": "G-10",
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "30.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G10TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-27.90"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "G11",
+    "note": "Synthetic. No due date from PayPal: we cannot tell if the seller can still respond, so the seller decides.",
+    "expected": "YOUR_CALL",
+    "answer": {
+      "hasTracking": true
+    },
+    "dispute": {
+      "dispute_id": "G-11",
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G11TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "G12",
+    "note": "Synthetic. SNAD, item matches the listing, but no seller protection: fight with the listing as evidence.",
+    "expected": "FIGHT",
+    "answer": {
+      "matchesListing": true
+    },
+    "dispute": {
+      "dispute_id": "G-12",
+      "reason": "SNAD",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "120.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G12TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "NOT_ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-115.30"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "G13",
+    "note": "Synthetic. SNAD, item matches the listing, but the buyer went to the card issuer (CHARGEBACK): protection does not apply, the bank decides, so the seller decides.",
+    "expected": "YOUR_CALL",
+    "answer": {
+      "matchesListing": true
+    },
+    "dispute": {
+      "dispute_id": "G-13",
+      "reason": "SNAD",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_life_cycle_stage": "CHARGEBACK",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "25.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G13TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-23.10"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "G14",
+    "note": "Synthetic (case 10, buyer side). INR, tracking delivered to a different address, caused by the buyer: the seller decides (Kate, 5 Nov 2026).",
+    "expected": "YOUR_CALL",
+    "answer": {
+      "hasTracking": true,
+      "delivered": true,
+      "deliveryDate": "2026-11-12",
+      "deliveredToTransactionAddress": false,
+      "addressMismatchCause": "buyer",
+      "causeEvidence": "buyer's locker address"
+    },
+    "dispute": {
+      "dispute_id": "G-14",
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "30.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G14TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-27.90"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "G15",
+    "note": "Synthetic (G15). A PayPal reason our code does not know. Seller says who is right, with evidence: buyer right gives REFUND; seller right or no evidence gives YOUR_CALL (Kate, 5 Nov 2026). This case has no answer, so YOUR_CALL.",
     "expected": "YOUR_CALL",
     "answer": {},
-    "dispute": { "dispute_id": "G-10", "reason": "NEW_PAYPAL_REASON", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "30.00" }, "disputed_transactions": [{ "seller_transaction_id": "G10TXN" }], "create_time": "2026-11-03T10:00:00Z", "seller_response_due_date": "2026-11-20T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-27.90" } }] }
+    "dispute": {
+      "dispute_id": "G-10",
+      "reason": "NEW_PAYPAL_REASON",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "30.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G10TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-27.90"
+          }
+        }
+      ]
+    }
   },
   {
-    "id": "G11", "note": "Synthetic. No due date from PayPal: we cannot tell if the seller can still respond, so the seller decides.",
+    "id": "G16",
+    "note": "Synthetic (case 11 A, Kate, 5 Nov 2026). Unauthorised: shipped after the 2-day deadline. Refund, whatever the tracking (not fraud: an unauthorised transaction).",
+    "expected": "REFUND",
+    "answer": {
+      "noticeDate": "2026-10-30",
+      "shipmentDate": "2026-11-03",
+      "hasTracking": true,
+      "shippedToTransactionAddress": true
+    },
+    "dispute": {
+      "reason": "UNAUTHORISED",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "75.00"
+      },
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-72.20"
+          }
+        }
+      ],
+      "dispute_id": "G-16",
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G16TXN"
+        }
+      ]
+    }
+  },
+  {
+    "id": "G17",
+    "note": "Synthetic (case 11 B, Kate, 5 Nov 2026). Unauthorised: no shipping proof by the 2-day deadline. Refund, whatever the tracking (not fraud: an unauthorised transaction).",
+    "expected": "REFUND",
+    "answer": {
+      "noticeDate": "2026-10-30"
+    },
+    "dispute": {
+      "reason": "UNAUTHORISED",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "75.00"
+      },
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-72.20"
+          }
+        }
+      ],
+      "dispute_id": "G-17",
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G17TXN"
+        }
+      ]
+    }
+  },
+  {
+    "id": "G18",
+    "note": "Synthetic (case 1 WAIT). INR, tracking added, not delivered yet, before one day before the due date: wait, YOUR_CALL (Kate, 5 Nov 2026).",
     "expected": "YOUR_CALL",
-    "answer": { "hasTracking": true },
-    "dispute": { "dispute_id": "G-11", "reason": "INR", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "40.00" }, "disputed_transactions": [{ "seller_transaction_id": "G11TXN" }], "create_time": "2026-11-03T10:00:00Z", "seller_protection": { "status": "ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-38.40" } }] }
+    "answer": {
+      "hasTracking": true
+    },
+    "dispute": {
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ],
+      "dispute_id": "G-18",
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G18TXN"
+        }
+      ]
+    }
   },
   {
-    "id": "G12", "note": "Synthetic. SNAD, item matches the listing, but no seller protection: fight with the listing as evidence.",
-    "expected": "FIGHT",
-    "answer": { "matchesListing": true },
-    "dispute": { "dispute_id": "G-12", "reason": "SNAD", "status": "WAITING_FOR_SELLER_RESPONSE", "dispute_amount": { "currency_code": "EUR", "value": "120.00" }, "disputed_transactions": [{ "seller_transaction_id": "G12TXN" }], "create_time": "2026-11-03T10:00:00Z", "seller_response_due_date": "2026-11-20T10:00:00Z", "seller_protection": { "status": "NOT_ELIGIBLE" }, "fund_movements": [{ "type": "HOLD_PLACED", "amount": { "currency_code": "EUR", "value": "-115.30" } }] }
+    "id": "G19",
+    "note": "Synthetic (G15 path). A PayPal reason our code does not know; the seller says the buyer is right, with evidence: REFUND (Kate, 5 Nov 2026).",
+    "expected": "REFUND",
+    "answer": {
+      "whoIsRight": "buyer",
+      "rightEvidence": "order and carrier records"
+    },
+    "dispute": {
+      "dispute_id": "G-19",
+      "reason": "NEW_PAYPAL_REASON",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "30.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G19TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-27.90"
+          }
+        }
+      ]
+    }
   }
 ]

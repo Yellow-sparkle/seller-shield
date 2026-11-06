@@ -1,21 +1,24 @@
 # Seller Shield
 
-A companion for small PayPal sellers. It shows open buyer disputes with their deadlines and held funds, and uses an AI model (Claude Opus 5.5) to recommend FIGHT or REFUND. The seller always makes the final call.
+A companion for small PayPal sellers. It shows money at risk and reply deadlines, helps add missing tracking to PayPal, and uses an AI model (Claude Opus 5.5) to recommend FIGHT, REFUND or YOUR_CALL (the seller decides) on each dispute. The seller always makes the final call.
 
-Built for the PayPal AI Hackathon. Sandbox only: EUR, no real buyer data.
+Built for the PayPal AI Hackathon. PayPal sandbox only: EUR, no real buyers or money.
 
-## What it does now
+## What it does
 
-- **Case screen** (`/`): lists the disputes in a grid, with amount, net held funds, response deadline, days left, seller protection and status.
-- **Recommendation** (`scripts/live-check.ts`): one Claude call per dispute. It returns FIGHT, REFUND or YOUR_CALL, with claims that cite the facts they rely on. Claims without a cited fact, or that predict the outcome, are removed. Low confidence always returns YOUR_CALL.
-- **Health route** (`/api/health`): returns `{"ok":true}`.
+| Screen | Address | What it does | Data |
+|---|---|---|---|
+| Health scan | `/scan` | Three cards: money at risk, sandbox orders missing tracking, next reply deadline. Shows the time it was read, and an error instead of zero if PayPal can't be reached. | Disputes are read live from the PayPal sandbox. Tracking state comes from the order data in the repo. |
+| Tracking fixer | `/orders` | AG Grid of 203 orders with filters (missing tracking, held, not protected, has dispute), quick filter, row selection and a review step. "Confirm and send" adds tracking in PayPal, and each row shows PayPal's result. | 3 real sandbox orders, plus 200 seeded orders labelled "Demo data" that can't be sent. Sends to the PayPal sandbox only. |
+| Case screen | `/` | Each dispute with amount, held funds, deadline, seller protection, the AI recommendation with its reasons, an evidence checklist, and a reply draft to copy. | Disputes from `lib/fixtures/sandbox-disputes.json` (copied from PayPal sandbox responses). Recommendations from a recorded live Claude run. Reply drafts come from fixed templates, and nothing is sent. |
 
-Sandbox disputes are stored in `lib/fixtures/sandbox-disputes.json`, copied from PayPal's Disputes API responses. The app does not call PayPal yet.
+How the recommendation works: deterministic rules (`lib/proof.ts`, `lib/rules.ts`) decide eligibility and force an answer where the rules are clear. Otherwise one Claude call returns FIGHT, REFUND or YOUR_CALL, with reasons that cite the case facts they rely on. Reasons without a cited fact, or that predict PayPal's decision, are removed. Low confidence always becomes YOUR_CALL.
 
 ## Requirements
 
 - Node.js 22.6 or newer (for `--experimental-strip-types`), and npm.
-- For the recommendation: an Anthropic API key. Create one at console.anthropic.com. It is not needed for the case screen or the tests.
+- PayPal sandbox app credentials, for the health scan and the tracking fixer. In the PayPal Developer Dashboard, open Apps & Credentials, switch to Sandbox, and open (or create) a REST app linked to a sandbox business account. Copy its Client ID and Secret.
+- An Anthropic API key, only for the live AI checks. The case screen uses recorded results and doesn't need it.
 
 ## Run it
 
@@ -23,38 +26,61 @@ Sandbox disputes are stored in `lib/fixtures/sandbox-disputes.json`, copied from
 git clone https://github.com/Yellow-sparkle/seller-shield.git
 cd seller-shield
 npm install
+```
+
+Create `.env.local` in the project folder:
+
+```
+PAYPAL_CLIENT_ID=your-sandbox-client-id
+PAYPAL_CLIENT_SECRET=your-sandbox-secret
+ANTHROPIC_API_KEY=your-key-here
+```
+
+Then start the app:
+
+```bash
 npm run dev
 ```
 
-Open http://localhost:3000 for the case screen.
+Open http://localhost:3000/scan for the health scan, http://localhost:3000/orders for the tracking fixer, and http://localhost:3000 for the case screen. Restart `npm run dev` after changing `.env.local`.
+
+Never commit `.env.local`. Files starting with `.env` are listed in `.gitignore`.
 
 ## Run the tests
 
 ```bash
-node --experimental-strip-types --test lib/dispute.test.ts lib/rules.test.ts lib/recommend.test.ts lib/guard.test.ts
+node --experimental-strip-types --test lib/*.test.ts
 ```
 
-## Run the live recommendation check
+## Run the AI checks
 
-Create `.env.local` in the project folder with one line:
-
-```
-ANTHROPIC_API_KEY=your-key-here
-```
-
-Then run:
+These call Claude and cost a few cents per case. They need `ANTHROPIC_API_KEY` in `.env.local`.
 
 ```bash
+# Recommendation for each sandbox dispute (add --record to save results for the case screen)
 node --env-file=.env.local --experimental-strip-types scripts/live-check.ts
+
+# Golden set: 19 hand-written cases with expected answers
+node --env-file=.env.local --experimental-strip-types scripts/golden-check.ts
+
+# Judge: checks each reason against the case facts
+node --env-file=.env.local --experimental-strip-types scripts/judge-check.ts
 ```
 
-This makes one call per sandbox dispute. Each call costs about 2 cents.
+How we evaluate the AI: [docs/evaluation.md](docs/evaluation.md). Results: [docs/eval-scorecard.md](docs/eval-scorecard.md).
 
-Never commit `.env.local`. It is listed in `.gitignore`.
+## Not built yet
+
+These are in the product plan but not in this version:
+
+- Health scan numbers that link to the rows behind them. The case screen, not the scan, is the home page.
+- A dispute button in the tracking grid that opens the case, and status pills and a summary row in the grid.
+- Sending a reply or evidence to PayPal's Disputes API from the case screen, and attaching files. Replies are copy-only today.
+- Reading tracking status back from PayPal for the health scan.
 
 ## Stack
 
-Next.js (App Router, TypeScript), AG Grid Community, Anthropic SDK, Render (hosting), Postman (API checks).
+Next.js (App Router, TypeScript), AG Grid Community, PayPal REST APIs (Disputes, Shipment Tracking, sandbox), Anthropic SDK (Claude Opus 5.5 for recommendations, Claude Sonnet 5.5 as judge).
 
 ## Licence
 

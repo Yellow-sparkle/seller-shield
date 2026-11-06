@@ -6,6 +6,8 @@ import type { Case } from "./dispute.ts";
 import { requiredEvidence, type Eligibility } from "./rules.ts";
 import { applyGuard, type Claim, type GuardedResult } from "./guard.ts";
 import type { SellerAnswer } from "./answers.ts";
+import { FACT_NOTES } from "./facts.ts";
+import { forcedRecommendation } from "./proof.ts";
 
 export const MODEL = "claude-opus-5-5";
 
@@ -19,6 +21,13 @@ export function factsFor(c: Case, e: Eligibility, answer: SellerAnswer = {}): Re
   return {
     hasTracking: answer.hasTracking ?? null,
     matchesListing: answer.matchesListing ?? null,
+    delivered: answer.delivered ?? null,
+    deliveryDate: answer.deliveryDate ?? null,
+    deliveredToTransactionAddress: answer.deliveredToTransactionAddress ?? null,
+    // Unauthorised shipment proof (case 3): without these the model can't see the 2-day proof.
+    noticeDate: answer.noticeDate ?? null,
+    shipmentDate: answer.shipmentDate ?? null,
+    shippedToTransactionAddress: answer.shippedToTransactionAddress ?? null,
     reason: c.reason,
     status: c.status,
     amount: c.amount,
@@ -38,7 +47,7 @@ export function buildPrompt(c: Case, e: Eligibility, answer: SellerAnswer = {}):
     "Use only the facts below.",
     "A null fact lowers confidence only when it would change the answer. Do not mention null facts that do not matter to the answer.",
     "The seller's answers (hasTracking, matchesListing) are facts. Use them as given.",
-    "holdAmount is the amount PayPal holds, net of PayPal fees. The minus sign is how PayPal records it. It is not an error.",
+    ...FACT_NOTES.map((n) => n),
     "Reply with JSON only, in this shape:",
     '{"recommendation":"FIGHT|REFUND|YOUR_CALL","confidence":"HIGH|LOW","claims":[{"text":"one short claim","fields":["fieldName"]}]}',
     "Every claim must list the fact fields it relies on. A claim with no fields will be discarded. Give at most 6 claims, short ones.",
@@ -73,6 +82,7 @@ export async function recommend(
   e: Eligibility,
   answer: SellerAnswer = {},
   client: Anthropic = new Anthropic(), // reads ANTHROPIC_API_KEY from the environment
+  now: Date = new Date(), // the clock for the date-based rules (pinned in the golden check)
 ): Promise<GuardedResult> {
   const response = await client.messages.create({
     model: MODEL,
@@ -84,5 +94,22 @@ export async function recommend(
     .map((b) => b.text)
     .join("");
   // Grounding guard: drop any claim whose listed fields are missing or null.
-  return applyGuard(parseRecommendation(text), factsFor(c, e, answer));
+  const guarded = applyGuard(parseRecommendation(text), factsFor(c, e, answer));
+  return enforceEligibility(applyProofRule(guarded, c, answer, now), e);
+}
+
+// Deterministic proof rules (lib/proof.ts): INR no tracking means REFUND; unconfirmed delivery or a missed unauthorised deadline means YOUR_CALL;
+// unauthorised and not covered means REFUND unless the seller has shipping evidence;
+// SNAD with a matching item means FIGHT (the sandbox protection flag does not count), and a non-matching item means REFUND;
+// a card-issuer chargeback always means YOUR_CALL.
+export function applyProofRule<T extends { recommendation: string; confidence: string }>(r: T, c: Case, answer: SellerAnswer, now: Date = new Date()): T {
+  const forced = forcedRecommendation(c, answer, now);
+  return forced ? { ...r, recommendation: forced, confidence: forced === "YOUR_CALL" ? "LOW" : "HIGH" } : r;
+}
+
+// Deterministic rule: if the seller cannot respond (under review, overdue, closed, no due date),
+// the seller decides. The model cannot override this, whatever it says.
+export function enforceEligibility<T extends { recommendation: string; confidence: string }>(r: T, e: Eligibility): T {
+  // The model's confidence judged its FIGHT or REFUND, which is now discarded, so the answer is LOW.
+  return e.canRespond ? r : { ...r, recommendation: "YOUR_CALL", confidence: "LOW" };
 }

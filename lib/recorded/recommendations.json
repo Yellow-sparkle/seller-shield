@@ -4,43 +4,47 @@
     "confidence": "HIGH",
     "claims": [
       {
-        "text": "The buyer says the item never arrived.",
+        "text": "This is an Item Not Received dispute awaiting the seller's response.",
         "fields": [
-          "reason"
+          "reason",
+          "status"
         ]
       },
       {
-        "text": "PayPal wants proof of delivery to decide this case.",
+        "text": "No tracking recorded.",
+        "fields": [
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "PayPal's Item Not Received rule requires tracking, so it is not met here.",
+        "fields": [
+          "reason",
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "PayPal is asking for proof of fulfillment.",
         "fields": [
           "evidenceTypeNeeded"
         ]
       },
       {
-        "text": "You have no tracking, so you can't prove delivery.",
+        "text": "PayPal is holding EUR 57.61, net of fees, on a EUR 60 transaction.",
         "fields": [
-          "hasTracking",
-          "evidenceTypeNeeded"
+          "holdAmount",
+          "amount"
         ]
       },
       {
-        "text": "The disputed amount is EUR 60, and PayPal is holding EUR 57.61 of it.",
+        "text": "The seller can still respond, by 23 Nov 2026.",
         "fields": [
-          "amount",
-          "holdAmount"
-        ]
-      },
-      {
-        "text": "PayPal is waiting for your response, which is due by 23 Nov 2026.",
-        "fields": [
-          "status",
           "canRespond",
           "responseDueAt"
         ]
       }
     ],
-    "removed": [
-      "Seller protection only helps if you can prove delivery, so it likely won't save this case."
-    ]
+    "removed": []
   },
   "PP-R-FGC-10196238": {
     "recommendation": "REFUND",
@@ -53,26 +57,35 @@
         ]
       },
       {
-        "text": "PayPal needs proof of fulfillment to rule for you.",
-        "fields": [
-          "evidenceTypeNeeded"
-        ]
-      },
-      {
-        "text": "You have no tracking, so you cannot prove delivery.",
+        "text": "No tracking recorded for this order.",
         "fields": [
           "hasTracking"
         ]
       },
       {
-        "text": "PayPal is holding EUR 43.12, net of fees, on this EUR 45 sale.",
+        "text": "PayPal's Item Not Received rule requires tracking, so this dispute does not meet it.",
+        "fields": [
+          "reason",
+          "hasTracking",
+          "evidenceTypeNeeded"
+        ]
+      },
+      {
+        "text": "Being eligible for seller protection does not satisfy the rule without tracking.",
+        "fields": [
+          "sellerProtectionEligible",
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "PayPal is holding EUR 43.12 of the EUR 45 payment.",
         "fields": [
           "holdAmount",
           "amount"
         ]
       },
       {
-        "text": "You can still respond until 2026-11-23 10:00 UTC.",
+        "text": "You can still respond until 23 Nov 2026, 23:34 UTC.",
         "fields": [
           "canRespond",
           "responseDueAt"
@@ -82,44 +95,47 @@
     "removed": []
   },
   "PP-R-NVP-10196239": {
-    "recommendation": "REFUND",
-    "confidence": "HIGH",
+    "recommendation": "YOUR_CALL",
+    "confidence": "LOW",
     "claims": [
       {
-        "text": "The buyer says the item is significantly not as described.",
+        "text": "This is a Significantly Not As Described dispute, not Item Not Received.",
         "fields": [
           "reason"
         ]
       },
       {
-        "text": "You confirmed the item does not match your listing, so you have no grounds to fight.",
+        "text": "You say the item only partly matches the listing.",
         "fields": [
           "matchesListing"
         ]
       },
       {
-        "text": "The dispute is for EUR 85.00.",
+        "text": "A partial match leaves the outcome uncertain for a not-as-described claim.",
         "fields": [
+          "matchesListing",
+          "reason"
+        ]
+      },
+      {
+        "text": "PayPal is holding EUR 81.76, net of fees, on the EUR 85 sale.",
+        "fields": [
+          "holdAmount",
           "amount"
         ]
       },
       {
-        "text": "PayPal is holding EUR 81.76 from your balance, net of fees.",
-        "fields": [
-          "holdAmount"
-        ]
-      },
-      {
-        "text": "PayPal is waiting for your response, and you can still respond.",
+        "text": "PayPal is waiting for your response, due by 23 Nov 2026.",
         "fields": [
           "status",
-          "canRespond"
+          "canRespond",
+          "responseDueAt"
         ]
       },
       {
-        "text": "Respond by 23 Nov 2026, 10:00 UTC.",
+        "text": "If you fight, PayPal asks for evidence of type OTHER.",
         "fields": [
-          "responseDueAt"
+          "evidenceTypeNeeded"
         ]
       }
     ],

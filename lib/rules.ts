@@ -29,6 +29,30 @@ export function responseEligibility(c: Case, now: Date = new Date()): Eligibilit
   const days = daysUntilDue(c, now);
   if (days === null) return { canRespond: false, reason: "NO_DUE_DATE" };
   // Compare the real timestamp: a deadline passed a few hours ago rounds to 0 days, so the day count alone is not enough.
-  if (days < 0 || Date.parse(c.responseDueAt as string) < now.getTime()) return { canRespond: false, reason: "OVERDUE" };
+  // One-hour margin before PayPal's cut-off, since the stored due date is UTC (case 8 gap 3, Kate, 5 Nov 2026).
+  const CUTOFF_MARGIN_MS = 60 * 60 * 1000;
+  if (days < 0 || Date.parse(c.responseDueAt as string) - CUTOFF_MARGIN_MS < now.getTime()) return { canRespond: false, reason: "OVERDUE" };
   return { canRespond: true, daysLeft: days };
+}
+
+// Seller Protection label for the case screen. SNAD is excluded in PayPal's published PT terms,
+// so it reads "Not covered" even when PayPal's sandbox status says ELIGIBLE.
+export function protectionLabel(c: Case): string {
+  if (c.reason === "SNAD") return "Not covered (SNAD is excluded in PayPal PT terms)";
+  if (c.sellerProtectionEligible === null) return "-";
+  return c.sellerProtectionEligible ? "Eligible" : "Not eligible";
+}
+
+// Decide-by state for the case screen. The seller must refund or respond before the due date,
+// because after it PayPal decides without them. Warns two days before the due date.
+export type DecideBy = { date: string | null; state: "ok" | "warn" | "passed" | "unknown" };
+
+export function decideBy(c: Case, now: Date = new Date()): DecideBy {
+  if (!c.responseDueAt) return { date: null, state: "unknown" };
+  const due = Date.parse(c.responseDueAt);
+  if (Number.isNaN(due)) return { date: null, state: "unknown" };
+  const date = c.responseDueAt.slice(0, 10);
+  if (now.getTime() > due) return { date, state: "passed" };
+  if (due - now.getTime() <= 2 * 86_400_000) return { date, state: "warn" };
+  return { date, state: "ok" };
 }
