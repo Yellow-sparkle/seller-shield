@@ -99,3 +99,10 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - Decision: full refund of €60,00. Recommended under the item-not-received rule with no proof of delivery. Kate confirmed.
 - Refund sent by Kate at 12:19 CET, 6 Nov 2026 (confirmed "done" in chat). Not re-read from the API yet.
 - Message to buyer drafted and sent by Kate, with "Refund issued for order #1042. We're sorry it didn't arrive." Check the case status with the read script.
+
+## Refund read (PP-R-GJM-10196233, 12:19 CET)
+- transaction_status: REFUNDED. Refund ID: 3EU27163KH137800T, 60,00 EUR.
+- status: UNDER_REVIEW (PayPal review). dispute_state: UNDER_PAYPAL_REVIEW. Stage: INQUIRY.
+- money_movements: buyer CREDIT 60,00; seller DEBIT 60,00 (DISPUTE_SETTLEMENT); seller DEBIT 2,39 (DISPUTE_SETTLEMENT_FEE).
+- The 2,39 EUR fee is on the seller side. Compare with the earlier case, where the 0,86 fee was the original payment fee. Check whether 2,39 matches the original payment fee on 4A183454PG821393D.
+- The case still reads UNDER_REVIEW after the refund, same as case 1. It's not RESOLVED yet.
