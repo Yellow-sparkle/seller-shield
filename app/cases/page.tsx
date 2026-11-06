@@ -86,20 +86,31 @@ const REASON_LABEL: Record<string, string> = {
   UNKNOWN: "Unknown reason",
 };
 
+// PayPal statuses that mean the case is over. For these we show PayPal's status and no action.
+const RESOLVED_STATUSES = ["REFUNDED", "RESOLVED", "DENIED", "CANCELLED"];
+
 function toRow(raw: object, now: Date, override: Override = {}): Row {
   const c = toCase(raw as never);
   const e = responseEligibility(c, now);
-  const rec = recommendationFor(c.disputeId, c, e, now, override);
+  const resolved = c.status !== null && RESOLVED_STATUSES.includes(c.status);
+  const rec = resolved
+    ? {
+        recommendation: "RESOLVED",
+        reasons: c.status === "REFUNDED" ? "• PayPal has already refunded the buyer." : `• PayPal has closed this case (${c.status}).`,
+        nextStep: "1. No action needed.\n2. Keep the case for your records.",
+      }
+    : recommendationFor(c.disputeId, c, e, now, override);
   return {
     id: c.disputeId,
     reason: REASON_LABEL[c.reason] ?? c.reason,
     amount: c.amount ? `${c.amount.value.toFixed(2)} ${c.amount.currency}` : "-",
     fee: feeLabel((feeFixtures as Record<string, FeeRecord>)[c.disputeId], "fee"),
     afterFees: feeLabel((feeFixtures as Record<string, FeeRecord>)[c.disputeId], "afterFees"),
-    deadline: c.responseDueAt ? c.responseDueAt.slice(0, 10) : "-",
-    daysLeft: daysUntilDue(c, now),
+    deadline: !resolved && c.responseDueAt ? c.responseDueAt.slice(0, 10) : "-",
+    daysLeft: resolved ? null : daysUntilDue(c, now),
     protection: protectionLabel(c),
     decideBy: (() => {
+      if (resolved) return "-";
       const d = decideBy(c, now);
       if (d.state === "unknown") return "-";
       if (d.state === "passed") return `Passed (${d.date}). PayPal decides`;
@@ -107,7 +118,9 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
       return `Decide by ${d.date}`;
     })(),
     canRespond: e.canRespond,
-    status: e.canRespond
+    status: resolved
+      ? c.status === "REFUNDED" ? "Refunded by PayPal" : `Resolved by PayPal (${c.status?.toLowerCase()})`
+      : e.canRespond
       ? "You can respond"
       : e.reason === "NO_DUE_DATE"
         ? "Due date unknown"
@@ -129,6 +142,7 @@ const rowSelection: RowSelectionOptions<Row> = { mode: "multiRow", checkboxes: t
 const CASE_READ_LABEL = "Case strength";
 
 function readStyle(value: string): { label: string; color: string; bg: string } {
+  if (value === "RESOLVED") return { label: "Closed by PayPal", color: "#4a5568", bg: "#edf1f6" };
   if (value.startsWith("FIGHT")) return { label: "Strong case", color: "#1d6b3f", bg: "#e3f4ea" };
   if (value.startsWith("REFUND")) return { label: "Weak case", color: "#a3231b", bg: "#fbe4e2" };
   if (value.startsWith("YOUR_CALL")) return { label: "Mixed: your decision", color: "#7a4f00", bg: "#fff4d6" };
