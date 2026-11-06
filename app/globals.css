@@ -1,14 +1,12 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f7fa;
+  --foreground: #1f2a37;
+  --navy: #003087;
+  --blue: #0070ba;
+  --line: #d6dee8;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+
 
 html {
   height: 100%;
@@ -47,3 +45,21 @@ a {
     color-scheme: dark;
   }
 }
+
+/* PayPal-style look: navy headings, blue actions, light grey page. Colours only, no PayPal logo. */
+h1 { color: var(--navy); font-weight: 700; }
+h2 { color: var(--navy); font-weight: 600; }
+a { color: var(--blue); }
+button:not(:disabled) { cursor: pointer; }
+button {
+  font: inherit;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: var(--navy);
+  padding: 6px 12px;
+}
+button:not(:disabled):hover { border-color: var(--blue); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+input, select, textarea { font: inherit; border: 1px solid var(--line); border-radius: 6px; background: #ffffff; padding: 6px 10px; }
+input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }

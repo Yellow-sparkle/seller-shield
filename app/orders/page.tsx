@@ -12,7 +12,7 @@ type TrackingEntry = { carrier: string; tracking: string };
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const theme = themeQuartz;
+const theme = themeQuartz.withParams({ accentColor: "#0070ba", headerBackgroundColor: "#eaf1fb", headerTextColor: "#003087", borderRadius: 6 });
 const CHIPS: { id: FilterChip; label: string }[] = [
   { id: "missingTracking", label: "Missing tracking" },
   { id: "held", label: "Held" },
@@ -148,7 +148,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <main style={{ padding: 16, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
+    <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22 }}>Tracking fixer</h1>
       <p style={{ color: "#555" }}>All PayPal calls on this screen go to the sandbox. Demo rows can&apos;t be selected for sending. The top row totals the orders shown.</p>
 
