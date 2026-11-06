@@ -140,5 +140,42 @@
       }
     ],
     "removed": []
+  },
+  "PP-R-SRZ-10196872": {
+    "recommendation": "YOUR_CALL",
+    "confidence": "LOW",
+    "claims": [
+      {
+        "text": "The buyer says the item was not received, and PayPal wants proof of fulfillment.",
+        "fields": [
+          "reason",
+          "evidenceTypeNeeded"
+        ]
+      },
+      {
+        "text": "This order is eligible for Seller Protection.",
+        "fields": [
+          "sellerProtectionEligible"
+        ]
+      },
+      {
+        "text": "The disputed amount is EUR 25.",
+        "fields": [
+          "amount"
+        ]
+      },
+      {
+        "text": "PayPal is waiting for your response, due by 26 Nov 2026.",
+        "fields": [
+          "status",
+          "canRespond",
+          "responseDueAt"
+        ]
+      }
+    ],
+    "removed": [
+      "Winning needs tracking, a delivered status and delivery to the transaction address. None of these is known yet.",
+      "If all three are confirmed, fighting is likely to succeed. If not, refunding is safer."
+    ]
   }
 }
