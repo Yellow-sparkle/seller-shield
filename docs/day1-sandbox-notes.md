@@ -106,3 +106,10 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - money_movements: buyer CREDIT 60,00; seller DEBIT 60,00 (DISPUTE_SETTLEMENT); seller DEBIT 2,39 (DISPUTE_SETTLEMENT_FEE).
 - The 2,39 EUR fee is on the seller side. Compare with the earlier case, where the 0,86 fee was the original payment fee. Check whether 2,39 matches the original payment fee on 4A183454PG821393D.
 - The case still reads UNDER_REVIEW after the refund, same as case 1. It's not RESOLVED yet.
+
+## Refund read (PP-R-FGC-10196238, 12:24 CET)
+- Item: ceramic serving bowl, order #1057, 45,00 EUR. Not shipped, no tracking.
+- Decision: full refund of 45,00 EUR, recommended and confirmed by Kate. Refund ID: 98T39287N8805573S.
+- transaction_status: REFUNDED. status: UNDER_REVIEW (PayPal review). Stage: INQUIRY.
+- money_movements: buyer CREDIT 45,00; seller DEBIT 45,00 (DISPUTE_SETTLEMENT); seller DEBIT 1,88 (DISPUTE_SETTLEMENT_FEE).
+- Same pattern as the other refunds: the case reads UNDER_REVIEW right after a refund. Check again for RESOLVED.
