@@ -43,3 +43,10 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - Kate sent a full refund of 15.00 EUR from the seller side. Refund ID: 37L47556W72439357.
 - The buyer keeps the item. The case should now be closed.
 - Open for the next check: whether the 14.14 EUR hold is released after the refund, and the status and fund_movements that the API now reports for PP-R-JGU-10196814.
+
+## Read after refund (11:53 CET, same case)
+- status: UNDER_REVIEW. dispute_state: UNDER_PAYPAL_REVIEW. dispute_life_cycle_stage: INQUIRY. transaction_status: REFUNDED.
+- money_movements: seller DEBIT 15.00 (DISPUTE_SETTLEMENT); seller DEBIT 0.86 (DISPUTE_SETTLEMENT_FEE); buyer CREDIT 15.00.
+- fund_movements: the 14.14 HOLD_PLACED debit from 11:37 is still listed. No hold-release entry is listed in this response.
+- Answer for the hold question: a refund settles from the seller balance (15.00 plus a 0.86 settlement fee). The response does not show a separate hold release. Check the seller balance in the dashboard to confirm the net amount.
+- Refund ID: 37L47556W72439357 at 11:52:27.307Z.
