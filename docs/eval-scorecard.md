@@ -1,5 +1,19 @@
 # Eval results scorecard
 
+![Eval Results Scorecard](eval-scorecard.png)
+
+| Category | KPI | Ratio passing | Subcomponent | All | Item not received | Not as described | Unauthorised | Other / new reason |
+|---|---|---|---|---|---|---|---|---|
+| Accuracy | ≥ 90% | 1 / 1 | Recommendation matches expected answer | **100%** (19/19) | 100% (8/8) | 100% (4/4) | 100% (4/4) | 100% (3/3) |
+| Grounding | ≥ 95% | 2 / 2 | Cases with every claim supported (judge) | **95%** (18/19) | 100% (8/8) | 75% (3/4) | 100% (4/4) | 100% (3/3) |
+| | | | Claims kept by grounding guard (sandbox) | **100%** (18/18) | 100% (12/12) | 100% (6/6) | N/A | N/A |
+| Style | 100% | 2 / 2 | Plain English (judge) | **100%** (19/19) | 100% (8/8) | 100% (4/4) | 100% (4/4) | 100% (3/3) |
+| | | | No prediction of PayPal's decision (judge) | **100%** (19/19) | 100% (8/8) | 100% (4/4) | 100% (4/4) | 100% (3/3) |
+
+Below KPI: Not as described, 75% on the judge check (one case added evidence examples that are not in the facts).
+
+## Detail
+
 Only measured results are shown. The summary uses the latest live run on 6 Nov 2026, with the golden and judge checks run on the same code (recommender: Claude Opus 5.5, judge: Claude Sonnet 5.5).
 
 Status key: **Pass** meets the target. **Near** is within 10% of the target. **Below** is more than 10% under the target.
