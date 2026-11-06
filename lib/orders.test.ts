@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { filterOrders, planBulk, protectionLabel, rowResultLabel, type Order } from "./orders.ts";
+import { caseLink, chipsFromQuery, filterOrders, gridSummary, planBulk, protectionLabel, rowResultLabel, type Order } from "./orders.ts";
 
 const base = (over: Partial<Order>): Order => ({
   orderNo: "1001",
@@ -63,4 +63,34 @@ test("a complete sandbox row goes into the plan with trimmed values", () => {
 test("a failed row never shows a success label", () => {
   assert.equal(rowResultLabel({ ok: true }), "Tracking added");
   assert.equal(rowResultLabel({ ok: false, error: "INVALID_REQUEST" }), "Failed: INVALID_REQUEST");
+});
+
+test("chips come from the link, and unknown chips are ignored", () => {
+  assert.deepEqual(chipsFromQuery("?chip=missingTracking"), ["missingTracking"]);
+  assert.deepEqual(chipsFromQuery("?chip=held&chip=bogus"), ["held"]);
+  assert.deepEqual(chipsFromQuery(""), []);
+});
+
+test("summary row totals the rows shown", () => {
+  const s = gridSummary([
+    base({ orderNo: "A", amount: { currency: "EUR", value: "20.00" }, held: true }),
+    base({ orderNo: "B", amount: { currency: "EUR", value: "5.50" }, tracking: "T1", disputeId: "D1", source: "sandbox" }),
+  ]);
+  assert.equal(s.orders, 2);
+  assert.equal(s.total, 25.5);
+  assert.equal(s.missingTracking, 1);
+  assert.equal(s.held, 1);
+  assert.equal(s.disputes, 1);
+  assert.equal(s.sandbox, 1);
+});
+
+test("only sandbox disputes link to a case screen", () => {
+  assert.equal(caseLink(base({ disputeId: "PP-R-1", source: "sandbox" })), "/cases#PP-R-1");
+  assert.equal(caseLink(base({ disputeId: "PP-R-DEMO-1", source: "demo" })), null);
+  assert.equal(caseLink(base({ source: "sandbox" })), null);
+});
+
+test("the sandbox chip keeps only real sandbox orders, so the grid matches the scan card", () => {
+  const shown = filterOrders(rows, chipsFromQuery("?chip=missingTracking&chip=sandbox"));
+  assert.deepEqual(shown.map((o) => o.orderNo), ["C"]);
 });

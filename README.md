@@ -8,9 +8,9 @@ Built for the PayPal AI Hackathon. PayPal sandbox only: EUR, no real buyers or m
 
 | Screen | Address | What it does | Data |
 |---|---|---|---|
-| Health scan | `/scan` | Three cards: money at risk, sandbox orders missing tracking, next reply deadline. Shows the time it was read, and an error instead of zero if PayPal can't be reached. | Disputes are read live from the PayPal sandbox. Tracking state comes from the order data in the repo. |
-| Tracking fixer | `/orders` | AG Grid of 203 orders with filters (missing tracking, held, not protected, has dispute), quick filter, row selection and a review step. "Confirm and send" adds tracking in PayPal, and each row shows PayPal's result. | 3 real sandbox orders, plus 200 seeded orders labelled "Demo data" that can't be sent. Sends to the PayPal sandbox only. |
-| Case screen | `/` | Each dispute with amount, held funds, deadline, seller protection, the AI recommendation with its reasons, an evidence checklist, and a reply draft to copy. | Disputes from `lib/fixtures/sandbox-disputes.json` (copied from PayPal sandbox responses). Recommendations from a recorded live Claude run. Reply drafts come from fixed templates, and nothing is sent. |
+| Health scan (home) | `/` | Three cards: money at risk, sandbox orders missing tracking, next reply deadline. Each card opens the rows behind its number. Shows the time it was read, and an error instead of zero if PayPal can't be reached. | Disputes are read live from the PayPal sandbox. Tracking state comes from the order data in the repo. |
+| Tracking fixer | `/orders` | AG Grid of 203 orders with filters (missing tracking, held, not protected, has dispute, sandbox only), quick filter, status pills, a pinned totals row, a "View case" button on disputed orders, row selection and a review step. "Confirm and send" adds tracking in PayPal, and each row shows PayPal's result. | 3 real sandbox orders, plus 200 seeded orders labelled "Demo data" that can't be sent. Sends to the PayPal sandbox only. |
+| Dispute cases | `/cases` | Each dispute with amount, held funds, deadline, seller protection, the AI recommendation with its reasons, an evidence checklist, and a reply draft to copy. | Disputes from `lib/fixtures/sandbox-disputes.json` (copied from PayPal sandbox responses). Recommendations from a recorded live Claude run. Reply drafts come from fixed templates, and nothing is sent. |
 
 How the recommendation works: deterministic rules (`lib/proof.ts`, `lib/rules.ts`) decide eligibility and force an answer where the rules are clear. Otherwise one Claude call returns FIGHT, REFUND or YOUR_CALL, with reasons that cite the case facts they rely on. Reasons without a cited fact, or that predict PayPal's decision, are removed. Low confidence always becomes YOUR_CALL.
 
@@ -42,7 +42,7 @@ Then start the app:
 npm run dev
 ```
 
-Open http://localhost:3000/scan for the health scan, http://localhost:3000/orders for the tracking fixer, and http://localhost:3000 for the case screen. Restart `npm run dev` after changing `.env.local`.
+Open http://localhost:3000 for the health scan. The bar at the top links to the orders grid (`/orders`) and the dispute cases (`/cases`). Restart `npm run dev` after changing `.env.local`.
 
 Never commit `.env.local`. Files starting with `.env` are listed in `.gitignore`.
 
@@ -73,8 +73,6 @@ How we evaluate the AI: [docs/evaluation.md](docs/evaluation.md). Results: [docs
 
 These are in the product plan but not in this version:
 
-- Health scan numbers that link to the rows behind them. The case screen, not the scan, is the home page.
-- A dispute button in the tracking grid that opens the case, and status pills and a summary row in the grid.
 - Sending a reply or evidence to PayPal's Disputes API from the case screen, and attaching files. Replies are copy-only today.
 - Reading tracking status back from PayPal for the health scan.
 
