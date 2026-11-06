@@ -11,6 +11,8 @@ type FullDispute = {
   seller_response_due_date?: string;
   dispute_life_cycle_stage?: string;
   fund_movements?: { type?: string; amount?: Money }[];
+  evidences?: { evidence_type?: string; source?: string; notes?: string; documents?: { name?: string }[] }[];
+  messages?: { posted_by?: string; content?: string }[];
 };
 
 const REASONS: Record<string, string> = {
@@ -33,6 +35,15 @@ export function toFixture(d: FullDispute): Record<string, unknown> {
     dispute_life_cycle_stage: d.dispute_life_cycle_stage,
     fund_movements: (d.fund_movements ?? []).map((f) => ({ type: f.type, amount: f.amount })),
   };
+  // What the buyer said and sent, and what PayPal asked the seller for. Only these fields are kept.
+  const evidences = d.evidences ?? [];
+  const buyerClaim = evidences.find((e) => e.evidence_type === "CREATE")?.notes ?? d.messages?.find((m) => m.posted_by === "BUYER")?.content ?? null;
+  fixture.buyer_claim = buyerClaim;
+  fixture.requested_from_seller = evidences.filter((e) => e.source === "REQUESTED_FROM_SELLER").map((e) => e.evidence_type ?? "UNKNOWN");
+  fixture.buyer_files = evidences
+    .filter((e) => e.source !== "REQUESTED_FROM_SELLER")
+    .flatMap((e) => (e.documents ?? []).map((doc) => doc.name ?? "(no name)"));
+  fixture.buyer_checked = true;
   if (typeof tx?.seller_protection_eligible === "boolean") {
     fixture.seller_protection = { status: tx.seller_protection_eligible ? "ELIGIBLE" : "NOT_ELIGIBLE" };
   }

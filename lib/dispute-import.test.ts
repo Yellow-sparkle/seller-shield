@@ -38,3 +38,23 @@ test("adding the same dispute again replaces it", () => {
   assert.equal(list.length, 1);
   assert.equal(list[0].status, "RESOLVED");
 });
+
+test("keeps the buyer's claim, PayPal's requests and buyer files, and nothing else", () => {
+  const full = {
+    dispute_id: "PP-R-TEST-00000001",
+    reason: "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+    status: "WAITING_FOR_SELLER_RESPONSE",
+    evidences: [
+      { evidence_type: "CREATE", source: "BUYER", notes: "Not arrived. I want a refund." },
+      { evidence_type: "PROOF_OF_FULFILLMENT", source: "REQUESTED_FROM_SELLER" },
+      { evidence_type: "OTHER", source: "BUYER", documents: [{ name: "photo.jpg" }] },
+    ],
+    messages: [{ posted_by: "BUYER", content: "Not arrived." }],
+  };
+  const f = toFixture(full as never);
+  assert.equal(f.buyer_claim, "Not arrived. I want a refund.");
+  assert.deepEqual(f.requested_from_seller, ["PROOF_OF_FULFILLMENT"]);
+  assert.deepEqual(f.buyer_files, ["photo.jpg"]);
+  assert.equal(f.buyer_checked, true);
+  assert.equal("evidences" in f, false);
+});

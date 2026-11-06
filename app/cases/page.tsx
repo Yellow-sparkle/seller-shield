@@ -36,6 +36,9 @@ type Row = {
   evidence: string;
   decision: string;
   buyerFiles: string[];
+  buyerClaim: string | null;
+  requested: string[];
+  buyerChecked: boolean;
 };
 
 type Override = Partial<SellerAnswer> & { decision?: string; buyerFiles?: string[] };
@@ -91,6 +94,7 @@ const REASON_LABEL: Record<string, string> = {
 const RESOLVED_STATUSES = ["REFUNDED", "RESOLVED", "DENIED", "CANCELLED"];
 
 function toRow(raw: object, now: Date, override: Override = {}): Row {
+  const fx = raw as Record<string, unknown>;
   const c = toCase(raw as never);
   const e = responseEligibility(c, now);
   const resolved = c.status !== null && RESOLVED_STATUSES.includes(c.status);
@@ -132,7 +136,10 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     cause: override.addressMismatchCause ?? "unknown",
     evidence: override.causeEvidence ?? "",
     decision: override.decision ?? "Not decided",
-    buyerFiles: override.buyerFiles ?? [],
+    buyerFiles: override.buyerFiles ?? (Array.isArray(fx.buyer_files) ? (fx.buyer_files as string[]) : []),
+    buyerClaim: typeof fx.buyer_claim === "string" ? fx.buyer_claim : null,
+    requested: Array.isArray(fx.requested_from_seller) ? (fx.requested_from_seller as string[]) : [],
+    buyerChecked: fx.buyer_checked === true,
   };
 }
 
@@ -252,17 +259,28 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
                 {item}
               </label>
             ))}
-            <div style={{ marginTop: 10, fontSize: 14 }}>
-              <strong>From the buyer</strong>
-              {r.buyerFiles.length > 0 ? (
-                <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
-                  {r.buyerFiles.map((f) => (
-                    <li key={f}>{f}</li>
-                  ))}
-                </ul>
-              ) : (
-                <div style={{ color: "#555" }}>None loaded from PayPal yet.</div>
+            <div style={{ marginTop: 10, fontSize: 14, display: "grid", gap: 6 }}>
+              {r.requested.length > 0 && (
+                <div>
+                  <strong>PayPal asked you for:</strong>{" "}
+                  {r.requested.map((t) => (t === "PROOF_OF_FULFILLMENT" ? "proof of delivery (tracking)" : t.toLowerCase().replace(/_/g, " "))).join(", ")}
+                </div>
               )}
+              {r.buyerClaim && (
+                <div>
+                  <strong>Buyer&apos;s claim:</strong> {r.buyerClaim}
+                </div>
+              )}
+              <div>
+                <strong>From the buyer:</strong>{" "}
+                {!r.buyerChecked && r.buyerFiles.length === 0 ? (
+                  <span style={{ color: "#555" }}>Not checked yet. Run add-dispute for this case.</span>
+                ) : r.buyerFiles.length > 0 ? (
+                  r.buyerFiles.join(", ")
+                ) : (
+                  <span style={{ color: "#555" }}>No files from the buyer.</span>
+                )}
+              </div>
             </div>
           </div>
         );

@@ -1,3 +1,4 @@
+export {};
 // Prints what PayPal's sandbox returns for one dispute: the full detail reply, then a short summary of the
 // buyer's evidence (files and documents) and messages. Read-only in PayPal; changes no file.
 // Uses PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET from .env.local.
