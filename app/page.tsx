@@ -26,7 +26,6 @@ export default function ScanPage() {
       {result?.ok && result.health && (
         <>
           <p style={{ fontSize: 16 }}>{result.health.copy}</p>
-          <p style={{ fontSize: 13, color: "#555" }}>Demo data: {result.health.demoMissingTracking} seeded orders also lack tracking. These are not counted in the cards.</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             <Card title="Money at risk" value={`${result.health.moneyAtRisk.currency} ${result.health.moneyAtRisk.amount.toFixed(2)}`} detail={`${result.health.moneyAtRisk.count} open disputes`} href="/cases" action="Open the dispute cases" />
             <Card
@@ -41,7 +40,7 @@ export default function ScanPage() {
               value={result.health.nextDeadline ? `${result.health.nextDeadline.daysLeft} days` : "None"}
               detail={result.health.nextDeadline ? new Date(result.health.nextDeadline.date).toLocaleDateString() : "No open deadline"}
               href={result.health.nextDeadline?.disputeId ? `/cases#${result.health.nextDeadline.disputeId}` : "/cases"}
-              action="Open this case"
+              action={result.health.nextDeadline?.disputeId ? "Open this case" : "Open the dispute cases"}
             />
           </div>
         </>
