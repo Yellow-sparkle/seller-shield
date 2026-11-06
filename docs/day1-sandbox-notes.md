@@ -73,3 +73,10 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 1. Item-not-received reason check: answered. The API accepts MERCHANDISE_OR_SERVICE_NOT_RECEIVED, and the case uses it.
 2. Due-date time zone: the API gives 2026-11-26T11:34:32.869Z. The buyer's message shows 11:34:32 CET in the UI, and its API timestamp is 11:34:32.869Z. So the UI is showing UTC but labelling it CET. Treat the deadline as 26 Nov 2026, 11:34 UTC (12:34 CET). Confirm in the seller UI before relying on it.
 3. Hold release: still open. fund_movements still list the 14.14 EUR HOLD_PLACED debit, and no release line is shown. Confirm by checking the seller balance's on-hold amount in the dashboard.
+
+## Transaction activity (6 Nov, seller dashboard)
+- Payment from buyer: +14,14 EUR net (15 EUR gross, 0,86 EUR already taken at payment).
+- Temporary Hold: −14,14 EUR. No release line shown.
+- Refund to buyer: −15,00 EUR, fee 0,00 EUR.
+- Open: is the hold released? Check the on-hold amount on the balance page. If it reads 14,14 EUR, it's not released.
+- Open: the API showed a separate 0,86 EUR DISPUTE_SETTLEMENT_FEE at refund time, but the activity shows the fee was taken at payment. Confirm whether the fee is double-counted.
