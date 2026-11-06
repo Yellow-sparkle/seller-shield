@@ -2,9 +2,9 @@
 
 // Case screen (PRD F3). Lists the sandbox disputes with the recorded AI recommendation.
 // A link such as /cases#PP-R-... (from the orders grid or the health scan) highlights that case.
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { AllCommunityModule, ModuleRegistry, themeQuartz, type CellValueChangedEvent, type ColDef } from "ag-grid-community";
+import { AllCommunityModule, ModuleRegistry, themeQuartz, type CellValueChangedEvent, type ColDef, type RowSelectionOptions } from "ag-grid-community";
 import { toCase, daysUntilDue } from "../../lib/dispute.ts";
 import { decideBy, protectionLabel, responseEligibility } from "../../lib/rules.ts";
 import { forcedRecommendation, inrWaitNote } from "../../lib/proof.ts";
@@ -111,8 +111,11 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
   };
 }
 
+// Ticked cases drive the lower sections, the same way ticked orders drive Review on the orders screen.
+const rowSelection: RowSelectionOptions<Row> = { mode: "multiRow", checkboxes: true, headerCheckbox: true };
+
 const columns: ColDef<Row>[] = [
-  { field: "id", headerName: "Dispute", flex: 2, minWidth: 190, pinned: "left" },
+  { field: "id", headerName: "Dispute", flex: 2, minWidth: 190 },
   { field: "reason", headerName: "Reason", flex: 1 },
   { field: "amount", headerName: "Amount", flex: 1 },
   { field: "hold", headerName: "Held (net of fees)", flex: 2 },
@@ -331,12 +334,18 @@ export default function CaseScreen() {
     window.addEventListener("hashchange", read);
     return () => window.removeEventListener("hashchange", read);
   }, []);
-  const rows: Row[] = now
-    ? (fixtures as object[]).map((f) => {
-        const id = toCase(f as never).disputeId;
-        return toRow(f, now, overrides[id] ?? {});
-      })
-    : [];
+  const rows: Row[] = useMemo(
+    () =>
+      now
+        ? (fixtures as object[]).map((f) => {
+            const id = toCase(f as never).disputeId;
+            return toRow(f, now, overrides[id] ?? {});
+          })
+        : [],
+    [now, overrides],
+  );
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const selectedRows = rows.filter((r) => selectedIds.includes(r.id));
   const onCellValueChanged = (e: CellValueChangedEvent<Row>) => {
     if (e.colDef.field !== "cause" && e.colDef.field !== "evidence") return;
     const d = e.data;
@@ -359,6 +368,8 @@ export default function CaseScreen() {
           theme={theme}
           rowData={rows}
           columnDefs={columns}
+          rowSelection={rowSelection}
+          onSelectionChanged={(e) => setSelectedIds(e.api.getSelectedRows().map((r) => r.id))}
           domLayout="autoHeight"
           defaultColDef={{ minWidth: 120, wrapHeaderText: true, autoHeaderHeight: true, wrapText: true, autoHeight: true, cellStyle: { lineHeight: "1.4", paddingTop: 8, paddingBottom: 8 } }}
           suppressColumnVirtualisation
@@ -371,8 +382,14 @@ export default function CaseScreen() {
           onCellValueChanged={onCellValueChanged}
         />
       </div>
-      <EvidenceChecklist rows={rows} />
-      <ReplyDrafts rows={rows} />
+      {selectedRows.length === 0 ? (
+        <p style={{ marginTop: 20, color: "#555", fontSize: 14 }}>Tick a case above to see its reply and actions.</p>
+      ) : (
+        <>
+          <EvidenceChecklist rows={selectedRows} />
+          <ReplyDrafts rows={selectedRows} />
+        </>
+      )}
     </main>
   );
 }

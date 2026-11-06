@@ -50,7 +50,7 @@ export default function ScanPage() {
 
 function Card({ title, value, detail, href, action }: { title: string; value: string; detail: string; href: string; action: string }) {
   return (
-    <a href={href} style={{ display: "block", padding: 18, background: "#ffffff", border: "1px solid #d6dee8", borderTop: "4px solid #0070ba", borderRadius: 8, color: "inherit", textDecoration: "none", boxShadow: "0 1px 2px rgba(0,48,135,0.06)" }}>
+    <a href={href} style={{ display: "block", padding: 18, background: "#ffffff", border: "1px solid #d6dee8", borderTop: "6px solid #ffc439", borderRadius: 8, color: "inherit", textDecoration: "none", boxShadow: "0 1px 2px rgba(0,48,135,0.06)" }}>
       <div style={{ fontSize: 13, color: "#555" }}>{title}</div>
       <div style={{ fontSize: 26, fontWeight: 700, color: "#003087" }}>{value}</div>
       <div style={{ fontSize: 13, color: "#555" }}>{detail}</div>
