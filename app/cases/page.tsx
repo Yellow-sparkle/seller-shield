@@ -148,7 +148,7 @@ function ProtectionBadge({ value }: { value: string }) {
   const tone = value.startsWith("Eligible") ? { color: "#1d6b3f", bg: "#e3f4ea" } : value.startsWith("Not") ? { color: "#a3231b", bg: "#fbe4e2" } : { color: "#4a5568", bg: "#edf1f6" };
   // Long explanations stay in the tooltip; the badge shows the short label.
   const short = value.startsWith("Not covered") ? "Not covered" : value;
-  return <span title={value} style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, background: tone.bg, color: tone.color, fontWeight: 600, fontSize: 13, whiteSpace: "nowrap" }}>{short}</span>;
+  return <span title={value} style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, background: tone.bg, color: tone.color, fontWeight: 600, fontSize: 13 }}>{short}</span>;
 }
 
 const columns: ColDef<Row>[] = [
@@ -472,10 +472,14 @@ export default function CaseScreen() {
       {selectedRows.length === 0 ? (
         <p style={{ marginTop: 20, color: "#555", fontSize: 14 }}>Tick a case above to see its reply and actions.</p>
       ) : (
-        <>
-          <EvidenceChecklist rows={selectedRows} />
-          <ReplyDrafts rows={selectedRows} />
-        </>
+        // One card per ticked case, so Documents and Reply and act for each case stay together.
+        selectedRows.map((r) => (
+          <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
+            <h2 style={{ fontSize: 18, margin: "0 0 4px" }}>Case {r.id}</h2>
+            <EvidenceChecklist rows={[r]} />
+            <ReplyDrafts rows={[r]} />
+          </section>
+        ))
       )}
     </main>
   );
