@@ -4,9 +4,7 @@ import { summarizeHealth, type HealthDispute } from "@/lib/health";
 import { allOrders } from "@/lib/orders-seed";
 import { SANDBOX_BASE } from "@/lib/tracking-api";
 
-export const dynamic = "force-dynamic";
-
-export async function GET() {
+export async function GET(_req: Request) {
   const asOf = new Date().toISOString();
   const id = process.env.PAYPAL_CLIENT_ID;
   const secret = process.env.PAYPAL_CLIENT_SECRET;
