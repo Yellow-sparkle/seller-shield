@@ -208,7 +208,7 @@ function writeEvidence(v: Record<string, boolean[]>) {
   }
 }
 
-function EvidenceChecklist({ rows }: { rows: Row[] }) {
+function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: boolean }) {
   const [checked, setChecked] = useState<Record<string, boolean[]>>({});
   useEffect(() => setChecked(readEvidence()), []);
   if (rows.length === 0) return null;
@@ -219,7 +219,7 @@ function EvidenceChecklist({ rows }: { rows: Row[] }) {
         const boxes = checked[r.id] ?? EVIDENCE_ITEMS.map(() => false);
         return (
           <div key={r.id} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
-            <strong>{r.id}</strong>
+            {showId && <strong>{r.id}</strong>}
             {EVIDENCE_ITEMS.map((item, i) => (
               <label key={item} style={{ display: "block", marginTop: 6 }}>
                 <input
@@ -246,7 +246,7 @@ function EvidenceChecklist({ rows }: { rows: Row[] }) {
 // Reply drafts and actions (PRD F3). The draft is a template from case facts. The seller edits it, then either
 // copies it or approves a send. Sends go through /api/dispute-action to the PayPal sandbox only, and only after
 // the seller presses an Approve button. Buttons are disabled when PayPal no longer accepts a response.
-function ReplyDrafts({ rows }: { rows: Row[] }) {
+function ReplyDrafts({ rows, showId = true }: { rows: Row[]; showId?: boolean }) {
   const cases = rows.filter((r) => /^(FIGHT|REFUND|YOUR_CALL)/.test(r.recommendation));
   if (cases.length === 0) return null;
   return (
@@ -254,7 +254,7 @@ function ReplyDrafts({ rows }: { rows: Row[] }) {
       <h2 style={{ fontSize: 18, marginBottom: 4 }}>Reply and act</h2>
       {cases.map((r) => {
         const draft = templateReply({ recommendation: r.recommendation, amount: r.amount, orderRef: r.id });
-        return <DraftCard key={r.id} row={r} initial={draft.draft} />;
+        return <DraftCard key={r.id} row={r} initial={draft.draft} showId={showId} />;
       })}
     </section>
   );
@@ -263,7 +263,7 @@ function ReplyDrafts({ rows }: { rows: Row[] }) {
 type Pending = "message" | "refund" | null;
 type Outcome = { ok: boolean; text: string };
 
-function DraftCard({ row, initial }: { row: Row; initial: string }) {
+function DraftCard({ row, initial, showId = true }: { row: Row; initial: string; showId?: boolean }) {
   const [text, setText] = useState(initial);
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState<Pending>(null);
@@ -296,7 +296,7 @@ function DraftCard({ row, initial }: { row: Row; initial: string }) {
 
   return (
     <div id={`act-${row.id}`} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
-      <strong>{row.id}</strong> <ReadBadge value={row.recommendation} />
+      {showId && <strong>{row.id}</strong>} <ReadBadge value={row.recommendation} />
       <textarea
         aria-label={`Reply to the buyer for ${row.id}`}
         value={text}
@@ -476,8 +476,8 @@ export default function CaseScreen() {
         selectedRows.map((r) => (
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 18, margin: "0 0 4px" }}>Case {r.id}</h2>
-            <EvidenceChecklist rows={[r]} />
-            <ReplyDrafts rows={[r]} />
+            <EvidenceChecklist rows={[r]} showId={false} />
+            <ReplyDrafts rows={[r]} showId={false} />
           </section>
         ))
       )}
