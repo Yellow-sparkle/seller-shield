@@ -98,7 +98,15 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
   const c = toCase(raw as never);
   const e = responseEligibility(c, now);
   const resolved = c.status !== null && RESOLVED_STATUSES.includes(c.status);
-  const rec = resolved
+  // The seller has replied and PayPal is waiting for the buyer: nothing for the seller to do yet.
+  const waitingForBuyer = c.status === "WAITING_FOR_BUYER_RESPONSE";
+  const rec = waitingForBuyer
+    ? {
+        recommendation: "WAITING",
+        reasons: "• You have replied. PayPal is waiting for the buyer.",
+        nextStep: "1. Wait for the buyer's reply.\n2. PayPal decides if the buyer does not reply in time.",
+      }
+    : resolved
     ? {
         recommendation: "RESOLVED",
         reasons: c.status === "REFUNDED" ? "• PayPal has already refunded the buyer." : `• PayPal has closed this case (${c.status}).`,
@@ -122,9 +130,11 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
       if (d.state === "warn") return `Decide now, due ${d.date}`;
       return `Decide by ${d.date}`;
     })(),
-    canRespond: e.canRespond,
+    canRespond: e.canRespond && !waitingForBuyer && !resolved,
     status: resolved
-      ? c.status === "REFUNDED" ? "Refunded by PayPal" : `Resolved by PayPal (${c.status?.toLowerCase()})`
+      ? c.status === "REFUNDED" ? "Refunded by PayPal" : "Resolved by PayPal"
+      : waitingForBuyer
+        ? "Waiting for the buyer to reply"
       : e.canRespond
       ? "You can respond"
       : e.reason === "NO_DUE_DATE"
@@ -152,6 +162,7 @@ const CASE_READ_LABEL = "Case strength";
 
 function readStyle(value: string): { label: string; color: string; bg: string } {
   if (value === "RESOLVED") return { label: "Closed by PayPal", color: "#4a5568", bg: "#edf1f6" };
+  if (value === "WAITING") return { label: "Waiting for the buyer", color: "#1f4e8c", bg: "#e6f0fb" };
   if (value.startsWith("FIGHT")) return { label: "Strong case", color: "#1d6b3f", bg: "#e3f4ea" };
   if (value.startsWith("REFUND")) return { label: "Weak case", color: "#a3231b", bg: "#fbe4e2" };
   if (value.startsWith("YOUR_CALL")) return { label: "Mixed: your decision", color: "#7a4f00", bg: "#fff4d6" };
