@@ -35,6 +35,7 @@ test("chips combine with AND", () => {
 test("protection label shows Protected only for PayPal's PROTECTED status", () => {
   assert.equal(protectionLabel(base({ protection: "PROTECTED" })), "Protected");
   assert.equal(protectionLabel(base({ protection: "UNKNOWN" })), "Unknown");
+  assert.equal(protectionLabel(base({ protection: "ELIGIBLE" })), "Eligible");
   assert.equal(protectionLabel(base({ protection: "NOT_PROTECTED" })), "Not protected");
 });
 

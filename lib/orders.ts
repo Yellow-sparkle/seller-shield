@@ -1,7 +1,7 @@
 // Order list for the tracking fixer (PRD F2). Pure logic only: filters, row labels and the bulk plan.
 // Nothing here calls PayPal. The bulk send happens only after the seller confirms the plan.
 
-export type Protection = "PROTECTED" | "NOT_PROTECTED" | "UNKNOWN";
+export type Protection = "PROTECTED" | "ELIGIBLE" | "NOT_PROTECTED" | "UNKNOWN";
 
 export type Order = {
   orderNo: string;
@@ -41,6 +41,7 @@ export function filterOrders(orders: Order[], chips: FilterChip[]): Order[] {
 // Protection label: "Protected" only when PayPal's own status says so.
 export function protectionLabel(o: Order): string {
   if (o.protection === "PROTECTED") return "Protected";
+  if (o.protection === "ELIGIBLE") return "Eligible";
   if (o.protection === "NOT_PROTECTED") return "Not protected";
   return "Unknown";
 }
