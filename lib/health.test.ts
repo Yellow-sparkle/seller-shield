@@ -67,3 +67,15 @@ test("demo orders without tracking are reported separately, not in the card", ()
   assert.equal(h.missingTracking.count, 0);
   assert.equal(h.demoMissingTracking, 1);
 });
+
+test("nearest deadline names its dispute, so the card can open that case", () => {
+  const h = summarizeHealth(
+    [
+      { dispute_id: "PP-R-LATER", status: "WAITING_FOR_SELLER_RESPONSE", seller_response_due_date: "2026-11-10T00:00:00Z" },
+      { dispute_id: "PP-R-SOON", status: "WAITING_FOR_SELLER_RESPONSE", seller_response_due_date: "2026-11-08T00:00:00Z" },
+    ],
+    [],
+    now,
+  );
+  assert.equal(h.nextDeadline?.disputeId, "PP-R-SOON");
+});

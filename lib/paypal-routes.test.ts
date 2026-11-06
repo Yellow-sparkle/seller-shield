@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runScan, sendTracking, type FetchFn } from "./paypal-routes.ts";
+import { runScan, sendDisputeAction, sendTracking, type FetchFn } from "./paypal-routes.ts";
 
 const creds = { id: "id", secret: "secret" };
 const now = new Date("2026-11-06T00:00:00Z");
@@ -100,4 +100,55 @@ test("tracking: a rejected token is not a success", async () => {
   const r = await sendTracking(creds, [line], fakePayPal(() => json(200, {}), null).fetchFn);
   assert.equal(r.status, 502);
   assert.equal(r.body.ok, false);
+});
+
+const msg = { disputeId: "PP-R-ABC-10196999", action: "message" as const, text: "Hello, your parcel left on 3 Nov." };
+
+test("dispute action: missing credentials is an error, and PayPal is not called", async () => {
+  const { fetchFn, calls } = fakePayPal(() => json(200, {}));
+  const r = await sendDisputeAction({}, msg, fetchFn);
+  assert.equal(r.status, 500);
+  assert.equal(calls.length, 0);
+});
+
+test("dispute action: bad input is rejected before any PayPal call", async () => {
+  const { fetchFn, calls } = fakePayPal(() => json(200, {}));
+  assert.equal((await sendDisputeAction(creds, { ...msg, disputeId: "../oauth2/token" }, fetchFn)).status, 400);
+  assert.equal((await sendDisputeAction(creds, { ...msg, text: "   " }, fetchFn)).status, 400);
+  assert.equal((await sendDisputeAction(creds, { ...msg, text: "x".repeat(2001) }, fetchFn)).status, 400);
+  assert.equal((await sendDisputeAction(creds, { ...msg, action: "escalate" as never }, fetchFn)).status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test("dispute action: a message goes to send-message with the seller's text", async () => {
+  let sent: { url: string; body: string } | null = null;
+  const fetchFn: FetchFn = async (url, init) => {
+    if (url.endsWith("/v1/oauth2/token")) return json(200, { access_token: "tok" });
+    sent = { url, body: String(init?.body) };
+    return json(200, { links: [] });
+  };
+  const r = await sendDisputeAction(creds, msg, fetchFn);
+  assert.equal(r.body.ok, true);
+  assert.match(sent!.url, /\/v1\/customer\/disputes\/PP-R-ABC-10196999\/send-message$/);
+  assert.deepEqual(JSON.parse(sent!.body), { message: msg.text });
+});
+
+test("dispute action: a refund accepts the claim as a full refund", async () => {
+  let sent: { url: string; body: string } | null = null;
+  const fetchFn: FetchFn = async (url, init) => {
+    if (url.endsWith("/v1/oauth2/token")) return json(200, { access_token: "tok" });
+    sent = { url, body: String(init?.body) };
+    return json(200, { links: [] });
+  };
+  const r = await sendDisputeAction(creds, { ...msg, action: "refund", text: "Full refund." }, fetchFn);
+  assert.equal(r.body.ok, true);
+  assert.match(sent!.url, /\/accept-claim$/);
+  assert.deepEqual(JSON.parse(sent!.body), { note: "Full refund.", accept_claim_type: "REFUND" });
+});
+
+test("dispute action: PayPal refusing is shown as not sent, with PayPal's reason", async () => {
+  const r = await sendDisputeAction(creds, msg, fakePayPal(() => json(422, { name: "UNPROCESSABLE_ENTITY", details: [{ issue: "CANNOT_SEND_MESSAGE", description: "Dispute is not in inquiry stage" }] })).fetchFn);
+  assert.equal(r.status, 502);
+  assert.equal(r.body.ok, false);
+  assert.match(String(r.body.error), /HTTP 422.*not in inquiry stage/);
 });

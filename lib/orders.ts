@@ -18,7 +18,7 @@ export type Order = {
   source: "sandbox" | "demo";
 };
 
-export type FilterChip = "missingTracking" | "held" | "notProtected" | "hasDispute";
+export type FilterChip = "missingTracking" | "held" | "notProtected" | "hasDispute" | "sandbox";
 
 export function matchesChip(o: Order, chip: FilterChip): boolean {
   switch (chip) {
@@ -30,6 +30,8 @@ export function matchesChip(o: Order, chip: FilterChip): boolean {
       return o.protection === "NOT_PROTECTED";
     case "hasDispute":
       return !!o.disputeId;
+    case "sandbox":
+      return o.source === "sandbox";
   }
 }
 
@@ -83,4 +85,33 @@ export function planBulk(selected: Order[], input: Record<string, { carrier: str
 // Row label after a batch result. A failed row never shows a success label.
 export function rowResultLabel(result: { ok: true } | { ok: false; error: string }): string {
   return result.ok ? "Tracking added" : `Failed: ${result.error}`;
+}
+
+const CHIP_IDS: FilterChip[] = ["missingTracking", "held", "notProtected", "hasDispute", "sandbox"];
+
+// Chips from a link such as /orders?chip=missingTracking (used by the health scan cards).
+// Unknown values are ignored.
+export function chipsFromQuery(search: string): FilterChip[] {
+  const params = new URLSearchParams(search);
+  return params.getAll("chip").filter((c): c is FilterChip => (CHIP_IDS as string[]).includes(c));
+}
+
+export type GridSummary = { orders: number; total: number; currency: string; missingTracking: number; held: number; disputes: number; sandbox: number };
+
+// Totals for the pinned summary row: always the rows currently shown.
+export function gridSummary(orders: Order[]): GridSummary {
+  return {
+    orders: orders.length,
+    total: orders.reduce((s, o) => s + (Number(o.amount.value) || 0), 0),
+    currency: orders[0]?.amount.currency ?? "EUR",
+    missingTracking: orders.filter((o) => !o.tracking).length,
+    held: orders.filter((o) => o.held).length,
+    disputes: orders.filter((o) => !!o.disputeId).length,
+    sandbox: orders.filter((o) => o.source === "sandbox").length,
+  };
+}
+
+// Where a dispute flag leads. Only real sandbox disputes have a case screen; demo disputes don't.
+export function caseLink(o: Order): string | null {
+  return o.disputeId && o.source === "sandbox" ? `/cases#${o.disputeId}` : null;
 }

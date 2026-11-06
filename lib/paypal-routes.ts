@@ -1,4 +1,4 @@
-// Logic behind /api/scan and /api/tracking, kept out of the route files so it can be tested
+// Logic behind /api/scan, /api/tracking and /api/dispute-action, kept out of the route files so it can be tested
 // with a fake fetch. Sandbox only. Each function returns the HTTP status and JSON body to send.
 import { summarizeHealth, type HealthDispute } from "./health.ts";
 import { allOrders } from "./orders-seed.ts";
@@ -69,6 +69,55 @@ export async function sendTracking(creds: Creds, lines: BulkLine[], fetchFn: Fet
     const confirmed = (parsed.tracker_identifiers ?? []).map((t) => t.transaction_id).filter((x): x is string => typeof x === "string");
     const errors = parsed.errors ?? [];
     return { status: res.ok ? 200 : 502, body: { ok: res.ok && errors.length === 0, status: res.status, body: text.slice(0, 2000), confirmed, errors } };
+  } catch (err) {
+    return { status: 500, body: { ok: false, error: err instanceof Error ? err.message : "Unknown error" } };
+  }
+}
+
+// Dispute actions (PRD F3). Only called after the seller approves on the case screen.
+// "message" sends the seller's reply to the buyer (PayPal allows this only in the INQUIRY stage).
+// "refund" accepts the claim with a full refund. Both go to the sandbox only.
+export type DisputeAction = { disputeId: string; action: "message" | "refund"; text: string };
+
+const DISPUTE_ID = /^PP-[A-Z0-9-]{4,60}$/;
+
+export function validateDisputeAction(a: Partial<DisputeAction>): string | null {
+  if (!a.disputeId || !DISPUTE_ID.test(a.disputeId)) return "Not a PayPal dispute ID";
+  if (a.action !== "message" && a.action !== "refund") return "Unknown action";
+  const text = (a.text ?? "").trim();
+  if (!text) return a.action === "message" ? "The message is empty" : "The refund note is empty";
+  if (text.length > 2000) return "PayPal allows at most 2000 characters";
+  return null;
+}
+
+export async function sendDisputeAction(creds: Creds, input: Partial<DisputeAction>, fetchFn: FetchFn): Promise<RouteResult> {
+  if (!creds.id || !creds.secret) return { status: 500, body: { ok: false, error: NO_CREDS } };
+  const invalid = validateDisputeAction(input);
+  if (invalid) return { status: 400, body: { ok: false, error: invalid } };
+  const { disputeId, action } = input as DisputeAction;
+  const text = (input.text as string).trim();
+  try {
+    const token = await sandboxToken({ id: creds.id, secret: creds.secret }, fetchFn);
+    if (!token) return { status: 502, body: { ok: false, error: "Could not get a PayPal sandbox token" } };
+
+    const path = action === "message" ? "send-message" : "accept-claim";
+    const payload = action === "message" ? { message: text } : { note: text, accept_claim_type: "REFUND" };
+    const res = await fetchFn(`${SANDBOX_BASE}/v1/customer/disputes/${encodeURIComponent(disputeId)}/${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await res.text();
+    let issue: string | undefined;
+    try {
+      const j = JSON.parse(body) as { name?: string; message?: string; details?: { issue?: string; description?: string }[] };
+      issue = j.details?.[0]?.description ?? j.details?.[0]?.issue ?? j.message ?? j.name;
+    } catch {
+      issue = undefined;
+    }
+    return res.ok
+      ? { status: 200, body: { ok: true, status: res.status, action, disputeId } }
+      : { status: 502, body: { ok: false, status: res.status, action, disputeId, error: `PayPal refused (HTTP ${res.status})${issue ? `: ${issue}` : ""}`, body: body.slice(0, 2000) } };
   } catch (err) {
     return { status: 500, body: { ok: false, error: err instanceof Error ? err.message : "Unknown error" } };
   }
