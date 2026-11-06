@@ -1,1 +1,62 @@
-{}
+{
+  "PP-R-GJM-10196233": {
+    "sellerTransactionId": "35W222794X4866508",
+    "gross": {
+      "value": 60,
+      "currency": "EUR"
+    },
+    "fee": {
+      "value": 2.39,
+      "currency": "EUR"
+    },
+    "afterFees": {
+      "value": 57.61,
+      "currency": "EUR"
+    }
+  },
+  "PP-R-FGC-10196238": {
+    "sellerTransactionId": "7RX812769J8875301",
+    "gross": {
+      "value": 45,
+      "currency": "EUR"
+    },
+    "fee": {
+      "value": 1.88,
+      "currency": "EUR"
+    },
+    "afterFees": {
+      "value": 43.12,
+      "currency": "EUR"
+    }
+  },
+  "PP-R-NVP-10196239": {
+    "sellerTransactionId": "11X88937YC2460212",
+    "gross": {
+      "value": 85,
+      "currency": "EUR"
+    },
+    "fee": {
+      "value": 3.24,
+      "currency": "EUR"
+    },
+    "afterFees": {
+      "value": 81.76,
+      "currency": "EUR"
+    }
+  },
+  "PP-R-SRZ-10196872": {
+    "sellerTransactionId": "1P279948DJ181945Y",
+    "gross": {
+      "value": 25,
+      "currency": "EUR"
+    },
+    "fee": {
+      "value": 1.2,
+      "currency": "EUR"
+    },
+    "afterFees": {
+      "value": 23.8,
+      "currency": "EUR"
+    }
+  }
+}
