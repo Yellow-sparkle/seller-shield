@@ -92,3 +92,10 @@ Date: 6 Nov 2026. Environment: api-m.sandbox.paypal.com.
 - Refund to buyer (11:52), −15,00 EUR: Completed.
 - Net effect on seller for this payment: +14,14 (payment net), −15,00 (refund), so −0,86 EUR. That matches the 0,86 EUR fee already taken at payment.
 - Answer for the hold question: the hold was removed. The 14,14 EUR is not held any more.
+
+## Second real case: PP-R-GJM-10196233 (Item not received, €60,00)
+- Created 3 Nov 2026 by the buyer. Seller response due 23 Nov 2026 (UTC, per API).
+- Seller had not shipped anything. Buyer had emailed the shop on 30 Oct with no reply.
+- Decision: full refund of €60,00. Recommended under the item-not-received rule with no proof of delivery. Kate confirmed.
+- Refund sent by Kate at 12:19 CET, 6 Nov 2026 (confirmed "done" in chat). Not re-read from the API yet.
+- Message to buyer drafted and sent by Kate, with "Refund issued for order #1042. We're sorry it didn't arrive." Check the case status with the read script.
