@@ -12,6 +12,7 @@ test("sandbox fixtures map to the expected evidence type", () => {
     "PROOF_OF_FULFILLMENT",
     "PROOF_OF_FULFILLMENT",
     "OTHER",
+    "PROOF_OF_FULFILLMENT",
   ]);
 });
 
