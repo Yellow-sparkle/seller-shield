@@ -9,6 +9,7 @@ import { toCase, daysUntilDue } from "../lib/dispute.ts";
 import { decideBy, protectionLabel, responseEligibility } from "../lib/rules.ts";
 import { forcedRecommendation, inrWaitNote } from "../lib/proof.ts";
 import { sellerAnswers, type SellerAnswer } from "../lib/answers.ts";
+import { templateReply } from "../lib/reply.ts";
 import fixtures from "../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../lib/recorded/recommendations.json" with { type: "json" };
 
@@ -200,6 +201,53 @@ function EvidenceChecklist({ rows }: { rows: Row[] }) {
   );
 }
 
+// Reply drafts (PRD F3). A template for now, from case facts only. Nothing is sent by this app:
+// the seller copies the text into PayPal themselves, after reading and editing it.
+function ReplyDrafts({ rows }: { rows: Row[] }) {
+  const cases = rows.filter((r) => /^(FIGHT|REFUND|YOUR_CALL)/.test(r.recommendation));
+  if (cases.length === 0) return null;
+  return (
+    <section style={{ marginTop: 24 }}>
+      <h2 style={{ fontSize: 18, marginBottom: 4 }}>Reply drafts</h2>
+      <p style={{ marginTop: 0, color: "#555", fontSize: 14 }}>
+        Read and edit each draft, then copy it into PayPal yourself. This app doesn&apos;t send anything.
+      </p>
+      {cases.map((r) => {
+        const draft = templateReply({ recommendation: r.recommendation, amount: r.amount, orderRef: r.id });
+        return (
+          <DraftCard key={r.id} id={r.id} initial={draft.draft} />
+        );
+      })}
+    </section>
+  );
+}
+
+function DraftCard({ id, initial }: { id: string; initial: string }) {
+  const [text, setText] = useState(initial);
+  const [copied, setCopied] = useState(false);
+  return (
+    <div style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
+      <strong>{id}</strong>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={4}
+        style={{ display: "block", width: "100%", marginTop: 6, fontFamily: "inherit", fontSize: 14 }}
+      />
+      <button
+        type="button"
+        onClick={() => {
+          navigator.clipboard?.writeText(text).then(() => setCopied(true), () => setCopied(false));
+        }}
+        style={{ marginTop: 6 }}
+      >
+        Copy (not sent)
+      </button>
+      {copied && <span style={{ marginLeft: 8, color: "#555", fontSize: 14 }}>Copied. Paste it into PayPal yourself.</span>}
+    </div>
+  );
+}
+
 export default function CaseScreen() {
   // Dates are computed after mount, so the server render does not depend on the clock.
   // Rows are built after mount (the clock). Seller cause and evidence typed on the screen are kept per case, for this session.
@@ -246,6 +294,7 @@ export default function CaseScreen() {
         <AgGridReact<Row> theme={theme} rowData={rows} columnDefs={columns} domLayout="autoHeight" onCellValueChanged={onCellValueChanged} />
       </div>
       <EvidenceChecklist rows={rows} />
+      <ReplyDrafts rows={rows} />
       <p style={{ color: "#555", fontSize: 14 }}>
         The seller decision is saved in this browser session only. Nothing is sent to PayPal yet.
       </p>

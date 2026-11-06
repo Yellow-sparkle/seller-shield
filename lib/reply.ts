@@ -35,3 +35,21 @@ export function parseReply(text: string): ReplyDraft {
   const placeholders = Array.isArray(raw.placeholders) ? raw.placeholders.filter((p): p is string => typeof p === "string") : [];
   return { draft: raw.draft.trim(), placeholders };
 }
+
+// Plain template reply for the screen, used until a recorded or live AI draft is available.
+// It uses only the case facts passed in, and bracketed placeholders for any evidence the seller must add.
+// It goes through parseReply, so it can't predict PayPal's decision or run past the length cap.
+export function templateReply(input: { recommendation: string; amount: string; orderRef: string }): ReplyDraft {
+  const rec = input.recommendation.split(" ")[0];
+  let draft: string;
+  let placeholders: string[] = [];
+  if (rec === "FIGHT") {
+    draft = `Thank you for your message about ${input.orderRef}. We have reviewed your claim and the evidence we hold: [attach proof of delivery or listing evidence]. We believe the item matches what was agreed.`;
+    placeholders = ["[attach proof of delivery or listing evidence]"];
+  } else if (rec === "REFUND") {
+    draft = `We are sorry about ${input.orderRef}. We have refunded ${input.amount} to you through PayPal.`;
+  } else {
+    draft = `Thank you for your message about ${input.orderRef}. We are reviewing the details of your claim and will reply as soon as we have them.`;
+  }
+  return parseReply(JSON.stringify({ draft, placeholders }));
+}
