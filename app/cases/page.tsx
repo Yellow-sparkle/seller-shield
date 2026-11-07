@@ -14,6 +14,7 @@ import fixtures from "../../lib/fixtures/sandbox-disputes.json" with { type: "js
 import recorded from "../../lib/recorded/recommendations.json" with { type: "json" };
 import { Pill, type Tone } from "../pill";
 import { allOrders } from "@/lib/orders-seed";
+import { casePath, type StepState } from "@/lib/case-path";
 import feeFixtures from "../../lib/fixtures/sandbox-fees.json" with { type: "json" };
 import { feeLabel, type FeeRecord } from "../../lib/fees.ts";
 
@@ -253,6 +254,79 @@ function writeEvidence(v: Record<string, boolean[]>) {
   } catch {
     // Storage blocked: the boxes keep their state until the page reloads.
   }
+  lastEvidence = v;
+  window.dispatchEvent(new Event(EVIDENCE_EVENT));
+}
+
+// Lets the case path update as soon as a box is ticked, even when storage is blocked.
+const EVIDENCE_EVENT = "seller-shield-evidence-changed";
+let lastEvidence: Record<string, boolean[]> | null = null;
+
+// PayPal colours: navy #003087 for done, blue #0070ba for the current step on a light gold band
+// (PayPal gold #ffc439 as the accent, never behind text), grey for later. A step left undone before
+// the current one gets a navy outline and dark amber text, so it reads as "still to do", not as an error.
+const STEP_STYLE: Record<StepState, { dot: React.CSSProperties; mark: string; note: string; noteColor: string }> = {
+  done: { dot: { background: "#003087", color: "#ffffff", border: "2px solid #003087" }, mark: "✓", note: "Done", noteColor: "#003087" },
+  now: { dot: { background: "#0070ba", color: "#ffffff", border: "2px solid #0070ba" }, mark: "", note: "Now", noteColor: "#005ea6" },
+  open: { dot: { background: "#ffffff", color: "#003087", border: "2px solid #003087" }, mark: "", note: "Not done yet", noteColor: "#8a4b00" },
+  later: { dot: { background: "#ffffff", color: "#6b7280", border: "2px solid #c4cdd8" }, mark: "", note: "Later", noteColor: "#5b6472" },
+};
+
+// The whole path for one case, with the steps already done (Kate, 7 Nov 2026).
+function CasePath({ row }: { row: Row }) {
+  const [ticks, setTicks] = useState<boolean[]>([]);
+  useEffect(() => {
+    const read = () => setTicks((lastEvidence ?? readEvidence())[row.id] ?? []);
+    read();
+    window.addEventListener(EVIDENCE_EVENT, read);
+    return () => window.removeEventListener(EVIDENCE_EVENT, read);
+  }, [row.id]);
+  const steps = casePath({
+    reason: row.reason === REASON_LABEL.INR ? "INR" : row.reason === REASON_LABEL.SNAD ? "SNAD" : "OTHER",
+    sellerMessaged: row.messages.some((m) => m.by === "SELLER") || row.sellerMessages.length > 0,
+    trackingInPayPal: !!row.order?.status,
+    evidenceTicked: EVIDENCE_ITEMS.every((_, i) => ticks[i]),
+    waitingForBuyer: row.recommendation === "WAITING",
+    closed: row.recommendation === "RESOLVED",
+  });
+  return (
+    <section style={{ marginTop: 16 }}>
+      <h2 style={{ fontSize: 18, marginBottom: 6 }}>Steps for this case</h2>
+      <ol style={{ listStyle: "none" }}>
+        {steps.map((s, i) => {
+          const st = STEP_STYLE[s.state];
+          const last = i === steps.length - 1;
+          return (
+            <li
+              key={s.label}
+              style={{
+                display: "flex",
+                gap: 12,
+                padding: "6px 10px",
+                borderRadius: 6,
+                background: s.state === "now" ? "#fff6dc" : "transparent",
+                borderLeft: s.state === "now" ? "4px solid #ffc439" : "4px solid transparent",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <span style={{ ...st.dot, width: 24, height: 24, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                  {st.mark || i + 1}
+                </span>
+                {!last && <span style={{ width: 2, flex: 1, minHeight: 10, marginTop: 2, background: s.state === "done" ? "#003087" : "#c4cdd8" }} />}
+              </div>
+              <div style={{ fontSize: 14, paddingBottom: last ? 0 : 6 }}>
+                <div style={{ fontWeight: s.state === "now" ? 700 : 600, color: s.state === "later" ? "#5b6472" : "#1f2a37" }}>
+                  {s.label} <span style={{ color: st.noteColor, fontSize: 12, fontWeight: 700, marginLeft: 4 }}>{st.note}</span>
+                </div>
+                <div style={{ color: "#5b6472", fontSize: 12 }}>{s.source}</div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      {row.recommendation === "RESOLVED" && <p style={{ fontSize: 14, color: "#5b6472", marginTop: 4 }}>No action needed. PayPal has closed this case.</p>}
+    </section>
+  );
 }
 
 function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: boolean }) {
@@ -646,6 +720,7 @@ export default function CaseScreen() {
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 18, margin: "0 0 4px" }}>Case {r.id}</h2>
             <OrderLine row={r} />
+            <CasePath row={r} />
             <EvidenceChecklist rows={[r]} showId={false} />
             <Conversation row={r} />
             <ReplyDrafts rows={[r]} showId={false} />
