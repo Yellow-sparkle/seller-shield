@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runScan, sendDisputeAction, sendTracking, type FetchFn } from "./paypal-routes.ts";
+import { runScan, sendDisputeAction, sendTracking, type FetchFn, evidenceInput } from "./paypal-routes.ts";
 
 const creds = { id: "id", secret: "secret" };
 const now = new Date("2026-11-06T00:00:00Z");
@@ -151,4 +151,32 @@ test("dispute action: PayPal refusing is shown as not sent, with PayPal's reason
   assert.equal(r.status, 502);
   assert.equal(r.body.ok, false);
   assert.match(String(r.body.error), /HTTP 422.*not in inquiry stage/);
+});
+
+test("H5: evidence sends the order's tracking to provide-evidence as proof of fulfilment", async () => {
+  let sent: { url: string; body: unknown } | null = null;
+  const fetchFn: FetchFn = async (url, init) => {
+    if (url.endsWith("/v1/oauth2/token")) return json(200, { access_token: "tok" });
+    sent = { url, body: init?.body };
+    return json(200, { links: [] });
+  };
+  const r = await sendDisputeAction(creds, { ...msg, action: "evidence", text: "Tracking for the order.", tracking: { carrier: "DHL", number: "TEST1235" } }, fetchFn);
+  assert.equal(r.body.ok, true);
+  assert.match(sent!.url, /\/PP-R-ABC-10196999\/provide-evidence$/);
+  assert.ok(sent!.body instanceof FormData);
+  const input = JSON.parse(await ((sent!.body as FormData).get("input") as Blob).text());
+  assert.equal(input.evidences[0].evidence_type, "PROOF_OF_FULFILLMENT");
+  assert.deepEqual(input.evidences[0].evidence_info.tracking_info, [{ carrier_name: "DHL", tracking_number: "TEST1235" }]);
+  assert.equal(input.evidences[0].notes, "Tracking for the order.");
+});
+
+test("H5: evidence without tracking is rejected before any PayPal call", async () => {
+  const { fetchFn, calls } = fakePayPal(() => json(200, {}));
+  assert.equal((await sendDisputeAction(creds, { ...msg, action: "evidence" }, fetchFn)).status, 400);
+  assert.equal((await sendDisputeAction(creds, { ...msg, action: "evidence", tracking: { carrier: "DHL", number: "" } }, fetchFn)).status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test("H5: an unknown carrier goes as OTHER with its name", () => {
+  assert.deepEqual(evidenceInput({ carrier: "PostNL", number: "X1" }, "n").evidences[0].evidence_info.tracking_info[0], { carrier_name: "OTHER", carrier_name_other: "PostNL", tracking_number: "X1" });
 });

@@ -3,7 +3,7 @@
 import { summarizeHealth, type HealthDispute } from "./health.ts";
 import { allOrders } from "./orders-seed.ts";
 import type { BulkLine } from "./orders.ts";
-import { buildTrackers, SANDBOX_BASE, TRACKERS_BATCH_PATH } from "./tracking-api.ts";
+import { buildTrackers, carrierCode, SANDBOX_BASE, TRACKERS_BATCH_PATH } from "./tracking-api.ts";
 
 export type Creds = { id?: string; secret?: string };
 export type FetchFn = (url: string, init?: RequestInit) => Promise<Response>;
@@ -76,14 +76,22 @@ export async function sendTracking(creds: Creds, lines: BulkLine[], fetchFn: Fet
 
 // Dispute actions (PRD F3). Only called after the seller approves on the case screen.
 // "message" sends the seller's reply to the buyer (PayPal allows this only in the INQUIRY stage).
-// "refund" accepts the claim with a full refund. Both go to the sandbox only.
-export type DisputeAction = { disputeId: string; action: "message" | "refund"; text: string };
+// "refund" accepts the claim with a full refund.
+// "evidence" sends the order's tracking as proof of fulfilment (provide-evidence), for item-not-received cases.
+// Kate's call on 7 Nov 2026 (review finding H5): Fight sends INR tracking as evidence; files for other reasons are
+// uploaded in the PayPal Resolution Center. All three go to the sandbox only.
+export type DisputeAction = { disputeId: string; action: "message" | "refund" | "evidence"; text: string; tracking?: { carrier: string; number: string } };
 
 const DISPUTE_ID = /^PP-[A-Z0-9-]{4,60}$/;
 
 export function validateDisputeAction(a: Partial<DisputeAction>): string | null {
   if (!a.disputeId || !DISPUTE_ID.test(a.disputeId)) return "Not a PayPal dispute ID";
-  if (a.action !== "message" && a.action !== "refund") return "Unknown action";
+  if (a.action !== "message" && a.action !== "refund" && a.action !== "evidence") return "Unknown action";
+  if (a.action === "evidence") {
+    const t = a.tracking;
+    if (!t || !t.carrier?.trim() || !t.number?.trim()) return "Tracking carrier and number are needed";
+    if (!/^[\x20-\x7E]{1,64}$/.test(t.number.trim())) return "Tracking number not valid";
+  }
   const text = (a.text ?? "").trim();
   if (!text) return a.action === "message" ? "The message is empty" : "The refund note is empty";
   if (text.length > 2000) return "PayPal allows at most 2000 characters";
@@ -100,13 +108,16 @@ export async function sendDisputeAction(creds: Creds, input: Partial<DisputeActi
     const token = await sandboxToken({ id: creds.id, secret: creds.secret }, fetchFn);
     if (!token) return { status: 502, body: { ok: false, error: "Could not get a PayPal sandbox token" } };
 
-    const path = action === "message" ? "send-message" : "accept-claim";
-    const payload = action === "message" ? { message: text } : { note: text, accept_claim_type: "REFUND" };
-    const res = await fetchFn(`${SANDBOX_BASE}/v1/customer/disputes/${encodeURIComponent(disputeId)}/${path}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const path = action === "message" ? "send-message" : action === "refund" ? "accept-claim" : "provide-evidence";
+    const url = `${SANDBOX_BASE}/v1/customer/disputes/${encodeURIComponent(disputeId)}/${path}`;
+    const res =
+      action === "evidence"
+        ? await fetchFn(url, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: evidenceForm((input as DisputeAction).tracking!, text) })
+        : await fetchFn(url, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify(action === "message" ? { message: text } : { note: text, accept_claim_type: "REFUND" }),
+          });
     const body = await res.text();
     let issue: string | undefined;
     try {
@@ -121,4 +132,27 @@ export async function sendDisputeAction(creds: Creds, input: Partial<DisputeActi
   } catch (err) {
     return { status: 500, body: { ok: false, error: err instanceof Error ? err.message : "Unknown error" } };
   }
+}
+
+// provide-evidence takes multipart/form-data with the evidence as JSON in a part named "input" (PayPal Disputes API v1).
+// Not yet tried against the live sandbox: check the first send (review finding H5).
+export function evidenceInput(tracking: { carrier: string; number: string }, notes: string) {
+  const code = carrierCode(tracking.carrier);
+  return {
+    evidences: [
+      {
+        evidence_type: "PROOF_OF_FULFILLMENT",
+        evidence_info: {
+          tracking_info: [{ carrier_name: code.carrier, ...(code.carrier_name_other ? { carrier_name_other: code.carrier_name_other } : {}), tracking_number: tracking.number.trim() }],
+        },
+        notes,
+      },
+    ],
+  };
+}
+
+function evidenceForm(tracking: { carrier: string; number: string }, notes: string): FormData {
+  const form = new FormData();
+  form.append("input", new Blob([JSON.stringify(evidenceInput(tracking, notes))], { type: "application/json" }));
+  return form;
 }
