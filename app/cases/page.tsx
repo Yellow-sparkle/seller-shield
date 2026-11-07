@@ -551,7 +551,7 @@ export default function CaseScreen() {
           rowSelection={rowSelection}
           onSelectionChanged={(e) => setSelectedIds(e.api.getSelectedRows().map((r) => r.id))}
           domLayout="autoHeight"
-          defaultColDef={{ sortable: true, filter: "agSetColumnFilter", minWidth: 120, wrapHeaderText: true, autoHeaderHeight: true, wrapText: true, autoHeight: true, cellStyle: { lineHeight: "1.4", paddingTop: 8, paddingBottom: 8 } }}
+          defaultColDef={{ sortable: true, filter: true, filterParams: { maxNumConditions: 1 }, minWidth: 120, wrapHeaderText: true, autoHeaderHeight: true, wrapText: true, autoHeight: true, cellStyle: { lineHeight: "1.4", paddingTop: 8, paddingBottom: 8 } }}
           suppressColumnVirtualisation
           getRowId={(p) => p.data.id}
           getRowStyle={(p) => (p.data && p.data.id === focusId ? { background: "#fff4d6", fontWeight: 600 } : undefined)}

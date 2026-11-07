@@ -258,7 +258,7 @@ export default function OrdersPage() {
             if (rows.length > 0) setPickMsg(null);
             else setReview(null);
           }}
-          defaultColDef={{ sortable: true, filter: "agSetColumnFilter", resizable: true, minWidth: 130, flex: 1 }}
+          defaultColDef={{ sortable: true, filter: true, filterParams: { maxNumConditions: 1 }, resizable: true, minWidth: 130, flex: 1 }}
         />
       </div>
 
