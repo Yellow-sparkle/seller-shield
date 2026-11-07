@@ -6,7 +6,9 @@ import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type ICellRendererParams, type RowSelectionOptions } from "ag-grid-community";
 import { allOrders } from "@/lib/orders-seed";
 import { Pill, type Tone } from "../pill";
-import { caseLink, chipsFromQuery, filterOrders, gridSummary, isSelectable, planBulk, protectionLabel, type BulkLine, type FilterChip, type GridSummary, type Order } from "@/lib/orders";
+import { caseLink, chipsFromQuery, filterOrders, gridSummary, isSelectable, planBulk, protectionLabel, trackingStatusText, type BulkLine, type FilterChip, type GridSummary, type Order } from "@/lib/orders";
+import { protectionShort, protectionTone } from "@/lib/protection";
+import { readSentTracking, recordSentTracking, withSentTracking } from "@/lib/sent-tracking";
 
 const CARRIER_OPTIONS = ["DHL", "PostNL", "DPD", "UPS", "Other"];
 type TrackingEntry = { carrier: string; tracking: string };
@@ -15,7 +17,8 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const theme = themeQuartz.withParams({ accentColor: "#0070ba", headerBackgroundColor: "#eaf1fb", headerTextColor: "#003087", borderRadius: 6 });
 const CHIPS: { id: FilterChip; label: string }[] = [
-  { id: "awaitingTracking", label: "Awaiting tracking" },
+  // "Has a number, not yet in PayPal" (L11): named so it can't be mistaken for "Missing tracking".
+  { id: "awaitingTracking", label: "Ready to send to PayPal" },
   { id: "missingTracking", label: "Missing tracking" },
   { id: "held", label: "Held" },
   { id: "notProtected", label: "Not protected" },
@@ -30,7 +33,6 @@ type P = ICellRendererParams<Order>;
 const isSummary = (p: P) => p.node.rowPinned === "top";
 type SummaryRow = Order & { summary: GridSummary };
 const sumOf = (p: P) => (p.data as SummaryRow | undefined)?.summary ?? ({ orders: 0, total: 0, currency: "EUR", missingTracking: 0, held: 0, disputes: 0, sandbox: 0 } as GridSummary);
-const PROTECTION_TONE: Record<Order["protection"], Tone> = { PROTECTED: "good", ELIGIBLE: "info", NOT_PROTECTED: "bad", UNKNOWN: "muted" };
 
 const rowSelection: RowSelectionOptions<Order> = { mode: "multiRow", checkboxes: true, headerCheckbox: true, isRowSelectable: (node) => (node.data ? isSelectable(node.data) : false) };
 
@@ -46,12 +48,13 @@ const columns: ColDef<Order>[] = [
       if (isSummary(p)) return <Pill tone="bad">{sumOf(p).disputes} disputes</Pill>;
       if (!p.data?.disputeId) return <Quiet>None</Quiet>;
       const href = caseLink(p.data);
+      // Every dispute in the grid has a case (M2).
       return href ? (
         <a href={href} style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: "#a3231b", color: "#fff", textDecoration: "none" }}>
           View case
         </a>
       ) : (
-        <Pill tone="bad">Demo dispute</Pill>
+        <Quiet>None</Quiet>
       );
     },
   },
@@ -65,15 +68,16 @@ const columns: ColDef<Order>[] = [
     colId: "trackingStatus",
     headerName: "PayPal tracking",
     minWidth: 175,
-    // PayPal's status when it has the number; "Awaiting tracking" when we have a number PayPal has not got yet;
-    // "No tracking" when the order has no tracking number at all.
-    valueGetter: (p) => (p.data ? (p.data.trackingStatus ?? (p.data.tracking ? "Awaiting tracking" : "No tracking")) : ""),
+    // PayPal's status when it has the number; "Not in PayPal yet" when we have a number PayPal has not got yet;
+    // "No tracking" when the order has no tracking number at all. Same words on the case card.
+    valueGetter: (p) => (p.data ? trackingStatusText(p.data) : ""),
     cellRenderer: (p: P) => (isSummary(p) || !p.data ? "" : p.data.trackingStatus ? <Pill tone="good">{p.value}</Pill> : <Pill tone="muted">{p.value}</Pill>),
   },
   {
     headerName: "Seller protection",
     valueGetter: (p) => (p.data ? protectionLabel(p.data) : ""),
-    cellRenderer: (p: P) => (isSummary(p) || !p.data ? "" : <Pill tone={PROTECTION_TONE[p.data.protection]}>{p.value}</Pill>),
+    // Same labels and colours as the case screen; a not-as-described dispute reads Not covered (M4).
+    cellRenderer: (p: P) => (isSummary(p) || !p.data ? "" : <span title={p.value}><Pill tone={protectionTone(p.value) as Tone}>{protectionShort(p.value)}</Pill></span>),
   },
   {
     headerName: "Hold",
@@ -96,7 +100,11 @@ const columns: ColDef<Order>[] = [
 ];
 
 export default function OrdersPage() {
-  const all = useMemo(() => allOrders(), []);
+  // Orders, with tracking PayPal confirmed from this browser shown as sent (M3).
+  const seeded = useMemo(() => allOrders(), []);
+  const [sent, setSent] = useState<ReturnType<typeof readSentTracking>>({});
+  useEffect(() => setSent(readSentTracking()), []);
+  const all = useMemo(() => seeded.map((o) => withSentTracking(o, sent)), [seeded, sent]);
   const [chips, setChips] = useState<FilterChip[]>([]);
   const [quick, setQuick] = useState("");
   const [selected, setSelected] = useState<Order[]>([]);
@@ -128,10 +136,13 @@ export default function OrdersPage() {
 
   const toggle = (id: FilterChip) => setChips((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
-  const plan = review ? planBulk(selected.filter((o) => review.includes(o.orderNo)), entries) : null;
+  // Entries default to the order's carrier and number until the seller edits them (L12).
+  const prefilled = Object.fromEntries(selected.map((o) => [o.orderNo, entries[o.orderNo] ?? { carrier: o.carrier && CARRIER_OPTIONS.includes(o.carrier) ? o.carrier : o.carrier ? "Other" : "", tracking: o.tracking ?? "" }]));
+  const plan = review ? planBulk(selected.filter((o) => review.includes(o.orderNo)), prefilled) : null;
   const setEntry = (orderNo: string, patch: Partial<TrackingEntry>) =>
     setEntries((e) => {
-      const prev: TrackingEntry = e[orderNo] ?? { carrier: "", tracking: "" };
+      const o = all.find((x) => x.orderNo === orderNo);
+      const prev: TrackingEntry = e[orderNo] ?? { carrier: o?.carrier && CARRIER_OPTIONS.includes(o.carrier) ? o.carrier : o?.carrier ? "Other" : "", tracking: o?.tracking ?? "" };
       return { ...e, [orderNo]: { ...prev, ...patch } };
     });
 
@@ -144,6 +155,9 @@ export default function OrdersPage() {
       const next: Record<string, string> = {};
       for (const l of lines) next[l.orderNo] = confirmed.has(l.orderNo) && !(data.errors?.length) ? "Tracking added" : `Not confirmed by PayPal${data.errors?.length ? ": batch errors" : ""}`;
       setRowStatus(next);
+      // Rows PayPal confirmed flip in the grid and on the case card (M3).
+      const ok = lines.filter((l) => next[l.orderNo] === "Tracking added");
+      if (ok.length) setSent(recordSentTracking(ok));
       setStatus(data.ok ? `PayPal sandbox replied HTTP ${data.status}. Sent ${lines.length} update(s). Response: ${data.body ?? "(empty)"}` : `Not sent: ${data.error ?? `PayPal returned HTTP ${data.status}: ${data.body ?? ""}`}`);
     } catch {
       setStatus("Not sent: the request to the server failed.");
@@ -201,7 +215,8 @@ export default function OrdersPage() {
             </div>
             {review.map((no) => {
               const o = all.find((x) => x.orderNo === no);
-              const entry = entries[no] ?? { carrier: "", tracking: "" };
+              // Starts from the order's own carrier and number, so a number on file is not typed again (L12).
+              const entry = entries[no] ?? { carrier: o?.carrier && CARRIER_OPTIONS.includes(o.carrier) ? o.carrier : o?.carrier ? "Other" : "", tracking: o?.tracking ?? "" };
               const result = rowStatus[no];
               return (
                 <div role="row" key={no} style={{ display: "grid", gridTemplateColumns: "minmax(170px,1.3fr) minmax(130px,0.8fr) minmax(170px,1fr) minmax(150px,1fr)", gap: 12, alignItems: "center", padding: "10px 12px", borderTop: "1px solid #eef1f5", background: "#ffffff" }}>
