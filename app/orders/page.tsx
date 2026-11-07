@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type ICellRendererParams, type RowSelectionOptions } from "ag-grid-community";
 import { allOrders } from "@/lib/orders-seed";
+import { Pill, type Tone } from "../pill";
 import { caseLink, chipsFromQuery, filterOrders, gridSummary, isSelectable, planBulk, protectionLabel, type BulkLine, type FilterChip, type GridSummary, type Order } from "@/lib/orders";
 
 const CARRIER_OPTIONS = ["DHL", "PostNL", "DPD", "UPS", "Other"];
@@ -22,19 +23,6 @@ const CHIPS: { id: FilterChip; label: string }[] = [
 ];
 
 // Pill colours by meaning: good, warning, problem, neutral.
-const TONES = {
-  good: { background: "#e3f3ea", color: "#1d6b3f" },
-  warn: { background: "#fdf1d8", color: "#7a4b00" },
-  bad: { background: "#fbe6e4", color: "#a3231b" },
-  info: { background: "#e7eafa", color: "#33449a" },
-  muted: { background: "#eef0f3", color: "#4a5160" },
-} as const;
-type Tone = keyof typeof TONES;
-
-function Pill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
-  return <span style={{ ...TONES[tone], padding: "2px 8px", borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}>{children}</span>;
-}
-
 // The pinned top row holds the totals for the rows shown. Its cells render the summary instead of an order.
 type P = ICellRendererParams<Order>;
 const isSummary = (p: P) => p.node.rowPinned === "top";

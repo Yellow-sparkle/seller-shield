@@ -12,6 +12,7 @@ import { sellerAnswers, type SellerAnswer } from "../../lib/answers.ts";
 import { templateReply } from "../../lib/reply.ts";
 import fixtures from "../../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../../lib/recorded/recommendations.json" with { type: "json" };
+import { Pill, type Tone } from "../pill";
 import feeFixtures from "../../lib/fixtures/sandbox-fees.json" with { type: "json" };
 import { feeLabel, type FeeRecord } from "../../lib/fees.ts";
 
@@ -160,29 +161,25 @@ const rowSelection: RowSelectionOptions<Row> = { mode: "multiRow", checkboxes: t
 // The column name is "Case strength" (Kate, 6 Nov 2026).
 const CASE_READ_LABEL = "Case strength";
 
-function readStyle(value: string): { label: string; color: string; bg: string } {
-  if (value === "RESOLVED") return { label: "Closed by PayPal", color: "#4a5568", bg: "#edf1f6" };
-  if (value === "WAITING") return { label: "Waiting for the buyer", color: "#1f4e8c", bg: "#e6f0fb" };
-  if (value.startsWith("FIGHT")) return { label: "Strong case", color: "#1d6b3f", bg: "#e3f4ea" };
-  if (value.startsWith("REFUND")) return { label: "Weak case", color: "#a3231b", bg: "#fbe4e2" };
-  if (value.startsWith("YOUR_CALL")) return { label: "Mixed: your decision", color: "#7a4f00", bg: "#fff4d6" };
-  return { label: "Not checked yet", color: "#4a5568", bg: "#edf1f6" };
+function readTone(value: string): { label: string; tone: Tone } {
+  if (value === "RESOLVED") return { label: "Closed by PayPal", tone: "muted" };
+  if (value === "WAITING") return { label: "Waiting for the buyer", tone: "info" };
+  if (value.startsWith("FIGHT")) return { label: "Strong case", tone: "good" };
+  if (value.startsWith("REFUND")) return { label: "Weak case", tone: "bad" };
+  if (value.startsWith("YOUR_CALL")) return { label: "Mixed: your decision", tone: "warn" };
+  return { label: "Not checked yet", tone: "muted" };
 }
 
 function ReadBadge({ value }: { value: string }) {
-  const s = readStyle(value);
-  return (
-    <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, background: s.bg, color: s.color, fontWeight: 600, fontSize: 13 }}>
-      {s.label}
-    </span>
-  );
+  const s = readTone(value);
+  return <Pill tone={s.tone}>{s.label}</Pill>;
 }
 
 function ProtectionBadge({ value }: { value: string }) {
-  const tone = value.startsWith("Eligible") ? { color: "#1d6b3f", bg: "#e3f4ea" } : value.startsWith("Not") ? { color: "#a3231b", bg: "#fbe4e2" } : { color: "#4a5568", bg: "#edf1f6" };
+  const tone: Tone = value.startsWith("Eligible") ? "info" : value.startsWith("Not") ? "bad" : "muted";
   // Long explanations stay in the tooltip; the badge shows the short label.
   const short = value.startsWith("Not covered") ? "Not covered" : value;
-  return <span title={value} style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, background: tone.bg, color: tone.color, fontWeight: 600, fontSize: 13 }}>{short}</span>;
+  return <span title={value}><Pill tone={tone}>{short}</Pill></span>;
 }
 
 const columns: ColDef<Row>[] = [
