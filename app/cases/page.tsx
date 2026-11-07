@@ -257,14 +257,13 @@ function writeEvidence(v: Record<string, boolean[]>) {
 const EVIDENCE_EVENT = "seller-shield-evidence-changed";
 let lastEvidence: Record<string, boolean[]> | null = null;
 
-// PayPal colours: gold #ffc439 with a dark tick for done (Kate, 7 Nov 2026), blue #0070ba for the current step on a light gold band
-// (PayPal gold #ffc439 as the accent, never behind text), grey for later. A step left undone before
-// the current one gets a navy outline and dark amber text, so it reads as "still to do", not as an error.
+// Two colours only (Kate, 7 Nov 2026): PayPal gold for steps (filled when done, outlined when not done
+// yet), PayPal navy for the current step, grey for later. Labels are dark text, the current one navy.
 const STEP_STYLE: Record<StepState, { dot: React.CSSProperties; mark: string; note: string; noteColor: string }> = {
-  done: { dot: { background: "#ffc439", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "✓", note: "Done", noteColor: "#003087" },
-  now: { dot: { background: "#0070ba", color: "#ffffff", border: "2px solid #0070ba" }, mark: "", note: "Now", noteColor: "#005ea6" },
-  open: { dot: { background: "#fff6dc", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "", note: "Not done yet", noteColor: "#8a4b00" },
-  later: { dot: { background: "#ffffff", color: "#5b6472", border: "2px solid #ffe08a" }, mark: "", note: "Later", noteColor: "#5b6472" },
+  done: { dot: { background: "#ffc439", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "✓", note: "Done", noteColor: "#2c2e2f" },
+  now: { dot: { background: "#003087", color: "#ffffff", border: "2px solid #003087" }, mark: "", note: "Now", noteColor: "#003087" },
+  open: { dot: { background: "#ffffff", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "", note: "Not done yet", noteColor: "#2c2e2f" },
+  later: { dot: { background: "#ffffff", color: "#6b7280", border: "2px solid #c4cdd8" }, mark: "", note: "Later", noteColor: "#6b7280" },
 };
 
 // The whole path for one case, with the steps already done (Kate, 7 Nov 2026).
@@ -299,15 +298,15 @@ function CasePath({ row }: { row: Row }) {
                 gap: 12,
                 padding: "6px 10px",
                 borderRadius: 6,
-                background: s.state === "now" ? "#fff6dc" : "transparent",
-                borderLeft: s.state === "now" ? "4px solid #ffc439" : "4px solid transparent",
+                background: s.state === "now" ? "#eaf1fb" : "transparent",
+                borderLeft: s.state === "now" ? "4px solid #003087" : "4px solid transparent",
               }}
             >
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <span style={{ ...st.dot, width: 24, height: 24, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                   {st.mark || i + 1}
                 </span>
-                {!last && <span style={{ width: 2, flex: 1, minHeight: 10, marginTop: 2, background: s.state === "done" ? "#ffc439" : "#ffe08a" }} />}
+                {!last && <span style={{ width: 2, flex: 1, minHeight: 10, marginTop: 2, background: s.state === "done" ? "#ffc439" : "#d6dee8" }} />}
               </div>
               <div style={{ fontSize: 14, paddingBottom: last ? 0 : 6 }}>
                 <div style={{ fontWeight: s.state === "now" ? 700 : 600, color: s.state === "later" ? "#5b6472" : "#1f2a37" }}>
