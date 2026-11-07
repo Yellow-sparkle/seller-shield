@@ -78,7 +78,7 @@ const columns: ColDef<Order>[] = [
   {
     headerName: "Hold",
     valueGetter: (p) => (p.data?.held ? "Held" : "Not held"),
-    cellRenderer: (p: P) => (isSummary(p) ? <Pill tone="warn">{sumOf(p).held} held</Pill> : p.data?.held ? <Pill tone="warn">Held</Pill> : <Quiet>Not held</Quiet>),
+    cellRenderer: (p: P) => (isSummary(p) ? <Pill tone="warn">{sumOf(p).held} held</Pill> : p.data?.held ? <Pill tone="warn">Held</Pill> : <Pill tone="muted">Not held</Pill>),
   },
   {
     headerName: "Amount",

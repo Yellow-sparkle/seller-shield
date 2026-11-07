@@ -27,10 +27,10 @@ export function casePath(p: PathInput): PathStep[] {
     { label: "Wait for the buyer to reply", done: p.closed, source: "From PayPal status" },
     { label: "PayPal decides and closes the case", done: p.closed, source: "From PayPal status" },
   ];
-  // The current step is the first one not done after the last done step. While PayPal waits for the
-  // buyer, that is the waiting step. Steps not done before it stay open; steps after it come later.
-  const lastDone = steps.reduce((acc, s, i) => (s.done ? i : acc), -1);
-  let now = p.closed ? -1 : p.waitingForBuyer ? 3 : steps.findIndex((s, i) => !s.done && i > lastDone);
+  // The current step is the first one not done, so a seller who has not messaged the buyer sees that
+  // first. While PayPal waits for the buyer, the waiting step is current. Steps not done before the
+  // current one stay open; steps after it come later (done ones keep their tick).
+  const now = p.closed ? -1 : p.waitingForBuyer ? 3 : steps.findIndex((s) => !s.done);
   return steps.map((s, i) => ({
     label: s.label,
     source: s.source,

@@ -177,5 +177,37 @@
       "Winning needs tracking, a delivered status and delivery to the transaction address. None of these is known yet.",
       "If all three are confirmed, fighting is likely to succeed. If not, refunding is safer."
     ]
+  },
+  "PP-R-DEMO-25": {
+    "recommendation": "FIGHT",
+    "confidence": "HIGH",
+    "claims": [
+      {
+        "text": "Demo case: an Item Not Received dispute waiting for your reply.",
+        "fields": [
+          "reason",
+          "status"
+        ]
+      },
+      {
+        "text": "Tracking DEMO100175 shows the parcel as delivered.",
+        "fields": [
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "PayPal is asking for proof of delivery, which the tracking gives.",
+        "fields": [
+          "evidenceTypeNeeded"
+        ]
+      },
+      {
+        "text": "You have not messaged the buyer yet.",
+        "fields": [
+          "messages"
+        ]
+      }
+    ],
+    "removed": []
   }
 }

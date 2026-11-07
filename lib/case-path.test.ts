@@ -28,3 +28,7 @@ test("not as described: step 3 is done only once the seller ticks it", () => {
   assert.equal(p[2].label, "Send photos and the listing");
   assert.equal(p[2].state, "done");
 });
+
+test("a seller who has not messaged the buyer sees that as the current step, even with tracking added", () => {
+  assert.deepEqual(states({ ...base, reason: "INR", trackingInPayPal: true }), ["done", "now", "done", "later", "later"]);
+});

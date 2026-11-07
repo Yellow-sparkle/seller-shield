@@ -15,6 +15,8 @@ import recorded from "../../lib/recorded/recommendations.json" with { type: "jso
 import { Pill, type Tone } from "../pill";
 import { allOrders } from "@/lib/orders-seed";
 import { casePath, type StepState } from "@/lib/case-path";
+// One demo case where the seller must write to the buyer, so the reply draft is always visible (Kate, 7 Nov 2026).
+import demoDisputes from "../../lib/fixtures/demo-disputes.json" with { type: "json" };
 import feeFixtures from "../../lib/fixtures/sandbox-fees.json" with { type: "json" };
 import { feeLabel, type FeeRecord } from "../../lib/fees.ts";
 
@@ -36,6 +38,7 @@ type Row = {
   nextStep: string;
   cause: string;
   evidence: string;
+  mismatch: "yes" | "no" | null;
   decision: string;
   buyerFiles: string[];
   buyerClaim: string | null;
@@ -52,7 +55,7 @@ type OrderTracking = { orderNo: string; tracking: string | null; carrier: string
 
 type CaseMessage = { by: string; time: string | null; text: string };
 
-type Override = Partial<SellerAnswer> & { decision?: string; buyerFiles?: string[] };
+type Override = Partial<SellerAnswer> & { addressMismatch?: "yes" | "no"; decision?: string; buyerFiles?: string[] };
 
 // Recorded Opus answers (see scripts/live-check.ts --record). Shown without a live call.
 // The deterministic rules (lib/proof.ts) override the recorded answer, as they do in recommend().
@@ -148,6 +151,7 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     ...rec,
     cause: override.addressMismatchCause ?? "unknown",
     evidence: override.causeEvidence ?? "",
+    mismatch: override.addressMismatch ?? (override.causeEvidence || (override.addressMismatchCause && override.addressMismatchCause !== "unknown") ? "yes" : null),
     decision: override.decision ?? "Not decided",
     buyerFiles: override.buyerFiles ?? (Array.isArray(fx.buyer_files) ? (fx.buyer_files as string[]) : []),
     buyerClaim: typeof fx.buyer_claim === "string" ? fx.buyer_claim : null,
@@ -259,8 +263,8 @@ let lastEvidence: Record<string, boolean[]> | null = null;
 const STEP_STYLE: Record<StepState, { dot: React.CSSProperties; mark: string; note: string; noteColor: string }> = {
   done: { dot: { background: "#ffc439", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "✓", note: "Done", noteColor: "#003087" },
   now: { dot: { background: "#0070ba", color: "#ffffff", border: "2px solid #0070ba" }, mark: "", note: "Now", noteColor: "#005ea6" },
-  open: { dot: { background: "#ffffff", color: "#003087", border: "2px solid #003087" }, mark: "", note: "Not done yet", noteColor: "#8a4b00" },
-  later: { dot: { background: "#ffffff", color: "#6b7280", border: "2px solid #c4cdd8" }, mark: "", note: "Later", noteColor: "#5b6472" },
+  open: { dot: { background: "#fff6dc", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "", note: "Not done yet", noteColor: "#8a4b00" },
+  later: { dot: { background: "#ffffff", color: "#5b6472", border: "2px solid #ffe08a" }, mark: "", note: "Later", noteColor: "#5b6472" },
 };
 
 // The whole path for one case, with the steps already done (Kate, 7 Nov 2026).
@@ -303,7 +307,7 @@ function CasePath({ row }: { row: Row }) {
                 <span style={{ ...st.dot, width: 24, height: 24, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                   {st.mark || i + 1}
                 </span>
-                {!last && <span style={{ width: 2, flex: 1, minHeight: 10, marginTop: 2, background: s.state === "done" ? "#ffc439" : "#c4cdd8" }} />}
+                {!last && <span style={{ width: 2, flex: 1, minHeight: 10, marginTop: 2, background: s.state === "done" ? "#ffc439" : "#ffe08a" }} />}
               </div>
               <div style={{ fontSize: 14, paddingBottom: last ? 0 : 6 }}>
                 <div style={{ fontWeight: s.state === "now" ? 700 : 600, color: s.state === "later" ? "#5b6472" : "#1f2a37" }}>
@@ -380,7 +384,7 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
 
 // Address mismatch cause and its evidence, moved from the table to the card (Kate, 7 Nov 2026).
 // The evidence is saved when the box loses focus, so the case row does not recalculate on every key.
-function CauseForm({ row, onChange }: { row: Row; onChange: (cause: string, evidence: string) => void }) {
+function CauseForm({ row, onChange }: { row: Row; onChange: (mismatch: "yes" | "no", cause: string, evidence: string) => void }) {
   const [text, setText] = useState(row.evidence ?? "");
   useEffect(() => setText(row.evidence ?? ""), [row.evidence]);
   const cause = row.cause === "seller" || row.cause === "buyer" ? row.cause : "unknown";
@@ -388,24 +392,39 @@ function CauseForm({ row, onChange }: { row: Row; onChange: (cause: string, evid
     <section style={{ marginTop: 20 }}>
       <h2 style={{ fontSize: 18, marginBottom: 6 }}>Address mismatch</h2>
       <div style={{ display: "grid", gap: 8, fontSize: 14, maxWidth: 640 }}>
-        <label>
-          <strong>Cause</strong>{" "}
-          <select value={cause} onChange={(e) => onChange(e.target.value, text)} style={{ marginLeft: 6 }}>
-            <option value="unknown">Not added yet</option>
-            <option value="seller">Seller</option>
-            <option value="buyer">Buyer</option>
-          </select>
-        </label>
-        <label style={{ display: "grid", gap: 4 }}>
-          <strong>Cause evidence</strong>
-          <textarea
-            rows={2}
-            value={text}
-            placeholder="For example: Buyer asked to change the delivery address after the order was placed."
-            onChange={(e) => setText(e.target.value)}
-            onBlur={() => text !== (row.evidence ?? "") && onChange(cause, text)}
-          />
-        </label>
+        {/* First a yes or no question; the cause and evidence open only on yes (Kate, 7 Nov 2026). */}
+        <div role="radiogroup" aria-label="Was the parcel sent to a different address than the one on the order?">
+          <strong>Was the parcel sent to a different address than the one on the order?</strong>
+          <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+            {(["yes", "no"] as const).map((v) => (
+              <label key={v}>
+                <input type="radio" name={`mismatch-${row.id}`} checked={row.mismatch === v} onChange={() => onChange(v, cause, text)} /> {v === "yes" ? "Yes" : "No"}
+              </label>
+            ))}
+          </div>
+        </div>
+        {row.mismatch === "yes" && (
+          <>
+            <label>
+              <strong>Who caused it?</strong>{" "}
+              <select value={cause} onChange={(e) => onChange("yes", e.target.value, text)} style={{ marginLeft: 6 }}>
+                <option value="unknown">Not added yet</option>
+                <option value="seller">Seller</option>
+                <option value="buyer">Buyer</option>
+              </select>
+            </label>
+            <label style={{ display: "grid", gap: 4 }}>
+              <strong>Evidence</strong>
+              <textarea
+                rows={2}
+                value={text}
+                placeholder="For example: Buyer asked to change the delivery address after the order was placed."
+                onChange={(e) => setText(e.target.value)}
+                onBlur={() => text !== (row.evidence ?? "") && onChange("yes", cause, text)}
+              />
+            </label>
+          </>
+        )}
       </div>
     </section>
   );
@@ -494,6 +513,8 @@ function ReplyDrafts({ rows, showId = true }: { rows: Row[]; showId?: boolean })
   );
 }
 
+const isDemo = (r: Row) => r.id.includes("-DEMO-");
+
 type Pending = "message" | "refund" | null;
 type Outcome = { ok: boolean; text: string };
 
@@ -543,15 +564,16 @@ function DraftCard({ row, initial, showId = true }: { row: Row; initial: string;
         <button type="button" onClick={() => navigator.clipboard?.writeText(text).then(() => setCopied(true), () => setCopied(false))}>
           Copy
         </button>
-        <button type="button" disabled={!row.canRespond || busy} onClick={() => setPending("message")}>
+        <button type="button" disabled={!row.canRespond || busy || isDemo(row)} onClick={() => setPending("message")}>
           Send to buyer...
         </button>
-        <button type="button" disabled={!row.canRespond || busy} onClick={() => setPending("refund")}>
+        <button type="button" disabled={!row.canRespond || busy || isDemo(row)} onClick={() => setPending("refund")}>
           Refund buyer...
         </button>
         {copied && <span style={{ color: "#555", fontSize: 14 }}>Copied.</span>}
       </div>
       {!row.canRespond && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>Replies are closed in PayPal for this case.</p>}
+      {row.canRespond && isDemo(row) && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>Demo case: you can edit and copy the text. Sending and refunds are off because it is not in PayPal.</p>}
       {pending && (
         <div role="dialog" aria-label="Approve before sending" style={{ marginTop: 8, padding: 10, borderRadius: 6, background: "#fff4d6", border: "1px solid #e8c56b" }}>
           <p style={{ margin: "0 0 6px" }}>
@@ -666,7 +688,7 @@ export default function CaseScreen() {
   const rows: Row[] = useMemo(
     () =>
       now
-        ? (fixtures as object[]).map((f) => {
+        ? ([...(fixtures as object[]), ...(demoDisputes as object[])] as object[]).map((f) => {
             const id = toCase(f as never).disputeId;
             return toRow(f, now, overrides[id] ?? {});
           })
@@ -682,10 +704,14 @@ export default function CaseScreen() {
   }, [chips]);
   const toggleChip = (id: string) => setChips((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
   const selectedRows = rows.filter((r) => selectedIds.includes(r.id));
-  const setCause = (id: string, cause: string, evidence: string) =>
+  const setCause = (id: string, mismatch: "yes" | "no", cause: string, evidence: string) =>
     setOverrides((prev) => ({
       ...prev,
-      [id]: { ...prev[id], addressMismatchCause: cause as "seller" | "buyer" | "unknown", causeEvidence: evidence || undefined },
+      // "No" clears the cause and evidence, so they do not change the case strength.
+      [id]:
+        mismatch === "no"
+          ? { ...prev[id], addressMismatch: "no", addressMismatchCause: "unknown", causeEvidence: undefined }
+          : { ...prev[id], addressMismatch: "yes", addressMismatchCause: cause as "seller" | "buyer" | "unknown", causeEvidence: evidence || undefined },
     }));
   return (
     <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
@@ -746,7 +772,7 @@ export default function CaseScreen() {
               </div>
               <div>
                 <OrderLine row={r} />
-                <CauseForm row={r} onChange={(cause, evidence) => setCause(r.id, cause, evidence)} />
+                <CauseForm row={r} onChange={(mismatch, cause, evidence) => setCause(r.id, mismatch, cause, evidence)} />
                 <EvidenceChecklist rows={[r]} showId={false} />
                 <Conversation row={r} />
                 <ReplyDrafts rows={[r]} showId={false} />

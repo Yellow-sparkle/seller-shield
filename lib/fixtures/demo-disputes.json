@@ -1,0 +1,20 @@
+[
+  {
+    "dispute_id": "PP-R-DEMO-25",
+    "reason": "INR",
+    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "dispute_amount": { "currency_code": "EUR", "value": "45.00" },
+    "disputed_transactions": [{ "seller_transaction_id": "DEMO-1025", "seller_protection_eligible": true }],
+    "create_time": "2026-11-05T09:12:00Z",
+    "seller_response_due_date": "2026-11-25T09:12:00Z",
+    "dispute_life_cycle_stage": "INQUIRY",
+    "fund_movements": [{ "type": "HOLD_PLACED", "affected_party": "SELLER", "amount": { "currency_code": "EUR", "value": "43.24" } }],
+    "seller_protection": { "status": "ELIGIBLE" },
+    "buyer_claim": "My parcel has not arrived. Can you tell me where it is?",
+    "requested_from_seller": ["PROOF_OF_FULFILLMENT"],
+    "buyer_files": [],
+    "buyer_checked": true,
+    "seller_messages": [],
+    "messages": [{ "by": "BUYER", "time": "2026-11-05T09:12:00Z", "text": "My parcel has not arrived. Can you tell me where it is?" }]
+  }
+]
