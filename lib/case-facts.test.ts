@@ -1,0 +1,79 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { caseAnswer } from "./case-facts.ts";
+import { forcedRecommendation } from "./proof.ts";
+import { toCase } from "./dispute.ts";
+
+const now = new Date("2026-11-07T12:00:00Z");
+const inr = toCase({ dispute_id: "D", reason: "INR", status: "WAITING_FOR_SELLER_RESPONSE", seller_response_due_date: "2026-11-25T09:12:00Z", dispute_life_cycle_stage: "INQUIRY" });
+const delivered = { tracking: "DEMO100175", trackingStatus: "DELIVERED", deliveredDate: "2026-10-29" };
+
+test("H1: Yes, seller caused it, with evidence gives REFUND on an INR case", () => {
+  const a = caseAnswer({}, delivered, { addressMismatch: "yes", addressMismatchCause: "seller", causeEvidence: "Label shows the old address" });
+  assert.equal(forcedRecommendation(inr, a, now), "REFUND");
+});
+
+test("H1: Yes, buyer caused it gives YOUR_CALL", () => {
+  const a = caseAnswer({}, delivered, { addressMismatch: "yes", addressMismatchCause: "buyer", causeEvidence: "Buyer changed the address" });
+  assert.equal(forcedRecommendation(inr, a, now), "YOUR_CALL");
+});
+
+test("H1: Yes, seller, but no evidence counts as unknown: YOUR_CALL", () => {
+  const a = caseAnswer({}, delivered, { addressMismatch: "yes", addressMismatchCause: "seller" });
+  assert.equal(forcedRecommendation(inr, a, now), "YOUR_CALL");
+});
+
+test("H2: delivered, address not answered yet: the rule says YOUR_CALL, not the model's FIGHT", () => {
+  assert.equal(forcedRecommendation(inr, caseAnswer({}, delivered, {}), now), "YOUR_CALL");
+});
+
+test("H2: delivered, dated, and No to the mismatch question: full proof, the model may FIGHT", () => {
+  assert.equal(forcedRecommendation(inr, caseAnswer({}, delivered, { addressMismatch: "no" }), now), null);
+});
+
+test("an order without tracking means no tracking: REFUND", () => {
+  assert.equal(forcedRecommendation(inr, caseAnswer({}, { tracking: null }, {}), now), "REFUND");
+});
+
+test("answers entered for the demo win over the order", () => {
+  assert.equal(caseAnswer({ hasTracking: false }, delivered, {}).hasTracking, false);
+});
+
+test("No case card answer and no order: nothing is guessed", () => {
+  assert.deepEqual(caseAnswer({}, null, {}), {});
+});
+
+test("No clears the cause and evidence from the answer", () => {
+  const a = caseAnswer({}, delivered, { addressMismatch: "no", addressMismatchCause: "seller", causeEvidence: "x" });
+  assert.equal(a.deliveredToTransactionAddress, true);
+  assert.equal(a.addressMismatchCause, undefined);
+});
+
+import { ruleReasons, normalizeDecision, routeFor, draftBasis } from "./case-facts.ts";
+import { withSentTracking } from "./sent-tracking.ts";
+
+test("PRD F3: a your-decision INR case says what would settle it", () => {
+  const lines = ruleReasons("INR", caseAnswer({}, { tracking: "T", trackingStatus: "DELIVERED" }, {}), "YOUR_CALL");
+  assert.match(lines[lines.length - 1], /What would settle it: the delivery date on the carrier page, your answer to the address question/);
+});
+
+test("M10: old decision values map to the three options", () => {
+  assert.equal(normalizeDecision("Accept refund"), "Refund");
+  assert.equal(normalizeDecision("Fight. Tracking shows delivery."), "Fight");
+  assert.equal(normalizeDecision("Reject recommendation"), "Not decided");
+  assert.equal(normalizeDecision(undefined), "Not decided");
+});
+
+test("M10: the seller's decision drives the path and the draft, the recommendation is the fallback", () => {
+  assert.equal(routeFor("Refund", "FIGHT (high confidence)"), "refund");
+  assert.equal(routeFor("Not decided", "REFUND (high confidence, rule)"), "refund");
+  assert.equal(routeFor("Not decided", "YOUR_CALL (low confidence)"), "fight");
+  assert.equal(draftBasis("Fight", "REFUND (high confidence)"), "FIGHT");
+  assert.equal(draftBasis("Not decided", "YOUR_CALL (low confidence)"), "YOUR_CALL (low confidence)");
+});
+
+test("M3: tracking sent from this browser shows on the order", () => {
+  const o = withSentTracking({ orderNo: "1P" } as { orderNo: string; tracking?: string; trackingStatus?: string }, { "1P": { carrier: "DHL", tracking: "T9", at: "2026-11-07" } });
+  assert.equal(o.trackingStatus, "SHIPPED");
+  assert.equal(o.tracking, "T9");
+});
