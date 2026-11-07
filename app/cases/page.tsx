@@ -13,6 +13,7 @@ import { templateReply } from "../../lib/reply.ts";
 import fixtures from "../../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../../lib/recorded/recommendations.json" with { type: "json" };
 import { Pill, type Tone } from "../pill";
+import { allOrders } from "@/lib/orders-seed";
 import feeFixtures from "../../lib/fixtures/sandbox-fees.json" with { type: "json" };
 import { feeLabel, type FeeRecord } from "../../lib/fees.ts";
 
@@ -42,7 +43,12 @@ type Row = {
   buyerChecked: boolean;
   sellerMessages: string[];
   messages: CaseMessage[];
+  order: OrderTracking | null;
 };
+
+// Orders by number, to show the order behind each case. The dispute's seller transaction ID is the order number.
+const ORDER_BY_NO = new Map(allOrders().map((o) => [o.orderNo, o]));
+type OrderTracking = { orderNo: string; tracking: string | null; carrier: string | null; status: string | null };
 
 type CaseMessage = { by: string; time: string | null; text: string };
 
@@ -157,6 +163,10 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     buyerChecked: fx.buyer_checked === true,
     sellerMessages: Array.isArray(fx.seller_messages) ? (fx.seller_messages as string[]) : [],
     messages: Array.isArray(fx.messages) ? (fx.messages as CaseMessage[]) : [],
+    order: (() => {
+      const o = c.transactionId ? ORDER_BY_NO.get(c.transactionId) : undefined;
+      return o ? { orderNo: o.orderNo, tracking: o.tracking ?? null, carrier: o.carrier ?? null, status: o.trackingStatus ?? null } : null;
+    })(),
   };
 }
 
@@ -300,6 +310,32 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
         );
       })}
     </section>
+  );
+}
+
+// The order behind the case and its tracking (from Orders and tracking), plus a link to PayPal for actions
+// this app does not do, such as uploading files.
+function OrderLine({ row }: { row: Row }) {
+  const o = row.order;
+  return (
+    <div style={{ fontSize: 14, display: "grid", gap: 4, marginTop: 4 }}>
+      <div>
+        <strong>Order tracking:</strong>{" "}
+        {!o ? (
+          <span style={{ color: "#555" }}>Order not found in Orders and tracking.</span>
+        ) : (
+          <>
+            Order {o.orderNo} · {o.tracking ? `${o.tracking}${o.carrier ? ` (${o.carrier})` : ""}` : "No tracking number"} ·{" "}
+            <Pill tone={o.status ? "good" : "muted"}>{o.status ?? (o.tracking ? "Awaiting tracking" : "No tracking")}</Pill>
+          </>
+        )}
+      </div>
+      <div>
+        <a href="https://www.sandbox.paypal.com/resolutioncenter" target="_blank" rel="noreferrer" style={{ color: "#0070ba", fontWeight: 600 }}>
+          Open the PayPal Resolution Center (sandbox)
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -609,6 +645,7 @@ export default function CaseScreen() {
         selectedRows.map((r) => (
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 18, margin: "0 0 4px" }}>Case {r.id}</h2>
+            <OrderLine row={r} />
             <EvidenceChecklist rows={[r]} showId={false} />
             <Conversation row={r} />
             <ReplyDrafts rows={[r]} showId={false} />
