@@ -82,14 +82,14 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
     const tracking = answer.hasTracking === true ? "A tracking number is on the order." : answer.hasTracking === false ? "No tracking number is on the order." : "";
     return {
       recommendation: `${forced} (${forced === "YOUR_CALL" ? "low" : "high"} confidence, rule)`,
-      reasons: [tracking, verdict].filter(Boolean).map((t) => `• ${t}`).join("\n"),
+      reasons: [tracking, verdict].filter(Boolean).join("\n"),
       nextStep,
     };
   }
   if (!r) return { recommendation: "Not recorded yet", reasons: "-", nextStep };
   return {
     recommendation: `${r.recommendation} (${r.confidence.toLowerCase()} confidence)`,
-    reasons: r.claims.map((c) => `• ${c.text}`).join("\n"),
+    reasons: r.claims.map((c) => c.text).join("\n"),
     nextStep,
   };
 }
@@ -117,13 +117,13 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
   const rec = waitingForBuyer
     ? {
         recommendation: "WAITING",
-        reasons: "• You have replied. PayPal is waiting for the buyer.",
+        reasons: "You have replied. PayPal is waiting for the buyer.",
         nextStep: "1. Wait for the buyer's reply.\n2. PayPal decides if the buyer does not reply in time.",
       }
     : resolved
     ? {
         recommendation: "RESOLVED",
-        reasons: c.status === "REFUNDED" ? "• PayPal has already refunded the buyer." : `• PayPal has closed this case (${c.status}).`,
+        reasons: c.status === "REFUNDED" ? "PayPal has already refunded the buyer." : `PayPal has closed this case (${c.status}).`,
         nextStep: "1. No action needed.\n2. Keep the case for your records.",
       }
     : recommendationFor(c.disputeId, c, e, now, override);
@@ -216,7 +216,23 @@ const columns: ColDef<Row>[] = [
   { field: "protection", headerName: "Seller protection", flex: 1, cellRenderer: (p: { value: string }) => <ProtectionBadge value={p.value} /> },
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
   { field: "recommendation", headerName: CASE_READ_LABEL, flex: 2, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
-  { field: "reasons", headerName: "Why", flex: 4, minWidth: 320, wrapText: true, autoHeight: true, cellStyle: { whiteSpace: "pre-line", lineHeight: "1.5", paddingTop: 8, paddingBottom: 8 } },
+  // Why: one plain line per reason, a small gap between them, no bullets (Kate, 7 Nov 2026).
+  {
+    field: "reasons",
+    headerName: "Why",
+    flex: 4,
+    minWidth: 320,
+    wrapText: true,
+    autoHeight: true,
+    cellStyle: { lineHeight: "1.45", paddingTop: 8, paddingBottom: 8 },
+    cellRenderer: (p: { value: string }) => (
+      <div style={{ display: "grid", gap: 4, whiteSpace: "normal" }}>
+        {String(p.value ?? "").split("\n").filter(Boolean).map((line, i) => (
+          <div key={i}>{line}</div>
+        ))}
+      </div>
+    ),
+  },
   // Next step, Address mismatch cause and Cause evidence moved to the case card (Kate, 7 Nov 2026).
   {
     field: "decision",
@@ -258,10 +274,10 @@ const EVIDENCE_EVENT = "seller-shield-evidence-changed";
 let lastEvidence: Record<string, boolean[]> | null = null;
 
 // Two colours only (Kate, 7 Nov 2026): PayPal gold for steps (filled when done, outlined when not done
-// yet), PayPal navy for the current step, grey for later. Labels are dark text, the current one navy.
+// yet), a gold circle with a navy ring on a light blue band for the current step, grey for later. Labels are dark text, the current one navy.
 const STEP_STYLE: Record<StepState, { dot: React.CSSProperties; mark: string; note: string; noteColor: string }> = {
   done: { dot: { background: "#ffc439", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "✓", note: "Done", noteColor: "#2c2e2f" },
-  now: { dot: { background: "#003087", color: "#ffffff", border: "2px solid #003087" }, mark: "", note: "Now", noteColor: "#003087" },
+  now: { dot: { background: "#ffc439", color: "#2c2e2f", border: "2px solid #003087" }, mark: "", note: "Now", noteColor: "#003087" },
   open: { dot: { background: "#ffffff", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "", note: "Not done yet", noteColor: "#2c2e2f" },
   later: { dot: { background: "#ffffff", color: "#6b7280", border: "2px solid #c4cdd8" }, mark: "", note: "Later", noteColor: "#6b7280" },
 };
