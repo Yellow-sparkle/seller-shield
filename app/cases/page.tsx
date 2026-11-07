@@ -253,11 +253,11 @@ function writeEvidence(v: Record<string, boolean[]>) {
 const EVIDENCE_EVENT = "seller-shield-evidence-changed";
 let lastEvidence: Record<string, boolean[]> | null = null;
 
-// PayPal colours: navy #003087 for done, blue #0070ba for the current step on a light gold band
+// PayPal colours: gold #ffc439 with a dark tick for done (Kate, 7 Nov 2026), blue #0070ba for the current step on a light gold band
 // (PayPal gold #ffc439 as the accent, never behind text), grey for later. A step left undone before
 // the current one gets a navy outline and dark amber text, so it reads as "still to do", not as an error.
 const STEP_STYLE: Record<StepState, { dot: React.CSSProperties; mark: string; note: string; noteColor: string }> = {
-  done: { dot: { background: "#003087", color: "#ffffff", border: "2px solid #003087" }, mark: "✓", note: "Done", noteColor: "#003087" },
+  done: { dot: { background: "#ffc439", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "✓", note: "Done", noteColor: "#003087" },
   now: { dot: { background: "#0070ba", color: "#ffffff", border: "2px solid #0070ba" }, mark: "", note: "Now", noteColor: "#005ea6" },
   open: { dot: { background: "#ffffff", color: "#003087", border: "2px solid #003087" }, mark: "", note: "Not done yet", noteColor: "#8a4b00" },
   later: { dot: { background: "#ffffff", color: "#6b7280", border: "2px solid #c4cdd8" }, mark: "", note: "Later", noteColor: "#5b6472" },
@@ -303,7 +303,7 @@ function CasePath({ row }: { row: Row }) {
                 <span style={{ ...st.dot, width: 24, height: 24, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                   {st.mark || i + 1}
                 </span>
-                {!last && <span style={{ width: 2, flex: 1, minHeight: 10, marginTop: 2, background: s.state === "done" ? "#003087" : "#c4cdd8" }} />}
+                {!last && <span style={{ width: 2, flex: 1, minHeight: 10, marginTop: 2, background: s.state === "done" ? "#ffc439" : "#c4cdd8" }} />}
               </div>
               <div style={{ fontSize: 14, paddingBottom: last ? 0 : 6 }}>
                 <div style={{ fontWeight: s.state === "now" ? 700 : 600, color: s.state === "later" ? "#5b6472" : "#1f2a37" }}>
@@ -737,7 +737,7 @@ export default function CaseScreen() {
       ) : (
         // One card per ticked case, so Documents and Reply and act for each case stay together.
         selectedRows.map((r) => (
-          <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderTop: "6px solid #ffc439", borderRadius: 8, background: "#ffffff", padding: 16 }}>
+          <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 24, margin: "0 0 12px" }}>Case {r.id}</h2>
             {/* Two columns (Kate, 7 Nov 2026): the step path on the left, everything else on the right. */}
             <div className="case-columns">
