@@ -4,7 +4,7 @@
 // A link such as /cases#PP-R-... (from the orders grid or the health scan) highlights that case.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { AllCommunityModule, ModuleRegistry, themeQuartz, type CellValueChangedEvent, type ColDef, type RowSelectionOptions } from "ag-grid-community";
+import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type RowSelectionOptions } from "ag-grid-community";
 import { toCase, daysUntilDue } from "../../lib/dispute.ts";
 import { decideBy, protectionLabel, responseEligibility } from "../../lib/rules.ts";
 import { forcedRecommendation, inrWaitNote } from "../../lib/proof.ts";
@@ -212,17 +212,7 @@ const columns: ColDef<Row>[] = [
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
   { field: "recommendation", headerName: CASE_READ_LABEL, flex: 2, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
   { field: "reasons", headerName: "Why", flex: 4, minWidth: 320, wrapText: true, autoHeight: true, cellStyle: { whiteSpace: "pre-line", lineHeight: "1.5", paddingTop: 8, paddingBottom: 8 } },
-  { field: "nextStep", headerName: "Next step", flex: 3, minWidth: 260, wrapText: true, autoHeight: true, cellStyle: { whiteSpace: "pre-line", lineHeight: "1.5", paddingTop: 8, paddingBottom: 8 } },
-  {
-    field: "cause",
-    headerName: "Address mismatch cause",
-    flex: 1.5,
-    valueFormatter: (p) => (p.value === "seller" ? "Seller" : p.value === "buyer" ? "Buyer" : "Not added yet"),
-    editable: true,
-    cellEditor: "agSelectCellEditor",
-    cellEditorParams: { values: ["unknown", "seller", "buyer"] },
-  },
-  { field: "evidence", headerName: "Cause evidence", flex: 2, editable: true, valueFormatter: (p) => (p.value ? String(p.value) : "Not added yet") },
+  // Next step, Address mismatch cause and Cause evidence moved to the case card (Kate, 7 Nov 2026).
   {
     field: "decision",
     headerName: "Seller decision",
@@ -383,6 +373,39 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
           </div>
         );
       })}
+    </section>
+  );
+}
+
+// Address mismatch cause and its evidence, moved from the table to the card (Kate, 7 Nov 2026).
+// The evidence is saved when the box loses focus, so the case row does not recalculate on every key.
+function CauseForm({ row, onChange }: { row: Row; onChange: (cause: string, evidence: string) => void }) {
+  const [text, setText] = useState(row.evidence ?? "");
+  useEffect(() => setText(row.evidence ?? ""), [row.evidence]);
+  const cause = row.cause === "seller" || row.cause === "buyer" ? row.cause : "unknown";
+  return (
+    <section style={{ marginTop: 20 }}>
+      <h2 style={{ fontSize: 18, marginBottom: 6 }}>Address mismatch</h2>
+      <div style={{ display: "grid", gap: 8, fontSize: 14, maxWidth: 640 }}>
+        <label>
+          <strong>Cause</strong>{" "}
+          <select value={cause} onChange={(e) => onChange(e.target.value, text)} style={{ marginLeft: 6 }}>
+            <option value="unknown">Not added yet</option>
+            <option value="seller">Seller</option>
+            <option value="buyer">Buyer</option>
+          </select>
+        </label>
+        <label style={{ display: "grid", gap: 4 }}>
+          <strong>Cause evidence</strong>
+          <textarea
+            rows={2}
+            value={text}
+            placeholder="For example: Buyer asked to change the delivery address after the order was placed."
+            onChange={(e) => setText(e.target.value)}
+            onBlur={() => text !== (row.evidence ?? "") && onChange(cause, text)}
+          />
+        </label>
+      </div>
     </section>
   );
 }
@@ -654,18 +677,11 @@ export default function CaseScreen() {
   }, [chips]);
   const toggleChip = (id: string) => setChips((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
   const selectedRows = rows.filter((r) => selectedIds.includes(r.id));
-  const onCellValueChanged = (e: CellValueChangedEvent<Row>) => {
-    if (e.colDef.field !== "cause" && e.colDef.field !== "evidence") return;
-    const d = e.data;
-    if (!d) return;
+  const setCause = (id: string, cause: string, evidence: string) =>
     setOverrides((prev) => ({
       ...prev,
-      [d.id]: {
-        addressMismatchCause: (d.cause as "seller" | "buyer" | "unknown") ?? "unknown",
-        causeEvidence: d.evidence || undefined,
-      },
+      [id]: { ...prev[id], addressMismatchCause: cause as "seller" | "buyer" | "unknown", causeEvidence: evidence || undefined },
     }));
-  };
   return (
     <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22, marginBottom: 4 }}>Dispute cases</h1>
@@ -709,7 +725,6 @@ export default function CaseScreen() {
             const node = focusId ? e.api.getRowNode(focusId) : undefined;
             if (node) e.api.flashCells({ rowNodes: [node] });
           }}
-          onCellValueChanged={onCellValueChanged}
         />
       </div>
       {selectedRows.length === 0 ? (
@@ -718,7 +733,7 @@ export default function CaseScreen() {
         // One card per ticked case, so Documents and Reply and act for each case stay together.
         selectedRows.map((r) => (
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
-            <h2 style={{ fontSize: 18, margin: "0 0 4px" }}>Case {r.id}</h2>
+            <h2 style={{ fontSize: 24, margin: "0 0 12px" }}>Case {r.id}</h2>
             {/* Two columns (Kate, 7 Nov 2026): the step path on the left, everything else on the right. */}
             <div className="case-columns">
               <div className="case-steps">
@@ -726,6 +741,7 @@ export default function CaseScreen() {
               </div>
               <div>
                 <OrderLine row={r} />
+                <CauseForm row={r} onChange={(cause, evidence) => setCause(r.id, cause, evidence)} />
                 <EvidenceChecklist rows={[r]} showId={false} />
                 <Conversation row={r} />
                 <ReplyDrafts rows={[r]} showId={false} />
