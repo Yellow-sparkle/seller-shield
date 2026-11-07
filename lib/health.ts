@@ -8,7 +8,9 @@ export type HealthDispute = {
   seller_response_due_date?: string;
 };
 
-const OPEN = new Set(["OPEN", "WAITING_FOR_SELLER_RESPONSE", "UNDER_REVIEW"]);
+// Disputes whose money is still at stake. WAITING_FOR_BUYER_RESPONSE counts too: the seller has replied, but the
+// case is not decided (review finding M12).
+const OPEN = new Set(["OPEN", "WAITING_FOR_SELLER_RESPONSE", "WAITING_FOR_BUYER_RESPONSE", "UNDER_REVIEW"]);
 
 export type Health = {
   moneyAtRisk: { count: number; amount: number; currency: string };
@@ -27,7 +29,9 @@ export function summarizeHealth(disputes: HealthDispute[], orders: Order[], now:
   const missingTotal = missing.reduce((sum, o) => sum + (Number(o.amount.value) || 0), 0);
   const demoMissing = orders.filter((o) => o.source === "demo" && !o.tracking).length;
 
+  // Reply deadlines count only where PayPal waits for the seller.
   const dues = open
+    .filter((d) => d.status === "OPEN" || d.status === "WAITING_FOR_SELLER_RESPONSE")
     .filter((d) => !!d.seller_response_due_date && !Number.isNaN(Date.parse(d.seller_response_due_date)))
     .map((d) => ({ at: Date.parse(d.seller_response_due_date as string), id: d.dispute_id }))
     .sort((a, b) => a.at - b.at);

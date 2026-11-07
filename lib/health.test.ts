@@ -79,3 +79,14 @@ test("nearest deadline names its dispute, so the card can open that case", () =>
   );
   assert.equal(h.nextDeadline?.disputeId, "PP-R-SOON");
 });
+
+test("M12: a dispute waiting for the buyer is still money at risk, but its date is not a reply deadline", () => {
+  const h = summarizeHealth(
+    [{ dispute_id: "W", status: "WAITING_FOR_BUYER_RESPONSE", dispute_amount: { currency_code: "EUR", value: "30.00" }, seller_response_due_date: "2026-11-08T00:00:00Z" }],
+    [],
+    new Date("2026-11-07T00:00:00Z"),
+  );
+  assert.equal(h.moneyAtRisk.count, 1);
+  assert.equal(h.moneyAtRisk.amount, 30);
+  assert.equal(h.nextDeadline, null);
+});
