@@ -39,17 +39,38 @@ export function parseReply(text: string): ReplyDraft {
 // Plain template reply for the screen, used until a recorded or live AI draft is available.
 // It uses only the case facts passed in, and bracketed placeholders for any evidence the seller must add.
 // It goes through parseReply, so it can't predict PayPal's decision or run past the length cap.
-export function templateReply(input: { recommendation: string; amount: string; orderRef: string }): ReplyDraft {
+// Review fixes (7 Nov 2026): the refund draft no longer says the refund already happened (H6); an item-not-received
+// fight talks about delivery and uses the order's tracking when there is one (L3); the draft names the order (L4).
+export function templateReply(input: {
+  recommendation: string;
+  amount: string;
+  orderRef: string;
+  reason?: string;
+  tracking?: { carrier: string | null; number: string } | null;
+}): ReplyDraft {
   const rec = input.recommendation.split(" ")[0];
   let draft: string;
   let placeholders: string[] = [];
-  if (rec === "FIGHT") {
-    draft = `Thank you for your message about ${input.orderRef}. We have reviewed your claim and the evidence we hold: [attach proof of delivery or listing evidence]. We believe the item matches what was agreed.`;
-    placeholders = ["[attach proof of delivery or listing evidence]"];
+  if (rec === "FIGHT" && input.reason === "INR") {
+    if (input.tracking?.number) {
+      const via = input.tracking.carrier ? ` with ${input.tracking.carrier}` : "";
+      draft = `Thank you for your message about ${input.orderRef}. Your parcel was sent${via}, tracking number ${input.tracking.number}. You can follow it on the carrier's website. Please tell us if the carrier page shows a problem.`;
+    } else {
+      draft = `Thank you for your message about ${input.orderRef}. Your parcel was sent with tracking number [add tracking number].`;
+      placeholders = ["[add tracking number]"];
+    }
+  } else if (rec === "FIGHT") {
+    draft = `Thank you for your message about ${input.orderRef}. We have reviewed your claim and the evidence we hold: [attach listing photos and parcel photos]. We believe the item matches the listing.`;
+    placeholders = ["[attach listing photos and parcel photos]"];
   } else if (rec === "REFUND") {
-    draft = `We are sorry about ${input.orderRef}. We have refunded ${input.amount} to you through PayPal.`;
+    draft = `We are sorry about ${input.orderRef}. We are accepting your claim and refunding ${input.amount} to you through PayPal.`;
   } else {
     draft = `Thank you for your message about ${input.orderRef}. We are reviewing the details of your claim and will reply as soon as we have them.`;
   }
   return parseReply(JSON.stringify({ draft, placeholders }));
+}
+
+// True while the text still holds a bracketed placeholder such as [attach ...]. Sending is blocked until it is filled (L3).
+export function hasPlaceholder(text: string): boolean {
+  return /\[[^\]]{2,}\]/.test(text);
 }

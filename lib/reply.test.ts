@@ -39,7 +39,8 @@ import { templateReply } from "./reply.ts";
 
 test("template reply for a refund states the amount and no prediction", () => {
   const r = templateReply({ recommendation: "REFUND", amount: "15.00 EUR", orderRef: "order #1063" });
-  assert.match(r.draft, /refunded 15\.00 EUR/);
+  assert.match(r.draft, /refunding 15\.00 EUR/);
+  assert.doesNotMatch(r.draft, /have refunded/);
   assert.deepEqual(r.placeholders, []);
 });
 
@@ -52,4 +53,25 @@ test("template reply for a fight keeps the evidence placeholder", () => {
 test("template reply for your call makes no promise", () => {
   const r = templateReply({ recommendation: "YOUR_CALL", amount: "85.00 EUR", orderRef: "order #1063" });
   assert.doesNotMatch(r.draft, /PayPal will|will win|will refund|guarantee/i);
+});
+
+import { hasPlaceholder } from "./reply.ts";
+
+test("H6: the refund draft does not say the refund already happened", () => {
+  const r = templateReply({ recommendation: "REFUND", amount: "25.00 EUR", orderRef: "order 1P27" });
+  assert.doesNotMatch(r.draft, /have refunded|has been refunded/i);
+});
+
+test("L3: an INR fight uses the order's tracking and talks about delivery, not the listing", () => {
+  const r = templateReply({ recommendation: "FIGHT (high confidence)", amount: "45.00 EUR", orderRef: "order DEMO-1025", reason: "INR", tracking: { carrier: "PostNL", number: "DEMO100175" } });
+  assert.match(r.draft, /PostNL, tracking number DEMO100175/);
+  assert.doesNotMatch(r.draft, /listing/);
+  assert.equal(hasPlaceholder(r.draft), false);
+});
+
+test("L3: placeholders are detected so the screen can block the send", () => {
+  assert.equal(hasPlaceholder("See [attach listing photos]."), true);
+  assert.equal(hasPlaceholder("No brackets here."), false);
+  const r = templateReply({ recommendation: "FIGHT", amount: "45.00 EUR", orderRef: "order X", reason: "INR" });
+  assert.equal(hasPlaceholder(r.draft), true);
 });
