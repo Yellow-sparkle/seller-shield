@@ -351,6 +351,11 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
         return (
           <div key={r.id} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
             {showId && <strong>{r.id}</strong>}
+            {/* A tip on what to do here (Kate, 7 Nov 2026). The boxes are the seller's own evidence, not the buyer's files. */}
+            <p style={{ fontSize: 14, color: "#2c2e2f", background: "#eaf1fb", borderRadius: 6, padding: "8px 10px", margin: "0 0 4px" }}>
+              <strong>Tip:</strong> tick each item once you have uploaded it to this case in PayPal. The ticks are your own checklist. They stay in this browser and are not sent to PayPal.
+            </p>
+            <div style={{ fontSize: 14, fontWeight: 700, marginTop: 8 }}>Your evidence</div>
             {EVIDENCE_ITEMS.map((item, i) => (
               <label key={item} style={{ display: "block", marginTop: 6 }}>
                 <input
@@ -367,7 +372,8 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
                 {item}
               </label>
             ))}
-            <div style={{ marginTop: 10, fontSize: 14, display: "grid", gap: 6 }}>
+            <div style={{ marginTop: 12, fontSize: 14, display: "grid", gap: 6 }}>
+              <div style={{ fontWeight: 700 }}>From PayPal and the buyer</div>
               {r.requested.length > 0 && (
                 <div>
                   <strong>PayPal asked you for:</strong>{" "}
