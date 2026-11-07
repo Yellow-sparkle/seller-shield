@@ -103,7 +103,6 @@ export default function OrdersPage() {
   // Orders, with tracking PayPal confirmed from this browser shown as sent (M3).
   const seeded = useMemo(() => allOrders(), []);
   const [sent, setSent] = useState<ReturnType<typeof readSentTracking>>({});
-  useEffect(() => setSent(readSentTracking()), []);
   const all = useMemo(() => seeded.map((o) => withSentTracking(o, sent)), [seeded, sent]);
   const [chips, setChips] = useState<FilterChip[]>([]);
   const [quick, setQuick] = useState("");
@@ -128,6 +127,7 @@ export default function OrdersPage() {
   useEffect(() => {
     const fromLink = chipsFromQuery(window.location.search);
     if (fromLink.length) setChips(fromLink);
+    setSent(readSentTracking());
   }, []);
 
   const summary = useMemo(() => gridSummary(visible), [visible]);

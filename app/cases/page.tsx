@@ -761,11 +761,14 @@ export default function CaseScreen() {
   // Dates are computed after mount, so the server render does not depend on the clock.
   // Rows are built after mount (the clock). Seller cause and evidence typed on the screen are kept per case, for this session.
   const [now, setNow] = useState<Date | null>(null);
+  // Tracking the seller sent from Orders and tracking in this browser (M3), read with the clock after mount.
+  const [sent, setSent] = useState<SentTracking>({});
   const [overrides, setOverrides] = useState<Record<string, Override>>({});
   // /cases?sample=1 shows the sample cause and evidence in memory only. Nothing is saved, and /cases clears it.
   const [sampleMode, setSampleMode] = useState(false);
   useEffect(() => {
     setNow(new Date());
+    setSent(readSentTracking());
     if (new URLSearchParams(window.location.search).get("sample") === "1") {
       setSampleMode(true);
       setOverrides(SAMPLE_OVERRIDES);
@@ -792,9 +795,6 @@ export default function CaseScreen() {
     window.addEventListener("hashchange", read);
     return () => window.removeEventListener("hashchange", read);
   }, []);
-  // Tracking the seller sent from Orders and tracking in this browser (M3).
-  const [sent, setSent] = useState<SentTracking>({});
-  useEffect(() => setSent(readSentTracking()), []);
   const rows: Row[] = useMemo(
     () =>
       now
