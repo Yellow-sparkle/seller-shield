@@ -9,8 +9,8 @@ test("a new case: only the opening is done, messaging the buyer is the current s
   assert.deepEqual(states(base), ["done", "now", "later", "later", "later"]);
 });
 
-test("evidence not ticked does not untick the later steps PayPal confirms", () => {
-  assert.deepEqual(states({ ...base, sellerMessaged: true, closed: true }), ["done", "done", "open", "done", "done"]);
+test("evidence not ticked does not untick the later steps PayPal confirms; on a closed case it reads Skipped (M8)", () => {
+  assert.deepEqual(states({ ...base, sellerMessaged: true, closed: true }), ["done", "done", "skipped", "done", "done"]);
 });
 
 test("waiting for the buyer is the current step, an unticked step before it stays open", () => {
@@ -31,4 +31,31 @@ test("not as described: step 3 is done only once the seller ticks it", () => {
 
 test("a seller who has not messaged the buyer sees that as the current step, even with tracking added", () => {
   assert.deepEqual(states({ ...base, reason: "INR", trackingInPayPal: true }), ["done", "now", "done", "later", "later"]);
+});
+
+test("M7: a refund has its own path", () => {
+  const p = casePath({ ...base, route: "refund" });
+  assert.deepEqual(p.map((s) => s.label), ["Buyer opened the case", "Refund the buyer in PayPal", "PayPal closes the case"]);
+  assert.deepEqual(p.map((s) => s.state), ["done", "now", "later"]);
+});
+
+test("M7: unauthorised asks for proof of shipment", () => {
+  assert.match(casePath({ ...base, reason: "UNAUTHORISED" })[2].label, /proof of shipment/);
+});
+
+test("M7: under review makes PayPal's review the current step", () => {
+  const p = casePath({ ...base, sellerMessaged: true, underReview: true });
+  assert.equal(p[3].label, "PayPal reviews the case");
+  assert.equal(p[3].state, "now");
+});
+
+test("M7: a card-issuer case shows the issuer deciding", () => {
+  const p = casePath({ ...base, chargeback: true });
+  assert.equal(p[p.length - 1].label, "The buyer's card issuer decides");
+  assert.equal(p[p.length - 1].state, "now");
+});
+
+test("L6: messages not loaded says so on the step", () => {
+  const p = casePath({ ...base, sellerMessaged: null });
+  assert.match(p[1].source, /not loaded/);
 });
