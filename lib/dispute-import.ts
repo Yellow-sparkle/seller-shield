@@ -12,7 +12,7 @@ type FullDispute = {
   dispute_life_cycle_stage?: string;
   fund_movements?: { type?: string; amount?: Money }[];
   evidences?: { evidence_type?: string; source?: string; notes?: string; documents?: { name?: string }[] }[];
-  messages?: { posted_by?: string; content?: string }[];
+  messages?: { posted_by?: string; time_posted?: string; content?: string }[];
 };
 
 const REASONS: Record<string, string> = {
@@ -46,6 +46,10 @@ export function toFixture(d: FullDispute): Record<string, unknown> {
   fixture.buyer_checked = true;
   // Messages the seller already sent, so the screen can show what was said.
   fixture.seller_messages = (d.messages ?? []).filter((m) => m.posted_by === "SELLER").map((m) => m.content ?? "");
+  // The whole conversation in time order, so the case card can show who wrote what and when.
+  fixture.messages = (d.messages ?? [])
+    .map((m) => ({ by: m.posted_by ?? "UNKNOWN", time: m.time_posted ?? null, text: m.content ?? "" }))
+    .sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
   if (typeof tx?.seller_protection_eligible === "boolean") {
     fixture.seller_protection = { status: tx.seller_protection_eligible ? "ELIGIBLE" : "NOT_ELIGIBLE" };
   }

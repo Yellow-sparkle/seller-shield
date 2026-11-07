@@ -24,7 +24,8 @@ test("a full PayPal dispute becomes the short fixture shape the app reads", () =
   assert.equal(c.sellerProtectionEligible, true);
   assert.deepEqual(c.holdAmount, { currency: "EUR", value: -24 });
   assert.equal(c.lifeCycleStage, "INQUIRY");
-  assert.equal(f.messages, undefined);
+  // Messages are kept in a short shape (who, when, text) for the case card (Kate, 7 Nov 2026).
+  assert.deepEqual(f.messages, [{ by: "BUYER", time: null, text: "not here" }]);
   assert.equal(responseEligibility(c, new Date("2026-11-08T00:00:00Z")).canRespond, true);
 });
 
@@ -57,5 +58,6 @@ test("keeps the buyer's claim, PayPal's requests and buyer files, and nothing el
   assert.deepEqual(f.buyer_files, ["photo.jpg"]);
   assert.equal(f.buyer_checked, true);
   assert.deepEqual(f.seller_messages, []);
+  assert.deepEqual(f.messages, [{ by: "BUYER", time: null, text: "Not arrived." }]);
   assert.equal("evidences" in f, false);
 });

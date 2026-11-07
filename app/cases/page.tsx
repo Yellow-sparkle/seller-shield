@@ -41,7 +41,10 @@ type Row = {
   requested: string[];
   buyerChecked: boolean;
   sellerMessages: string[];
+  messages: CaseMessage[];
 };
+
+type CaseMessage = { by: string; time: string | null; text: string };
 
 type Override = Partial<SellerAnswer> & { decision?: string; buyerFiles?: string[] };
 
@@ -153,6 +156,7 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     requested: Array.isArray(fx.requested_from_seller) ? (fx.requested_from_seller as string[]) : [],
     buyerChecked: fx.buyer_checked === true,
     sellerMessages: Array.isArray(fx.seller_messages) ? (fx.seller_messages as string[]) : [],
+    messages: Array.isArray(fx.messages) ? (fx.messages as CaseMessage[]) : [],
   };
 }
 
@@ -295,6 +299,42 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
           </div>
         );
       })}
+    </section>
+  );
+}
+
+// The conversation with the buyer, from PayPal's record (Kate, 7 Nov 2026): whether the seller has written,
+// when, and every message in time order. Needs add-dispute to have saved the messages.
+function when(t: string | null): string {
+  if (!t) return "time not given";
+  const d = new Date(t);
+  return Number.isNaN(d.getTime()) ? t : d.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function Conversation({ row }: { row: Row }) {
+  const fromSeller = row.messages.filter((m) => m.by === "SELLER");
+  const last = fromSeller[fromSeller.length - 1];
+  return (
+    <section style={{ marginTop: 24 }}>
+      <h2 style={{ fontSize: 18, marginBottom: 4 }}>Messages</h2>
+      {!row.buyerChecked ? (
+        <p style={{ color: "#555", fontSize: 14, margin: 0 }}>Not checked yet. Run add-dispute for this case.</p>
+      ) : (
+        <>
+          <p style={{ fontSize: 14, margin: "0 0 8px", fontWeight: 600 }}>
+            {last ? `You last messaged the buyer on ${when(last.time)}.` : "You have not messaged the buyer yet."}
+          </p>
+          {row.messages.length === 0 && <p style={{ color: "#555", fontSize: 14, margin: 0 }}>No messages in this case.</p>}
+          {row.messages.map((m, i) => (
+            <div key={i} style={{ marginTop: 6, padding: 10, border: "1px solid #d6dee8", borderRadius: 6, background: m.by === "SELLER" ? "#eaf1fb" : "#f5f7fa", fontSize: 14 }}>
+              <div style={{ fontSize: 12, color: "#4a5568", marginBottom: 4 }}>
+                <strong>{m.by === "SELLER" ? "You" : m.by === "BUYER" ? "Buyer" : m.by}</strong> · {when(m.time)}
+              </div>
+              {m.text}
+            </div>
+          ))}
+        </>
+      )}
     </section>
   );
 }
@@ -570,16 +610,7 @@ export default function CaseScreen() {
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 18, margin: "0 0 4px" }}>Case {r.id}</h2>
             <EvidenceChecklist rows={[r]} showId={false} />
-            {r.sellerMessages.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <strong style={{ fontSize: 14 }}>Your messages to the buyer</strong>
-                {r.sellerMessages.map((m, i) => (
-                  <div key={i} style={{ marginTop: 6, padding: 10, border: "1px solid #d6dee8", borderRadius: 6, background: "#f5f7fa", fontSize: 14 }}>
-                    {m}
-                  </div>
-                ))}
-              </div>
-            )}
+            <Conversation row={r} />
             <ReplyDrafts rows={[r]} showId={false} />
           </section>
         ))
