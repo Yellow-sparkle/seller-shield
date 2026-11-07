@@ -71,3 +71,11 @@ button.primary:not(:disabled):hover { background: #f0b82b; border-color: #f0b82b
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 input, select, textarea { font: inherit; border: 1px solid var(--line); border-radius: 6px; background: #ffffff; padding: 6px 10px; }
 input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* Case card: steps on the left, the rest on the right. One column on narrow screens. */
+.case-columns { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 24px; align-items: start; }
+.case-steps { position: sticky; top: 12px; border-right: 1px solid var(--line); padding-right: 16px; }
+@media (max-width: 860px) {
+  .case-columns { grid-template-columns: 1fr; }
+  .case-steps { position: static; border-right: none; padding-right: 0; }
+}

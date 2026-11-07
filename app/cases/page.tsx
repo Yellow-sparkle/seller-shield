@@ -719,11 +719,18 @@ export default function CaseScreen() {
         selectedRows.map((r) => (
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 18, margin: "0 0 4px" }}>Case {r.id}</h2>
-            <OrderLine row={r} />
-            <CasePath row={r} />
-            <EvidenceChecklist rows={[r]} showId={false} />
-            <Conversation row={r} />
-            <ReplyDrafts rows={[r]} showId={false} />
+            {/* Two columns (Kate, 7 Nov 2026): the step path on the left, everything else on the right. */}
+            <div className="case-columns">
+              <div className="case-steps">
+                <CasePath row={r} />
+              </div>
+              <div>
+                <OrderLine row={r} />
+                <EvidenceChecklist rows={[r]} showId={false} />
+                <Conversation row={r} />
+                <ReplyDrafts rows={[r]} showId={false} />
+              </div>
+            </div>
           </section>
         ))
       )}
