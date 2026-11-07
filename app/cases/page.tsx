@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type RowSelectionOptions } from "ag-grid-community";
 import { toCase, daysUntilDue } from "../../lib/dispute.ts";
-import { decideBy, protectionLabel, responseEligibility } from "../../lib/rules.ts";
+import { protectionLabel, responseEligibility } from "../../lib/rules.ts";
 import { forcedRecommendation, inrWaitNote } from "../../lib/proof.ts";
 import { sellerAnswers, type SellerAnswer } from "../../lib/answers.ts";
 import { templateReply } from "../../lib/reply.ts";
@@ -29,7 +29,6 @@ type Row = {
   deadline: string;
   daysLeft: number | null;
   protection: string;
-  decideBy: string;
   status: string;
   canRespond: boolean;
   recommendation: string;
@@ -134,14 +133,6 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     deadline: resolved ? "Closed" : c.responseDueAt ? c.responseDueAt.slice(0, 10) : "Not set",
     daysLeft: resolved ? null : daysUntilDue(c, now),
     protection: protectionLabel(c),
-    decideBy: (() => {
-      if (resolved) return "Closed";
-      const d = decideBy(c, now);
-      if (d.state === "unknown") return "Not set";
-      if (d.state === "passed") return `Passed (${d.date}). PayPal decides`;
-      if (d.state === "warn") return `Decide now, due ${d.date}`;
-      return `Decide by ${d.date}`;
-    })(),
     canRespond: e.canRespond && !waitingForBuyer && !resolved,
     status: resolved
       ? c.status === "REFUNDED" ? "Refunded by PayPal" : "Resolved by PayPal"
@@ -203,11 +194,21 @@ const columns: ColDef<Row>[] = [
   { field: "id", headerName: "Dispute", flex: 2, minWidth: 190 },
   { field: "reason", headerName: "Reason", flex: 1 },
   { field: "amount", headerName: "Amount", flex: 1 },
-  { field: "fee", headerName: "PayPal fee", flex: 1 },
   { field: "afterFees", headerName: "Amount after fees", flex: 1.5 },
   { field: "deadline", headerName: "Respond by", flex: 1 },
-  { field: "decideBy", headerName: "Decide by", flex: 2 },
-  { field: "daysLeft", headerName: "Days left", flex: 1, valueFormatter: (p) => (p.value !== null && p.value !== undefined ? String(p.value) : p.data?.recommendation === "RESOLVED" ? "Closed" : "Not set") },
+  // Decide by was folded into Days left (Kate, 7 Nov 2026): 2 days or fewer, or passed, shows in red.
+  {
+    field: "daysLeft",
+    headerName: "Days left",
+    flex: 1,
+    // 1 or 2 days left: PayPal gold. Due today or passed: red.
+    cellRenderer: (p: { value: number | null; data?: Row }) => {
+      if (p.value === null || p.value === undefined) return <Quiet>{p.data?.recommendation === "RESOLVED" ? "Closed" : "Not set"}</Quiet>;
+      if (p.value <= 0) return <Pill tone="bad">{p.value < 0 ? "Passed" : "Due today"}</Pill>;
+      if (p.value <= 2) return <span style={{ background: "#ffc439", color: "#2c2e2f", fontWeight: 700, padding: "2px 8px", borderRadius: 999, fontSize: 12 }}>{p.value} {p.value === 1 ? "day" : "days"}: decide now</span>;
+      return String(p.value);
+    },
+  },
   { field: "protection", headerName: "Seller protection", flex: 1, cellRenderer: (p: { value: string }) => <ProtectionBadge value={p.value} /> },
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
   { field: "recommendation", headerName: CASE_READ_LABEL, flex: 2, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
@@ -408,6 +409,10 @@ function CauseForm({ row, onChange }: { row: Row; onChange: (cause: string, evid
       </div>
     </section>
   );
+}
+
+function Quiet({ children }: { children: React.ReactNode }) {
+  return <span style={{ color: "#6b7280" }}>{children}</span>;
 }
 
 // The order behind the case and its tracking (from Orders and tracking), plus a link to PayPal for actions
@@ -732,7 +737,7 @@ export default function CaseScreen() {
       ) : (
         // One card per ticked case, so Documents and Reply and act for each case stay together.
         selectedRows.map((r) => (
-          <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
+          <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderTop: "6px solid #ffc439", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 24, margin: "0 0 12px" }}>Case {r.id}</h2>
             {/* Two columns (Kate, 7 Nov 2026): the step path on the left, everything else on the right. */}
             <div className="case-columns">
