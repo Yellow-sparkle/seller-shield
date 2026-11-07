@@ -56,5 +56,6 @@ test("keeps the buyer's claim, PayPal's requests and buyer files, and nothing el
   assert.deepEqual(f.requested_from_seller, ["PROOF_OF_FULFILLMENT"]);
   assert.deepEqual(f.buyer_files, ["photo.jpg"]);
   assert.equal(f.buyer_checked, true);
+  assert.deepEqual(f.seller_messages, []);
   assert.equal("evidences" in f, false);
 });

@@ -44,6 +44,8 @@ export function toFixture(d: FullDispute): Record<string, unknown> {
     .filter((e) => e.source !== "REQUESTED_FROM_SELLER")
     .flatMap((e) => (e.documents ?? []).map((doc) => doc.name ?? "(no name)"));
   fixture.buyer_checked = true;
+  // Messages the seller already sent, so the screen can show what was said.
+  fixture.seller_messages = (d.messages ?? []).filter((m) => m.posted_by === "SELLER").map((m) => m.content ?? "");
   if (typeof tx?.seller_protection_eligible === "boolean") {
     fixture.seller_protection = { status: tx.seller_protection_eligible ? "ELIGIBLE" : "NOT_ELIGIBLE" };
   }

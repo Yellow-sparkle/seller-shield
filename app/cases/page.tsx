@@ -40,6 +40,7 @@ type Row = {
   buyerClaim: string | null;
   requested: string[];
   buyerChecked: boolean;
+  sellerMessages: string[];
 };
 
 type Override = Partial<SellerAnswer> & { decision?: string; buyerFiles?: string[] };
@@ -151,6 +152,7 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     buyerClaim: typeof fx.buyer_claim === "string" ? fx.buyer_claim : null,
     requested: Array.isArray(fx.requested_from_seller) ? (fx.requested_from_seller as string[]) : [],
     buyerChecked: fx.buyer_checked === true,
+    sellerMessages: Array.isArray(fx.seller_messages) ? (fx.seller_messages as string[]) : [],
   };
 }
 
@@ -547,7 +549,7 @@ export default function CaseScreen() {
           rowSelection={rowSelection}
           onSelectionChanged={(e) => setSelectedIds(e.api.getSelectedRows().map((r) => r.id))}
           domLayout="autoHeight"
-          defaultColDef={{ sortable: true, filter: true, minWidth: 120, wrapHeaderText: true, autoHeaderHeight: true, wrapText: true, autoHeight: true, cellStyle: { lineHeight: "1.4", paddingTop: 8, paddingBottom: 8 } }}
+          defaultColDef={{ sortable: true, filter: "agSetColumnFilter", minWidth: 120, wrapHeaderText: true, autoHeaderHeight: true, wrapText: true, autoHeight: true, cellStyle: { lineHeight: "1.4", paddingTop: 8, paddingBottom: 8 } }}
           suppressColumnVirtualisation
           getRowId={(p) => p.data.id}
           getRowStyle={(p) => (p.data && p.data.id === focusId ? { background: "#fff4d6", fontWeight: 600 } : undefined)}
@@ -566,6 +568,16 @@ export default function CaseScreen() {
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 18, margin: "0 0 4px" }}>Case {r.id}</h2>
             <EvidenceChecklist rows={[r]} showId={false} />
+            {r.sellerMessages.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <strong style={{ fontSize: 14 }}>Your messages to the buyer</strong>
+                {r.sellerMessages.map((m, i) => (
+                  <div key={i} style={{ marginTop: 6, padding: 10, border: "1px solid #d6dee8", borderRadius: 6, background: "#f5f7fa", fontSize: 14 }}>
+                    {m}
+                  </div>
+                ))}
+              </div>
+            )}
             <ReplyDrafts rows={[r]} showId={false} />
           </section>
         ))
