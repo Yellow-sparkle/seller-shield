@@ -64,8 +64,8 @@ const columns: ColDef<Order>[] = [
     headerName: "PayPal tracking",
     minWidth: 175,
     // PayPal's status when it has the number; "Awaiting tracking" when we have a number PayPal has not got yet;
-    // "Not applicable" when the order has no tracking number at all.
-    valueGetter: (p) => (p.data ? (p.data.trackingStatus ?? (p.data.tracking ? "Awaiting tracking" : "Not applicable")) : ""),
+    // "No tracking" when the order has no tracking number at all.
+    valueGetter: (p) => (p.data ? (p.data.trackingStatus ?? (p.data.tracking ? "Awaiting tracking" : "No tracking")) : ""),
     cellRenderer: (p: P) => (isSummary(p) || !p.data ? "" : p.data.trackingStatus ? <Pill tone="good">{p.value}</Pill> : <Pill tone="muted">{p.value}</Pill>),
   },
   {
