@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toCase } from "./dispute.ts";
-import { decideBy, protectionLabel, requiredEvidence, responseEligibility } from "./rules.ts";
+import { protectionLabel, requiredEvidence, responseEligibility } from "./rules.ts";
 import fixtures from "./fixtures/sandbox-disputes.json" with { type: "json" };
 
 const now = new Date("2026-11-04T00:00:00Z");
@@ -69,18 +69,10 @@ test("NVP (SNAD) shows Not covered even though the sandbox says ELIGIBLE", () =>
 test("non-SNAD cases keep PayPal's protection status", () => {
   const c = toCase((fixtures as object[])[0] as never);
   assert.equal(protectionLabel(c), "Eligible");
+  assert.equal(protectionLabel(toCase({ dispute_id: "N" })), "Unknown");
+  assert.equal(protectionLabel(toCase({ dispute_id: "P", seller_protection: { status: "PARTIALLY_ELIGIBLE" } })), "Partly eligible");
 });
 
-test("decide-by: warns two days before the due date, and reports when it has passed", () => {
-  const f = (fixtures as object[])[0];
-  const c = toCase(f as never);
-  const due = Date.parse(c.responseDueAt as string);
-  const day = 86_400_000;
-  assert.equal(decideBy(c, new Date(due - 10 * day)).state, "ok");
-  assert.equal(decideBy(c, new Date(due - 1 * day)).state, "warn");
-  assert.equal(decideBy(c, new Date(due + 1 * day)).state, "passed");
-  assert.equal(decideBy(c, new Date(due - 1 * day)).date, (c.responseDueAt as string).slice(0, 10));
-});
 
 test("response: a deadline less than an hour away counts as passed (cut-off margin, case 8)", () => {
   const c = toCase({ dispute_id: "M", reason: "INR", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "10.00" },

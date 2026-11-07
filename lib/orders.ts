@@ -1,7 +1,10 @@
 // Order list for the tracking fixer (PRD F2). Pure logic only: filters, row labels and the bulk plan.
 // Nothing here calls PayPal. The bulk send happens only after the seller confirms the plan.
 
-export type Protection = "PROTECTED" | "ELIGIBLE" | "NOT_PROTECTED" | "UNKNOWN";
+import { protectionText, type ProtectionStatus } from "./protection.ts";
+
+// PayPal's seller protection status for the order (see lib/protection.ts).
+export type Protection = ProtectionStatus;
 
 export type Order = {
   orderNo: string;
@@ -11,9 +14,11 @@ export type Order = {
   carrier?: string;
   tracking?: string;
   trackingStatus?: string;
+  deliveredDate?: string; // carrier delivery date, when the carrier shows one
   protection: Protection;
   held: boolean;
   disputeId?: string;
+  disputeReason?: string; // the dispute's PayPal reason (INR, SNAD, ...), so Orders and Cases show the same protection
   // "sandbox" rows come from PayPal sandbox data. "demo" rows are seeded for the list and can't be sent.
   source: "sandbox" | "demo";
 };
@@ -29,7 +34,8 @@ export function matchesChip(o: Order, chip: FilterChip, now?: Date): boolean {
     case "held":
       return o.held;
     case "notProtected":
-      return o.protection === "NOT_PROTECTED";
+      // Not eligible, or a not-as-described dispute that Seller Protection does not cover.
+      return o.protection === "NOT_ELIGIBLE" || o.disputeReason === "SNAD";
     case "hasDispute":
       return !!o.disputeId;
     case "sandbox":
@@ -53,12 +59,9 @@ export function filterOrders(orders: Order[], chips: FilterChip[], now?: Date): 
   return orders.filter((o) => chips.every((c) => matchesChip(o, c, now)));
 }
 
-// Protection label: "Protected" only when PayPal's own status says so.
+// Protection label, the same words as the case screen (lib/protection.ts).
 export function protectionLabel(o: Order): string {
-  if (o.protection === "PROTECTED") return "Protected";
-  if (o.protection === "ELIGIBLE") return "Eligible";
-  if (o.protection === "NOT_PROTECTED") return "Not protected";
-  return "Unknown";
+  return protectionText(o.protection, o.disputeReason);
 }
 
 // Only sandbox rows can be selected for the bulk send. Demo rows are labelled and skipped.
@@ -124,7 +127,14 @@ export function gridSummary(orders: Order[]): GridSummary {
   };
 }
 
-// Where a dispute flag leads. Only real sandbox disputes have a case screen; demo disputes don't.
+// Where a dispute flag leads. Every order with a dispute id has a case on the case screen
+// (the seed only flags demo orders that have a demo case, review finding M2).
 export function caseLink(o: Order): string | null {
-  return o.disputeId && o.source === "sandbox" ? `/cases#${o.disputeId}` : null;
+  return o.disputeId ? `/cases#${encodeURIComponent(o.disputeId)}` : null;
+}
+
+// Tracking status text for the grid and the case card (review finding L11): PayPal's status when it has one,
+// "Not in PayPal yet" when we hold a number PayPal has not got, "No tracking" when there is no number.
+export function trackingStatusText(o: { tracking?: string | null; trackingStatus?: string | null }): string {
+  return o.trackingStatus ?? (o.tracking ? "Not in PayPal yet" : "No tracking");
 }

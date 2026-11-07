@@ -2,6 +2,7 @@
 // The rules decide what the seller can still do and what evidence PayPal asks for.
 import type { Case, CaseReason } from "./dispute.ts";
 import { daysUntilDue } from "./dispute.ts";
+import { protectionText } from "./protection.ts";
 
 // Evidence type per reason, from the PayPal Disputes guide in the PRD.
 // INR and UNAUTHORISED ask for proof of fulfilment (tracking); SNAD and OTHER ask for documents and notes.
@@ -37,22 +38,7 @@ export function responseEligibility(c: Case, now: Date = new Date()): Eligibilit
 
 // Seller Protection label for the case screen. SNAD is excluded in PayPal's published PT terms,
 // so it reads "Not covered" even when PayPal's sandbox status says ELIGIBLE.
+// Same words as the orders grid (lib/protection.ts, review finding M4).
 export function protectionLabel(c: Case): string {
-  if (c.reason === "SNAD") return "Not covered (SNAD is excluded in PayPal PT terms)";
-  if (c.sellerProtectionEligible === null) return "-";
-  return c.sellerProtectionEligible ? "Eligible" : "Not eligible";
-}
-
-// Decide-by state for the case screen. The seller must refund or respond before the due date,
-// because after it PayPal decides without them. Warns two days before the due date.
-export type DecideBy = { date: string | null; state: "ok" | "warn" | "passed" | "unknown" };
-
-export function decideBy(c: Case, now: Date = new Date()): DecideBy {
-  if (!c.responseDueAt) return { date: null, state: "unknown" };
-  const due = Date.parse(c.responseDueAt);
-  if (Number.isNaN(due)) return { date: null, state: "unknown" };
-  const date = c.responseDueAt.slice(0, 10);
-  if (now.getTime() > due) return { date, state: "passed" };
-  if (due - now.getTime() <= 2 * 86_400_000) return { date, state: "warn" };
-  return { date, state: "ok" };
+  return protectionText(c.sellerProtectionStatus, c.reason);
 }

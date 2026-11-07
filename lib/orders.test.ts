@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { caseLink, chipsFromQuery, filterOrders, gridSummary, planBulk, protectionLabel, rowResultLabel, type Order } from "./orders.ts";
+import { trackingStatusText, caseLink, chipsFromQuery, filterOrders, gridSummary, planBulk, protectionLabel, rowResultLabel, type Order } from "./orders.ts";
 
 const base = (over: Partial<Order>): Order => ({
   orderNo: "1001",
@@ -14,8 +14,8 @@ const base = (over: Partial<Order>): Order => ({
 });
 
 const rows: Order[] = [
-  base({ orderNo: "A", tracking: "TR1", protection: "PROTECTED" }),
-  base({ orderNo: "B", protection: "NOT_PROTECTED", held: true, disputeId: "PP-R-X" }),
+  base({ orderNo: "A", tracking: "TR1", protection: "ELIGIBLE" }),
+  base({ orderNo: "B", protection: "NOT_ELIGIBLE", held: true, disputeId: "PP-R-X" }),
   base({ orderNo: "C", source: "sandbox", tracking: undefined }),
 ];
 
@@ -32,11 +32,17 @@ test("chips combine with AND", () => {
   assert.deepEqual(filterOrders(rows, ["held", "notProtected", "missingTracking"]).map((o) => o.orderNo), ["B"]);
 });
 
-test("protection label shows Protected only for PayPal's PROTECTED status", () => {
-  assert.equal(protectionLabel(base({ protection: "PROTECTED" })), "Protected");
+test("protection label uses the same words as the case screen", () => {
   assert.equal(protectionLabel(base({ protection: "UNKNOWN" })), "Unknown");
   assert.equal(protectionLabel(base({ protection: "ELIGIBLE" })), "Eligible");
-  assert.equal(protectionLabel(base({ protection: "NOT_PROTECTED" })), "Not protected");
+  assert.equal(protectionLabel(base({ protection: "PARTIALLY_ELIGIBLE" })), "Partly eligible");
+  assert.equal(protectionLabel(base({ protection: "NOT_ELIGIBLE" })), "Not eligible");
+});
+
+test("M4: an order with a not-as-described dispute reads Not covered, as on its case, and counts as not protected", () => {
+  const o = base({ protection: "ELIGIBLE", disputeId: "PP-R-S", disputeReason: "SNAD" });
+  assert.match(protectionLabel(o), /^Not covered/);
+  assert.deepEqual(filterOrders([o], ["notProtected"]).length, 1);
 });
 
 test("demo rows are skipped in the bulk plan and never sent", () => {
@@ -84,10 +90,16 @@ test("summary row totals the rows shown", () => {
   assert.equal(s.sandbox, 1);
 });
 
-test("only sandbox disputes link to a case screen", () => {
+test("M2: every order with a dispute links to its case, the demo one too", () => {
   assert.equal(caseLink(base({ disputeId: "PP-R-1", source: "sandbox" })), "/cases#PP-R-1");
-  assert.equal(caseLink(base({ disputeId: "PP-R-DEMO-1", source: "demo" })), null);
+  assert.equal(caseLink(base({ disputeId: "PP-R-DEMO-25", source: "demo" })), "/cases#PP-R-DEMO-25");
   assert.equal(caseLink(base({ source: "sandbox" })), null);
+});
+
+test("L11: tracking status text", () => {
+  assert.equal(trackingStatusText({ tracking: "T1", trackingStatus: "SHIPPED" }), "SHIPPED");
+  assert.equal(trackingStatusText({ tracking: "T1" }), "Not in PayPal yet");
+  assert.equal(trackingStatusText({}), "No tracking");
 });
 
 test("the sandbox chip keeps only real sandbox orders, so the grid matches the scan card", () => {
@@ -106,7 +118,7 @@ test("Last 30 days keeps orders dated within 30 days of today", () => {
   assert.deepEqual(filterOrders(rows, ["last30"], now).map((o: { orderNo: string }) => o.orderNo), ["NEW", "EDGE"]);
 });
 
-test("Awaiting tracking keeps orders with a number that PayPal has no status for", () => {
+test("Ready to send (awaitingTracking) keeps orders with a number that PayPal has no status for", () => {
   const base = { carrier: "DHL", held: false, protection: "ELIGIBLE", disputeId: null, buyer: "B", amount: { value: "1.00", currency: "EUR" }, source: "sandbox", date: "2026-11-01" };
   const rows = [
     { ...base, orderNo: "READY", tracking: "T1", trackingStatus: null },

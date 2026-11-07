@@ -2,6 +2,8 @@
 // Pure functions only, no network calls. The field names follow the PayPal
 // Disputes API v1 detail response. Anything missing becomes null, never a guess.
 
+import { toProtectionStatus, type ProtectionStatus } from "./protection.ts";
+
 export type CaseReason = "INR" | "SNAD" | "UNAUTHORISED" | "OTHER" | "UNKNOWN";
 
 export type Case = {
@@ -13,6 +15,7 @@ export type Case = {
   openedAt: string | null;
   responseDueAt: string | null;
   sellerProtectionEligible: boolean | null;
+  sellerProtectionStatus: ProtectionStatus; // PayPal's status as given, for the shared label (lib/protection.ts)
   holdAmount: { currency: string; value: number } | null;
   lifeCycleStage: string | null; // e.g. INQUIRY, CHARGEBACK; CHARGEBACK means the buyer went to the card issuer
 };
@@ -60,6 +63,7 @@ export function toCase(raw: RawDispute): Case {
       raw.seller_protection?.status === undefined
         ? null
         : raw.seller_protection.status !== "NOT_ELIGIBLE",
+    sellerProtectionStatus: toProtectionStatus(raw.seller_protection?.status),
     holdAmount: toMoney(hold?.amount),
     lifeCycleStage: raw.dispute_life_cycle_stage ?? null,
   };
