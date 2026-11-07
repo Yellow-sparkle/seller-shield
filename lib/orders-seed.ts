@@ -91,8 +91,9 @@ export const sandboxOrders: Order[] = [
     source: "sandbox",
   },
   // The order behind the open INR dispute PP-R-SRZ-10196872 (review finding H4). No tracking yet: adding it here is
-  // the fix for that dispute. Amount is the dispute amount. The dispute's fund movement is a DEBIT, not a hold, and
-  // what that means is not confirmed (finding L10), so held stays false.
+  // the fix for that dispute. Amount is the dispute amount. The dispute's fund movement is a DEBIT, not a hold: PayPal's
+  // Dispute Detail report separates "Debit" (money taken from the balance) from "On temporary hold" (L10, checked
+  // 7 Nov 2026 against the report spec, not the API enum). So nothing is held; the 23.80 has already left the balance.
   {
     orderNo: "1P279948DJ181945Y",
     date: "2026-11-06",

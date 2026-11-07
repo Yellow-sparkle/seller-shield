@@ -214,7 +214,8 @@ const columns: ColDef<Row>[] = [
   { field: "id", headerName: "Dispute", flex: 2, minWidth: 190 },
   { field: "reason", headerName: "Reason", flex: 1 },
   { field: "amount", headerName: "Amount", flex: 1 },
-  { field: "afterFees", headerName: "Amount after fees", flex: 1.5, headerTooltip: "The dispute amount minus the PayPal fee on the sale. Whether PayPal returns the fee if you refund is not confirmed." },
+  { field: "afterFees", headerName: "Amount after fees", flex: 1.5, // PayPal's merchant fees page: the fees paid to receive a payment are not returned on a refund (checked 7 Nov 2026, L9).
+    headerTooltip: "What the sale brought you after PayPal's fee. If you refund, the buyer gets the full amount and PayPal keeps the fee." },
   { field: "deadline", headerName: "Respond by", flex: 1 },
   // Decide by was folded into Days left (Kate, 7 Nov 2026): 2 days or fewer, or passed, shows in red.
   {
