@@ -94,3 +94,14 @@ test("the sandbox chip keeps only real sandbox orders, so the grid matches the s
   const shown = filterOrders(rows, chipsFromQuery("?chip=missingTracking&chip=sandbox"));
   assert.deepEqual(shown.map((o) => o.orderNo), ["C"]);
 });
+
+test("Last 30 days keeps orders dated within 30 days of today", () => {
+  const base = { tracking: "T1", trackingStatus: null, carrier: "DHL", held: false, protection: "ELIGIBLE", disputeId: null, buyer: "B", amount: { value: "1.00", currency: "EUR" }, source: "demo" };
+  const rows = [
+    { ...base, orderNo: "NEW", date: "2026-11-01" },
+    { ...base, orderNo: "EDGE", date: "2026-10-08" },
+    { ...base, orderNo: "OLD", date: "2026-09-01" },
+  ] as never[];
+  const now = new Date("2026-11-07T12:00:00Z");
+  assert.deepEqual(filterOrders(rows, ["last30"], now).map((o: { orderNo: string }) => o.orderNo), ["NEW", "EDGE"]);
+});

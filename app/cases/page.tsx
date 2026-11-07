@@ -408,6 +408,7 @@ const FILTERS: { id: string; label: string; group: "strength" | "status" | "dead
   { id: "weak", label: "Weak case", group: "strength" },
   { id: "canRespond", label: "You can respond", group: "status" },
   { id: "closed", label: "Closed to response", group: "status" },
+  { id: "waiting", label: "Waiting for the buyer", group: "status" },
   { id: "resolved", label: "Resolved by PayPal", group: "status" },
   { id: "due7", label: "Due in 7 days", group: "deadline" },
 ];
@@ -419,6 +420,7 @@ function matchesFilter(r: Row, id: string): boolean {
   if (id === "canRespond") return r.canRespond;
   if (id === "closed") return !r.canRespond && r.recommendation !== "RESOLVED";
   if (id === "resolved") return r.recommendation === "RESOLVED";
+  if (id === "waiting") return r.recommendation === "WAITING";
   if (id === "due7") return r.daysLeft !== null && r.daysLeft <= 7;
   return true;
 }

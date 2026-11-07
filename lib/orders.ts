@@ -18,9 +18,11 @@ export type Order = {
   source: "sandbox" | "demo";
 };
 
-export type FilterChip = "missingTracking" | "held" | "notProtected" | "hasDispute" | "sandbox";
+export type FilterChip = "missingTracking" | "held" | "notProtected" | "hasDispute" | "sandbox" | "last30";
 
-export function matchesChip(o: Order, chip: FilterChip): boolean {
+const DAY_MS = 86400000;
+
+export function matchesChip(o: Order, chip: FilterChip, now?: Date): boolean {
   switch (chip) {
     case "missingTracking":
       return !o.tracking;
@@ -32,12 +34,20 @@ export function matchesChip(o: Order, chip: FilterChip): boolean {
       return !!o.disputeId;
     case "sandbox":
       return o.source === "sandbox";
+    case "last30": {
+      // Orders dated in the last 30 days, counted in whole days from today (UTC), so the 30th day counts.
+      const t = Date.parse(o.date);
+      // The clock is read only when this chip is on, so the page prerender never calls new Date().
+      const at = now ?? new Date();
+      const today = Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate());
+      return Number.isFinite(t) && t >= today - 30 * DAY_MS;
+    }
   }
 }
 
 // Rows that pass every chip that is switched on (AND across chips).
-export function filterOrders(orders: Order[], chips: FilterChip[]): Order[] {
-  return orders.filter((o) => chips.every((c) => matchesChip(o, c)));
+export function filterOrders(orders: Order[], chips: FilterChip[], now?: Date): Order[] {
+  return orders.filter((o) => chips.every((c) => matchesChip(o, c, now)));
 }
 
 // Protection label: "Protected" only when PayPal's own status says so.
@@ -87,7 +97,7 @@ export function rowResultLabel(result: { ok: true } | { ok: false; error: string
   return result.ok ? "Tracking added" : `Failed: ${result.error}`;
 }
 
-const CHIP_IDS: FilterChip[] = ["missingTracking", "held", "notProtected", "hasDispute", "sandbox"];
+const CHIP_IDS: FilterChip[] = ["missingTracking", "held", "notProtected", "hasDispute", "sandbox", "last30"];
 
 // Chips from a link such as /orders?chip=missingTracking (used by the health scan cards).
 // Unknown values are ignored.

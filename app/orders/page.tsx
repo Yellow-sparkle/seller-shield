@@ -20,6 +20,7 @@ const CHIPS: { id: FilterChip; label: string }[] = [
   { id: "notProtected", label: "Not protected" },
   { id: "hasDispute", label: "Has dispute" },
   { id: "sandbox", label: "Sandbox orders only" },
+  { id: "last30", label: "Last 30 days" },
 ];
 
 // Pill colours by meaning: good, warning, problem, neutral.
