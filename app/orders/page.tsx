@@ -32,14 +32,17 @@ const PROTECTION_TONE: Record<Order["protection"], Tone> = { PROTECTED: "good", 
 
 const rowSelection: RowSelectionOptions<Order> = { mode: "multiRow", checkboxes: true, headerCheckbox: true, isRowSelectable: (node) => (node.data ? isSelectable(node.data) : false) };
 
+// Grey text for "nothing here" states, so no cell is left blank (Kate, 7 Nov 2026).
+const Quiet = ({ children }: { children: React.ReactNode }) => <span style={{ color: "#6b7280" }}>{children}</span>;
+
 const columns: ColDef<Order>[] = [
   { field: "orderNo", headerName: "Order #", minWidth: 190, cellRenderer: (p: P) => (isSummary(p) ? <strong>{sumOf(p).orders} orders shown</strong> : p.value) },
   {
     headerName: "Dispute",
-    valueGetter: (p) => (p.data?.disputeId ? "Dispute" : ""),
+    valueGetter: (p) => (p.data?.disputeId ? "Dispute" : "None"),
     cellRenderer: (p: P) => {
       if (isSummary(p)) return <Pill tone="bad">{sumOf(p).disputes} disputes</Pill>;
-      if (!p.data?.disputeId) return "";
+      if (!p.data?.disputeId) return <Quiet>None</Quiet>;
       const href = caseLink(p.data);
       return href ? (
         <a href={href} style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: "#a3231b", color: "#fff", textDecoration: "none" }}>
@@ -51,14 +54,19 @@ const columns: ColDef<Order>[] = [
     },
   },
   {
-    field: "tracking",
+    colId: "tracking",
     headerName: "Tracking #",
-    cellRenderer: (p: P) => (isSummary(p) ? <Pill tone={sumOf(p).missingTracking ? "bad" : "good"}>{sumOf(p).missingTracking} missing</Pill> : p.value ? p.value : <Pill tone="bad">Missing</Pill>),
+    valueGetter: (p) => p.data?.tracking || "Missing",
+    cellRenderer: (p: P) => (isSummary(p) ? <Pill tone={sumOf(p).missingTracking ? "bad" : "good"}>{sumOf(p).missingTracking} missing</Pill> : p.data?.tracking ? p.data.tracking : <Pill tone="bad">Missing</Pill>),
   },
   {
-    field: "trackingStatus",
+    colId: "trackingStatus",
     headerName: "PayPal tracking",
-    cellRenderer: (p: P) => (isSummary(p) || !p.data ? "" : p.value ? <Pill tone="good">{p.value}</Pill> : p.data.tracking ? <Pill tone="muted">Not sent</Pill> : ""),
+    minWidth: 175,
+    // PayPal's status when it has the number; "Awaiting tracking" when we have a number PayPal has not got yet;
+    // "Not applicable" when the order has no tracking number at all.
+    valueGetter: (p) => (p.data ? (p.data.trackingStatus ?? (p.data.tracking ? "Awaiting tracking" : "Not applicable")) : ""),
+    cellRenderer: (p: P) => (isSummary(p) || !p.data ? "" : p.data.trackingStatus ? <Pill tone="good">{p.value}</Pill> : <Pill tone="muted">{p.value}</Pill>),
   },
   {
     headerName: "Seller protection",
@@ -67,15 +75,15 @@ const columns: ColDef<Order>[] = [
   },
   {
     headerName: "Hold",
-    valueGetter: (p) => (p.data?.held ? "Held" : ""),
-    cellRenderer: (p: P) => (isSummary(p) ? <Pill tone="warn">{sumOf(p).held} held</Pill> : p.value ? <Pill tone="warn">Held</Pill> : ""),
+    valueGetter: (p) => (p.data?.held ? "Held" : "Not held"),
+    cellRenderer: (p: P) => (isSummary(p) ? <Pill tone="warn">{sumOf(p).held} held</Pill> : p.data?.held ? <Pill tone="warn">Held</Pill> : <Quiet>Not held</Quiet>),
   },
   {
     headerName: "Amount",
     valueGetter: (p) => (p.data ? Number(p.data.amount.value) : 0),
     cellRenderer: (p: P) => (isSummary(p) ? <strong>{sumOf(p).total.toFixed(2)} {sumOf(p).currency}</strong> : p.data ? `${p.data.amount.value} ${p.data.amount.currency}` : ""),
   },
-  { field: "carrier", headerName: "Carrier", valueFormatter: (p) => p.value ?? "" },
+  { colId: "carrier", headerName: "Carrier", valueGetter: (p) => p.data?.carrier ?? "Not set", cellRenderer: (p: P) => (p.data?.carrier ? p.data.carrier : <Quiet>Not set</Quiet>) },
   { field: "date", headerName: "Date" },
   { field: "buyer", headerName: "Buyer" },
   {

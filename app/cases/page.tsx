@@ -121,13 +121,13 @@ function toRow(raw: object, now: Date, override: Override = {}): Row {
     amount: c.amount ? `${c.amount.value.toFixed(2)} ${c.amount.currency}` : "-",
     fee: feeLabel((feeFixtures as Record<string, FeeRecord>)[c.disputeId], "fee"),
     afterFees: feeLabel((feeFixtures as Record<string, FeeRecord>)[c.disputeId], "afterFees"),
-    deadline: !resolved && c.responseDueAt ? c.responseDueAt.slice(0, 10) : "-",
+    deadline: resolved ? "Closed" : c.responseDueAt ? c.responseDueAt.slice(0, 10) : "Not set",
     daysLeft: resolved ? null : daysUntilDue(c, now),
     protection: protectionLabel(c),
     decideBy: (() => {
-      if (resolved) return "-";
+      if (resolved) return "Closed";
       const d = decideBy(c, now);
-      if (d.state === "unknown") return "-";
+      if (d.state === "unknown") return "Not set";
       if (d.state === "passed") return `Passed (${d.date}). PayPal decides`;
       if (d.state === "warn") return `Decide now, due ${d.date}`;
       return `Decide by ${d.date}`;
@@ -192,7 +192,7 @@ const columns: ColDef<Row>[] = [
   { field: "afterFees", headerName: "Amount after fees", flex: 1.5 },
   { field: "deadline", headerName: "Respond by", flex: 1 },
   { field: "decideBy", headerName: "Decide by", flex: 2 },
-  { field: "daysLeft", headerName: "Days left", flex: 1 },
+  { field: "daysLeft", headerName: "Days left", flex: 1, valueFormatter: (p) => (p.value !== null && p.value !== undefined ? String(p.value) : p.data?.recommendation === "RESOLVED" ? "Closed" : "Not set") },
   { field: "protection", headerName: "Seller protection", flex: 1, cellRenderer: (p: { value: string }) => <ProtectionBadge value={p.value} /> },
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
   { field: "recommendation", headerName: CASE_READ_LABEL, flex: 2, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
