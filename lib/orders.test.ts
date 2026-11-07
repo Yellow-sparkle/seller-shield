@@ -105,3 +105,13 @@ test("Last 30 days keeps orders dated within 30 days of today", () => {
   const now = new Date("2026-11-07T12:00:00Z");
   assert.deepEqual(filterOrders(rows, ["last30"], now).map((o: { orderNo: string }) => o.orderNo), ["NEW", "EDGE"]);
 });
+
+test("Awaiting tracking keeps orders with a number that PayPal has no status for", () => {
+  const base = { carrier: "DHL", held: false, protection: "ELIGIBLE", disputeId: null, buyer: "B", amount: { value: "1.00", currency: "EUR" }, source: "sandbox", date: "2026-11-01" };
+  const rows = [
+    { ...base, orderNo: "READY", tracking: "T1", trackingStatus: null },
+    { ...base, orderNo: "SENT", tracking: "T2", trackingStatus: "IN_TRANSIT" },
+    { ...base, orderNo: "NONE", tracking: null, trackingStatus: null },
+  ] as never[];
+  assert.deepEqual(filterOrders(rows, ["awaitingTracking"]).map((o: { orderNo: string }) => o.orderNo), ["READY"]);
+});

@@ -18,7 +18,7 @@ export type Order = {
   source: "sandbox" | "demo";
 };
 
-export type FilterChip = "missingTracking" | "held" | "notProtected" | "hasDispute" | "sandbox" | "last30";
+export type FilterChip = "missingTracking" | "held" | "notProtected" | "hasDispute" | "sandbox" | "last30" | "awaitingTracking";
 
 const DAY_MS = 86400000;
 
@@ -34,6 +34,9 @@ export function matchesChip(o: Order, chip: FilterChip, now?: Date): boolean {
       return !!o.disputeId;
     case "sandbox":
       return o.source === "sandbox";
+    case "awaitingTracking":
+      // A tracking number exists but PayPal has no tracking status yet: ready to send.
+      return !!o.tracking && !o.trackingStatus;
     case "last30": {
       // Orders dated in the last 30 days, counted in whole days from today (UTC), so the 30th day counts.
       const t = Date.parse(o.date);
@@ -97,7 +100,7 @@ export function rowResultLabel(result: { ok: true } | { ok: false; error: string
   return result.ok ? "Tracking added" : `Failed: ${result.error}`;
 }
 
-const CHIP_IDS: FilterChip[] = ["missingTracking", "held", "notProtected", "hasDispute", "sandbox", "last30"];
+const CHIP_IDS: FilterChip[] = ["missingTracking", "held", "notProtected", "hasDispute", "sandbox", "last30", "awaitingTracking"];
 
 // Chips from a link such as /orders?chip=missingTracking (used by the health scan cards).
 // Unknown values are ignored.

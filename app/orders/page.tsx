@@ -15,6 +15,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const theme = themeQuartz.withParams({ accentColor: "#0070ba", headerBackgroundColor: "#eaf1fb", headerTextColor: "#003087", borderRadius: 6 });
 const CHIPS: { id: FilterChip; label: string }[] = [
+  { id: "awaitingTracking", label: "Awaiting tracking" },
   { id: "missingTracking", label: "Missing tracking" },
   { id: "held", label: "Held" },
   { id: "notProtected", label: "Not protected" },
