@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { agreement, factsSummary, parseCsv, toCsv } from "./judge-benchmark.ts";
+import { agreement, factsSummary, parseCsv, parseFactsSummary, toCsv } from "./judge-benchmark.ts";
 
 test("CSV round trip keeps commas, quotes and line breaks", () => {
   const rows = [["id", "claim"], ["G01-1", 'Said "delivered", on 14 Oct\nto the address']];
@@ -23,4 +23,9 @@ test("agreement counts matches, the dangerous misses and blank labels", () => {
   assert.equal(r.agree, 2);
   assert.deepEqual(r.missedFalse, [{ id: "b", claim: "B" }]);
   assert.equal(r.unlabelled, 1);
+});
+
+test("facts lines turn back into the facts object", () => {
+  const facts = { reason: "INR", delivered: true, amount: 12.5, dueAt: "2026-11-20T10:00:00Z", list: ["a"] };
+  assert.deepEqual(parseFactsSummary(factsSummary(facts)), facts);
 });

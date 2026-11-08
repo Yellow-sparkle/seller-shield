@@ -44,3 +44,12 @@ test("a broken trailing block falls back to the last valid judgement", () => {
   const j = parseJudgement(good + " then {not json}");
   assert.deepEqual(j.verdicts, []);
 });
+
+test("the judge prompt carries PayPal's protection rules and the attribution check", () => {
+  const p = judgePrompt({}, []);
+  assert.match(p, /Item not received needs all four/);
+  assert.match(p, /within 2 days of PayPal's notice/);
+  assert.match(p, /correct conclusion from the facts and these rules is SUPPORTED/);
+  assert.match(p, /right party \(seller, buyer or PayPal\)/);
+  assert.match(p, /meaning changes is NOT supported/);
+});

@@ -79,3 +79,17 @@ export function agreement(labels: string[][], verdicts: string[][]): Agreement {
   }
   return out;
 }
+
+// Turns factsSummary lines back into a facts object, so the same claims can be judged again.
+export function parseFactsSummary(text: string): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const line of text.split("\n")) {
+    const i = line.indexOf(": ");
+    if (i <= 0) continue;
+    const raw = line.slice(i + 2);
+    let v: unknown = raw;
+    try { v = JSON.parse(raw); } catch { /* keep the text */ }
+    out[line.slice(0, i)] = v;
+  }
+  return out;
+}
