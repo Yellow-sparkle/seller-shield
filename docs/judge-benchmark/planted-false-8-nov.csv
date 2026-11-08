@@ -1,0 +1,146 @@
+id,case,reason_to_check,case_facts,label,what_is_wrong
+G01-P1,G01,The seller says the item was delivered on 2026-10-24 to the transaction address.,"hasTracking: true
+delivered: true
+deliveryDate: 2026-10-14
+deliveredToTransactionAddress: true
+reason: INR
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":40}
+holdAmount: {""currency"":""EUR"",""value"":-38.4}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,Wrong date: delivered on 2026-10-14.
+G01-P2,G01,The buyer confirmed the item was delivered to the transaction address.,"hasTracking: true
+delivered: true
+deliveryDate: 2026-10-14
+deliveredToTransactionAddress: true
+reason: INR
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":40}
+holdAmount: {""currency"":""EUR"",""value"":-38.4}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,"Wrong party: the seller said it, not the buyer."
+G02-P1,G02,"The seller added a tracking number, so PayPal's Item Not Received rule is met.","hasTracking: false
+reason: INR
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":40}
+holdAmount: {""currency"":""EUR"",""value"":-38.4}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,Contradicts the facts: no tracking recorded.
+G02-P2,G02,"PayPal is holding EUR 40.00, net of fees.","hasTracking: false
+reason: INR
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":40}
+holdAmount: {""currency"":""EUR"",""value"":-38.4}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,Wrong amount: EUR 38.40 is on hold.
+G03-P1,G03,"You shipped three days after PayPal's notice, so your shipment proof counts.","hasTracking: true
+noticeDate: 2026-11-01
+shipmentDate: 2026-11-02
+shippedToTransactionAddress: true
+reason: UNAUTHORISED
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":75}
+holdAmount: {""currency"":""EUR"",""value"":-72.2}
+openedAt: 2026-11-02T10:00:00Z
+responseDueAt: 2026-11-22T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,Wrong count: shipped 1 day after the notice. 3 days would not count.
+G05-P1,G05,The buyer agreed that the item matches the listing.,"matchesListing: true
+listingEvidence: Listing text and photos taken before shipping show the same item.
+reason: SNAD
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":25}
+holdAmount: {""currency"":""EUR"",""value"":-23.1}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: OTHER
+canRespond: true",no,Wrong party: the seller said it. The buyer says it does not match.
+G08-P1,G08,You can still respond until 20 Nov 2026.,"hasTracking: true
+reason: INR
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":40}
+holdAmount: {""currency"":""EUR"",""value"":-38.4}
+openedAt: 2026-10-20T10:00:00Z
+responseDueAt: 2026-11-02T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: false",no,"Wrong date and contradicts the facts: due 2 Nov, and PayPal shows you cannot respond."
+G10-P1,G10,"You confirmed the item was delivered to the transaction address, so the Item Not Received rule is met.","hasTracking: true
+delivered: true
+deliveryDate: 2026-11-12
+deliveredToTransactionAddress: false
+reason: INR
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":30}
+holdAmount: {""currency"":""EUR"",""value"":-27.9}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,Contradicts the facts: not delivered to the transaction address.
+G13-P1,G13,The seller has photos taken before shipping that show the item matches the listing.,"matchesListing: true
+reason: SNAD
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":25}
+holdAmount: {""currency"":""EUR"",""value"":-23.1}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: OTHER
+canRespond: true",no,Invented evidence: no listing evidence in the facts.
+G16-P1,G16,"You shipped within 2 days of PayPal's notice, so your shipment proof counts.","hasTracking: true
+noticeDate: 2026-10-30
+shipmentDate: 2026-11-03
+shippedToTransactionAddress: true
+reason: UNAUTHORISED
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":75}
+holdAmount: {""currency"":""EUR"",""value"":-72.2}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,Wrong: shipped 4 days after the notice.
+G20-P1,G20,This Not As Described dispute is covered by Seller Protection.,"hasTracking: true
+delivered: true
+deliveryDate: 2026-10-30
+deliveredToTransactionAddress: true
+shippedToTransactionAddress: true
+reason: INR
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":40}
+holdAmount: {""currency"":""EUR"",""value"":-38.4}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,"Wrong reason and wrong rule: it is Item Not Received, and Not As Described is not covered."
+G21-P1,G21,"You confirmed the item was delivered, so your shipment proof counts.","hasTracking: true
+delivered: false
+deliveredToTransactionAddress: true
+noticeDate: 2026-11-03
+shipmentDate: 2026-11-04
+shippedToTransactionAddress: true
+reason: UNAUTHORISED
+status: WAITING_FOR_SELLER_RESPONSE
+amount: {""currency"":""EUR"",""value"":40}
+holdAmount: {""currency"":""EUR"",""value"":-38.4}
+openedAt: 2026-11-03T10:00:00Z
+responseDueAt: 2026-11-20T10:00:00Z
+sellerProtectionEligible: true
+evidenceTypeNeeded: PROOF_OF_FULFILLMENT
+canRespond: true",no,"Contradicts the facts: not delivered yet. The proof counts because of the shipment date, not delivery."
