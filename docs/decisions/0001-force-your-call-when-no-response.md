@@ -34,3 +34,8 @@ Cases where `canRespond` is false (from `responseEligibility`):
 - **Override is silent:** the model's disagreement is not recorded. We could log the original answer for review.
 - **One live run:** the model can vary between runs. Repeat the red-flag subset before the demo.
 - **Review status mapping:** the claim that PayPal's review status maps to CLOSED is inferred from the code. Unverified against a live review case.
+
+## Update, 8 Nov 2026 (Kate, golden G11)
+- **NO_DUE_DATE** stays YOUR_CALL (Mixed), but the reply buttons stay on with the warning "Deadline unknown: check it in PayPal first". PayPal refuses anything it no longer accepts, and the screen shows that refusal.
+- **OVERDUE** now means REFUND (ADR 0003).
+- All 21 golden labels are signed off by Kate (`signedOff` in lib/golden/cases.json).

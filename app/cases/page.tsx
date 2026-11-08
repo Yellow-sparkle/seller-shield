@@ -88,7 +88,7 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
     : underReview
     ? "1. Wait for PayPal's decision.\n2. Do not refund while it is under review."
     : !e.canRespond && e.reason === "NO_DUE_DATE"
-      ? "1. Check the response deadline in PayPal.\n2. No due date in our data."
+      ? "1. Check the response deadline in PayPal. PayPal sent no due date.\n2. If you can still reply, reply below. PayPal refuses anything it no longer accepts."
       : !e.canRespond && e.reason === "OVERDUE"
         ? "1. Ask the buyer, outside PayPal, to close the case if the parcel arrived.\n2. After PayPal decides, you can appeal with new evidence, such as proof of delivery (window not confirmed)."
       : !e.canRespond
@@ -152,7 +152,10 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
   // A message to the buyer does not: the seller may still need to send evidence or refund.
   const live = !resolved && !waitingForBuyer;
   const sentFinal = live && (override.sent?.action === "refund" || override.sent?.action === "evidence");
-  const open = e.canRespond && live && !sentFinal;
+  // No due date from PayPal: the case stays Mixed, but the buttons stay on, because PayPal refuses what it no longer
+  // accepts and the screen shows that refusal (Kate, 8 Nov 2026, G11).
+  const unknownDue = !e.canRespond && e.reason === "NO_DUE_DATE";
+  const open = (e.canRespond || unknownDue) && live && !sentFinal;
   const rec = waitingForBuyer
     ? {
         recommendation: "WAITING",
@@ -194,7 +197,7 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
       : e.canRespond
       ? "You can respond"
       : e.reason === "NO_DUE_DATE"
-        ? "Due date unknown"
+        ? "Due date unknown. Check it in PayPal before you reply."
         : c.status === "UNDER_REVIEW"
         ? "Under PayPal review. You can't respond in the dispute."
         : e.reason === "OVERDUE"
@@ -749,6 +752,7 @@ function DraftCard({ row, initial, refundDraft, showId = true, onSent }: { row: 
       {row.canRespond && !isDemo(row) && !row.canMessage && !refundDraft && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>PayPal takes messages to the buyer only in the inquiry stage. Copy the text into the PayPal Resolution Center instead.</p>}
       {row.canRespond && !isDemo(row) && tracking && !row.canEvidence && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>PayPal takes evidence only while it waits for your reply.</p>}
       {row.canRespond && row.sentAction?.action === "message" && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>Message sent from this browser on {when(row.sentAction.at)}.</p>}
+      {row.canRespond && row.closedReason === "NO_DUE_DATE" && <p style={{ color: "#7a4b00", fontSize: 14, marginTop: 6 }}>Deadline unknown: check it in PayPal first.</p>}
       {row.canRespond && placeholder && <p style={{ color: "#7a4b00", fontSize: 14, marginTop: 6 }}>Fill in or remove the part in [brackets] before sending.</p>}
       {row.canRespond && refundDraft && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>This text goes to the buyer with the refund. Use Refund buyer to send both.</p>}
       {row.canRespond && !tracking && row.reasonCode === "INR" && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>No tracking on the order yet. Add it in Orders and tracking, then send it here as evidence.</p>}
