@@ -14,6 +14,7 @@ import { addressNextStep, caseAnswer, DECISIONS, draftBasis, normalizeDecision, 
 import { evidenceItems } from "../../lib/evidence.ts";
 import { protectionShort, protectionTone } from "../../lib/protection.ts";
 import { trackingStatusText } from "../../lib/orders.ts";
+import { whySummary } from "../../lib/why-summary.ts";
 import { sameAnswer } from "../../lib/eval-answers.ts";
 import { readSentTracking, withSentTracking, type SentTracking } from "../../lib/sent-tracking.ts";
 import fixtures from "../../lib/fixtures/sandbox-disputes.json" with { type: "json" };
@@ -309,7 +310,7 @@ const columns: ColDef<Row>[] = [
     cellEditorParams: { values: [...DECISIONS] },
     headerTooltip: "Your decision. Double-click a cell to change it. It sets the steps and the reply draft for this case.",
   },
-  // Why: one plain line per reason, a small gap between them, no bullets (Kate, 7 Nov 2026).
+  // Why: one reason per row in the table (Kate, 8 Nov 2026); the case card lists them all, one plain line each (Kate, 7 Nov 2026).
   {
     field: "reasons",
     headerName: "Why",
@@ -318,13 +319,16 @@ const columns: ColDef<Row>[] = [
     wrapText: true,
     autoHeight: true,
     cellStyle: { lineHeight: "1.45", paddingTop: 8, paddingBottom: 8 },
-    cellRenderer: (p: { value: string }) => (
-      <div style={{ display: "grid", gap: 4, whiteSpace: "normal" }}>
-        {String(p.value ?? "").split("\n").filter(Boolean).map((line, i) => (
-          <div key={i}>{line}</div>
-        ))}
-      </div>
-    ),
+    // One reason in the table, so every row stays short; all of them on hover and on the case card (Kate, 8 Nov 2026).
+    cellRenderer: (p: { value: string }) => {
+      const w = whySummary(String(p.value ?? ""));
+      return (
+        <div title={w.all.join("\n")} style={{ whiteSpace: "normal" }}>
+          <div>{w.main}</div>
+          {w.more > 0 && <div style={{ fontSize: 12, color: "#6b7280" }}>+{w.more} more: tick the case to see all</div>}
+        </div>
+      );
+    },
   },
 ];
 
