@@ -1,0 +1,59 @@
+id,judge_supported,judge_reason
+G01-1,yes,"Reason is INR (Item Not Received), which matches this claim."
+G01-2,yes,"hasTracking is true, and it is the seller's own answer."
+G01-3,yes,"delivered is true, deliveryDate is 2026-10-14 and deliveredToTransactionAddress is true. These are the seller's answers."
+G01-4,yes,"The rule needs tracking, a delivered status and a matching address. The seller's answers show all three."
+G01-5,yes,evidenceTypeNeeded is PROOF_OF_FULFILLMENT and responseDueAt is 2026-11-20T10:00:00Z.
+G01-6,yes,"sellerProtectionEligible is true, and holdAmount is EUR 38.4, with the minus sign being how PayPal records it."
+G02-1,yes,"The reason is INR, which means Item Not Received."
+G02-2,yes,hasTracking is false.
+G02-3,no,"The facts do not say the dispute fails the rule. Delivery and address answers are missing, and sellerProtectionEligible is true, so this conclusion is not backed by the facts."
+G02-4,yes,evidenceTypeNeeded is PROOF_OF_FULFILLMENT.
+G02-5,yes,"holdAmount is -38.4 EUR, which is net of fees, and the amount is 40 EUR."
+G02-6,yes,responseDueAt is 2026-11-20T10:00:00Z.
+G03-1,yes,"The reason is UNAUTHORISED, which matches."
+G03-2,yes,"The notice date is 2026-11-01 and the shipment date is 2026-11-02, so one day apart, within 2 days. shippedToTransactionAddress is true."
+G03-3,yes,hasTracking is true and evidenceTypeNeeded is PROOF_OF_FULFILLMENT. The claim does not say tracking proves delivery.
+G03-4,yes,sellerProtectionEligible is true.
+G03-5,yes,"holdAmount is -72.2 EUR, with the minus sign being how PayPal records it, and the amount is 75 EUR."
+G03-6,yes,The status is WAITING_FOR_SELLER_RESPONSE and responseDueAt is 2026-11-22T10:00:00Z.
+G05-1,yes,"The reason is SNAD, which means significantly not as described."
+G05-2,yes,"matchesListing is true, and it is the seller's own answer."
+G05-3,yes,listingEvidence says exactly this.
+G05-4,yes,evidenceTypeNeeded is OTHER.
+G05-5,yes,canRespond is true and responseDueAt is 2026-11-20T10:00:00Z.
+G05-6,yes,holdAmount is -23.1 EUR (the minus sign is how PayPal records it) and amount is 25 EUR.
+G08-1,yes,"Reason is INR, amount is EUR 40, and holdAmount is -38.4 EUR, which is the held amount net of fees."
+G08-2,yes,"hasTracking is true, and the notes say tracking only shows a number was added, not proof of delivery."
+G08-3,yes,sellerProtectionEligible is true.
+G08-4,yes,evidenceTypeNeeded is PROOF_OF_FULFILLMENT and responseDueAt is 2026-11-02T10:00:00Z.
+G08-5,yes,Status is WAITING_FOR_SELLER_RESPONSE and canRespond is false.
+G10-1,yes,The reason is INR and the status is WAITING_FOR_SELLER_RESPONSE.
+G10-2,yes,"hasTracking and delivered are both true, and both are the seller's own answers."
+G10-3,yes,"deliveredToTransactionAddress is false, and the rule requires a matching address."
+G10-4,no,"sellerProtectionEligible is true. No fact says the address mismatch makes protection unhelpful, so this is an invented conclusion."
+G10-5,yes,"holdAmount is -27.9 EUR, net of fees, and the amount is 30 EUR."
+G10-6,yes,This matches responseDueAt.
+G13-1,yes,"The reason is SNAD, which means significantly not as described."
+G13-2,yes,"matchesListing is true, and this is the seller's own answer."
+G13-3,yes,evidenceTypeNeeded is OTHER.
+G13-4,yes,"holdAmount is -23.1 EUR, with the minus sign being how PayPal records it, and amount is 25 EUR."
+G13-5,yes,canRespond is true and responseDueAt is 2026-11-20T10:00:00Z.
+G16-1,yes,reason is UNAUTHORISED and evidenceTypeNeeded is PROOF_OF_FULFILLMENT.
+G16-2,yes,"The dates match, the gap is 4 days, and 4 days is more than the 2-day window."
+G16-3,yes,"shippedToTransactionAddress is true. Shipment proof only counts within 2 days of the notice date, and this shipment was 4 days after."
+G16-4,yes,"hasTracking is true, and tracking only says a number was added. It does not change the shipment date."
+G16-5,yes,holdAmount is -72.2 EUR (net of fees) and amount is 75 EUR.
+G16-6,yes,canRespond is true and responseDueAt is 2026-11-20T10:00:00Z.
+G20-1,yes,"The reason is INR, which means item not received."
+G20-2,yes,"hasTracking is true, delivered is true, and deliveryDate is 2026-10-30. These are the seller's own answers."
+G20-3,yes,"deliveredToTransactionAddress is true, delivered is true, and hasTracking is true. These match the rule's requirements of tracking, delivered status and a matching address."
+G20-4,yes,sellerProtectionEligible is true and evidenceTypeNeeded is PROOF_OF_FULFILLMENT.
+G20-5,yes,canRespond is true and responseDueAt is 2026-11-20T10:00:00Z.
+G20-6,yes,"The amount is EUR 40 and holdAmount is -38.4 EUR. The minus sign is how PayPal records it, and the hold is net of fees."
+G21-1,yes,reason is UNAUTHORISED and status is WAITING_FOR_SELLER_RESPONSE.
+G21-2,yes,"noticeDate 2026-11-03 and shipmentDate 2026-11-04 are 1 day apart, which is within 2 days."
+G21-3,yes,"shippedToTransactionAddress is true (seller's answer) and shipment is within 2 days of the notice, so shipment proof counts."
+G21-4,yes,evidenceTypeNeeded is PROOF_OF_FULFILLMENT and hasTracking is true.
+G21-5,yes,sellerProtectionEligible is true.
+G21-6,yes,holdAmount is 38.4 EUR (minus sign is just PayPal's recording) and responseDueAt is 2026-11-20T10:00:00Z.

@@ -19,6 +19,18 @@ Below KPI: Not as described, 75% on the judge check (one case added evidence exa
 - **The judge only matters where the screen shows the model's words.** When a rule decides a case, the screen shows the rule's reasons (ruleReasons), not the model's claims.
 - **Recorded answers on the screen.** The screen never calls the model live. It shows recorded answers (lib/recorded/recommendations.json). Each new recording keeps the answer it was made from, and the screen does not show a recording made from other facts. `scripts/stale-check.ts` lists recordings to re-record. The figures above are from 6 Nov, before this change, and the run that includes G20 and G21 is still to do.
 
+## Judge benchmark against a human (8 Nov 2026)
+
+Kate labelled 58 reasons from 10 golden cases (G01, G02, G03, G05, G08, G10, G13, G16, G20, G21) as supported or not, without seeing the judge's verdicts. Judge: Claude Sonnet 5.5. Files: `docs/judge-benchmark/`.
+
+| Check | Target | Result | Status |
+|---|---|---|---|
+| Judge agrees with the human label | ≥ 90% | 56 / 58 (97%) | Pass |
+| Reasons the human marked not supported but the judge passed | 0 | 0 | Pass, but see below |
+
+- **Both disagreements are the judge being stricter than the human.** G02-3 ("the rule requires tracking, so this dispute does not meet it") and G10-4 ("protection eligibility does not help here, since the address does not match"). Both are conclusions from PayPal's rules, which the judge isn't given, so it calls them invented. Kate judged them correct. A stricter judge is the safe direction: it can only lower the score, not let a false reason through.
+- **Limit:** Kate marked all 58 reasons as supported, so the sample contains no false reason. That means it shows the judge doesn't over-flag, but it can't show the judge would catch a false one. A next round should include a few deliberately wrong reasons.
+
 ## Run history and detail
 
 Only measured results are shown. The summary uses the latest live run on 6 Nov 2026, with the golden and judge checks run on the same code (recommender: Claude Opus 5.5, judge: Claude Sonnet 5.5).
