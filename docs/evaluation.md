@@ -26,8 +26,9 @@ Based on the "Layers of LLM Evaluation" table. Only the checks Seller Shield act
 | Worst error: Strong when the expected answer is Weak | 0, always | This sends a seller to fight a case they should refund (the PRD's top risk). One is a stop. |
 | Judge: every reason supported by the case facts | ≥ 95% of cases | A false reason misleads the seller. The judge is also an AI, so 95% allows for its own mistakes. Every flagged reason is read by a person. |
 | Style: plain English, no prediction of PayPal's decision | 100% | The app must never promise an outcome. A prediction is also removed in code. |
-| Judge agrees with a human label (benchmark, about 40 reasons) | ≥ 90% | The judge's own scores only count if it agrees with a person. Kate labels the reasons of 10 sample cases without seeing the judge's verdicts (`judge-check --export`, then `scripts/judge-agreement.ts`). |
+| Judge agrees with a human label (benchmark, 58 reasons) | ≥ 90% | The judge's own scores only count if it agrees with a person. Kate labels the reasons of 10 sample cases without seeing the judge's verdicts (`judge-check --export`, then `scripts/judge-agreement.ts`). |
 | Reasons the judge passed that a human marked not supported | 0 | These are the misses that would let a false reason reach a seller. |
+| Deliberately false reasons the judge catches | all | A benchmark with only true reasons can't show the judge catches false ones. 12 hand-written false reasons, judged separately (`scripts/judge-rebenchmark.ts`). |
 
 **When to run it.** The no-AI checks run with every test run. The live AI checks run before a demo, after a prompt change, and after a rule change.
 

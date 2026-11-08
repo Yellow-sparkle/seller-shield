@@ -23,13 +23,16 @@ Below KPI: Not as described, 75% on the judge check (one case added evidence exa
 
 Kate labelled 58 reasons from 10 golden cases (G01, G02, G03, G05, G08, G10, G13, G16, G20, G21) as supported or not, without seeing the judge's verdicts. Judge: Claude Sonnet 5.5. Files: `docs/judge-benchmark/`.
 
-| Check | Target | Result | Status |
-|---|---|---|---|
-| Judge agrees with the human label | ≥ 90% | 56 / 58 (97%) | Pass |
-| Reasons the human marked not supported but the judge passed | 0 | 0 | Pass, but see below |
+| Check | Target | First run | After the prompt change | Status |
+|---|---|---|---|---|
+| Judge agrees with the human label | ≥ 90% | 56 / 58 (97%) | 58 / 58 (100%) | Pass |
+| Reasons the human marked not supported but the judge passed | 0 | 0 | 0 | Pass |
+| Deliberately false reasons the judge caught | all | not tested | 12 / 12 | Pass |
 
-- **Both disagreements are the judge being stricter than the human.** G02-3 ("the rule requires tracking, so this dispute does not meet it") and G10-4 ("protection eligibility does not help here, since the address does not match"). Both are conclusions from PayPal's rules, which the judge isn't given, so it calls them invented. Kate judged them correct. A stricter judge is the safe direction: it can only lower the score, not let a false reason through.
-- **Limit:** Kate marked all 58 reasons as supported, so the sample contains no false reason. That means it shows the judge doesn't over-flag, but it can't show the judge would catch a false one. A next round should include a few deliberately wrong reasons.
+- **First run: both disagreements were the judge being stricter than the human.** G02-3 ("the rule requires tracking, so this dispute does not meet it") and G10-4 ("protection eligibility does not help here, since the address does not match") are conclusions from PayPal's rules, which the judge wasn't given, so it called them invented. Kate judged them correct.
+- **The change:** the judge prompt now lists PayPal's Seller Protection rules as known facts, and two checks borrowed from Opik's Hallucination metric: a fact given to the wrong party is not supported, and a simplification that changes the meaning is not supported. The same 58 reasons were judged again with `scripts/judge-rebenchmark.ts`.
+- **False reasons:** all 58 real reasons were true, so the first run couldn't show whether the judge catches a false one. 12 deliberately false reasons were added (`planted-false-8-nov.csv`): wrong dates and amounts, a fact given to the wrong party, invented evidence, contradictions of the facts, and wrong rule conclusions. They were judged in separate calls, so they couldn't sway the verdicts on the 58. The judge caught all 12.
+- **Limits:** 70 reasons from one run is a small sample, and the false reasons were written by hand, so they may be easier to spot than a model's own mistakes. The judge stays a supporting check.
 
 ## Run history and detail
 
