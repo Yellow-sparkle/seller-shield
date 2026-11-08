@@ -967,7 +967,7 @@ export default function CaseScreen() {
           suppressColumnVirtualisation
           getRowId={(p) => p.data.id}
           // Closed cases are dimmed, so the cases that need the seller stand out (Kate, 8 Nov 2026).
-          getRowStyle={(p) => {
+          getRowStyle={(p): Record<string, string | number> | undefined => {
             if (p.data && p.data.id === focusId) return { background: "#fff4d6", fontWeight: 600 };
             if (p.data?.recommendation === "RESOLVED") return { opacity: 0.55 };
             return undefined;
