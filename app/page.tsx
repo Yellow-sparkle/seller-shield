@@ -34,7 +34,7 @@ export default function ScanPage() {
       {result?.ok && result.health && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            <Card title="Money at risk" value={`${result.health.moneyAtRisk.currency} ${result.health.moneyAtRisk.amount.toFixed(2)}`} detail={`${result.health.moneyAtRisk.count} open disputes`} href="/cases?chip=canRespond&chip=overdue&chip=waiting" action="Show these open cases" />
+            <Card title="Money at risk" value={`${result.health.moneyAtRisk.currency} ${result.health.moneyAtRisk.amount.toFixed(2)}`} detail={`${result.health.moneyAtRisk.count} open ${result.health.moneyAtRisk.count === 1 ? "dispute" : "disputes"} in PayPal. The demo case is not counted.`} href="/cases?chip=canRespond&chip=overdue&chip=waiting" action="Show these open cases" />
             <Card
               title="Missing tracking"
               value={`${result.health.missingTracking.count} orders`}
