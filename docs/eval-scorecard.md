@@ -10,7 +10,7 @@
 | AI | Golden cases the AI decides (G01, G03, G20, G21) match the expected answer | golden-check, 3 runs | 4 / 4 each run | 4 / 4 on all 3 runs |
 | AI | Strong when the expected answer is Weak | golden-check | 0 | 0 in 3 runs |
 | Grounding | Cases where every reason is supported | AI judge | ≥ 95% | 21 / 21 (100%) |
-| Grounding | Reasons kept by the grounding guard (sandbox disputes) | Code | 100% | 18 / 18 (6 Nov recordings, since re-recorded) |
+| Grounding | Reasons kept by the grounding guard (sandbox disputes) | Code | 100% | 27 / 27 (8 Nov recordings) |
 | Style | Plain English, no prediction of PayPal's decision | AI judge, plus a filter in code | 100% | 21 / 21 |
 | Style | Average reading grade of the reasons | Flesch-Kincaid formula, no AI (`scripts/readability-check.ts`) | 8 or below | 5.9 (recorded answers and benchmark reasons) |
 | Judge | Agreement with Kate's labels | 58 reasons Kate labelled | ≥ 90% | 58 / 58 |
