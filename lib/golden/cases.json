@@ -698,5 +698,88 @@
         }
       ]
     }
+  },
+  {
+    "id": "G20",
+    "note": "Synthetic, built the screen's way (S8). INR, the order has tracking with status SHIPPED, the seller read the delivery date on the carrier page and says it went to the order address. The rules leave it to the model; proof of delivery supports the seller, so FIGHT.",
+    "expected": "FIGHT",
+    "order": {
+      "tracking": "DHL20G20",
+      "trackingStatus": "SHIPPED"
+    },
+    "card": {
+      "carrierDeliveryDate": "2026-10-30",
+      "addressMismatch": "no"
+    },
+    "dispute": {
+      "dispute_id": "G-20",
+      "reason": "INR",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G20TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "G21",
+    "note": "Synthetic, built the screen's way (S8). Unauthorised, protection eligible, PayPal's notice on 2026-11-03, shipped on 2026-11-04 (within 2 days) with tracking to the order address. The rules leave it to the model; shipment proof meets the terms, so FIGHT.",
+    "expected": "FIGHT",
+    "order": {
+      "tracking": "DHL21G21",
+      "trackingStatus": "SHIPPED"
+    },
+    "card": {
+      "noticeDate": "2026-11-03",
+      "shipmentDate": "2026-11-04",
+      "addressMismatch": "no"
+    },
+    "dispute": {
+      "dispute_id": "G-21",
+      "reason": "UNAUTHORISED",
+      "status": "WAITING_FOR_SELLER_RESPONSE",
+      "dispute_amount": {
+        "currency_code": "EUR",
+        "value": "40.00"
+      },
+      "disputed_transactions": [
+        {
+          "seller_transaction_id": "G21TXN"
+        }
+      ],
+      "create_time": "2026-11-03T10:00:00Z",
+      "seller_response_due_date": "2026-11-20T10:00:00Z",
+      "seller_protection": {
+        "status": "ELIGIBLE"
+      },
+      "fund_movements": [
+        {
+          "type": "HOLD_PLACED",
+          "amount": {
+            "currency_code": "EUR",
+            "value": "-38.40"
+          }
+        }
+      ]
+    }
   }
 ]

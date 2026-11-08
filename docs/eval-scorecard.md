@@ -12,6 +12,13 @@
 
 Below KPI: Not as described, 75% on the judge check (one case added evidence examples that are not in the facts).
 
+## What the scores cover (8 Nov 2026, second review S8)
+
+- **Most golden cases are decided by the rules, not the model.** recommend() applies the rules in lib/proof.ts last, so a rule result replaces the model's answer. With the pinned clock (5 Nov 2026), the rules decide 17 of the 21 golden cases. The model decides only 4: G01, G03, G20 and G21. The accuracy figure is therefore mainly a check of the rules. Report the model-decided cases separately: "AI X/4 on the cases the rules leave to it, rules 17/17, checked without the AI" (`lib/eval-answers.test.ts`, `lib/proof.test.ts`).
+- **G20 and G21 are built the way the case screen builds them.** They hold an order and card answers, and the golden and judge checks turn these into an answer with caseAnswer(), the same function the screen uses. A no-AI test confirms that the rules leave both to the model.
+- **The judge only matters where the screen shows the model's words.** When a rule decides a case, the screen shows the rule's reasons (ruleReasons), not the model's claims.
+- **Recorded answers on the screen.** The screen never calls the model live. It shows recorded answers (lib/recorded/recommendations.json). Each new recording keeps the answer it was made from, and the screen does not show a recording made from other facts. `scripts/stale-check.ts` lists recordings to re-record. The figures above are from 6 Nov, before this change, and the run that includes G20 and G21 is still to do.
+
 ## Run history and detail
 
 Only measured results are shown. The summary uses the latest live run on 6 Nov 2026, with the golden and judge checks run on the same code (recommender: Claude Opus 5.5, judge: Claude Sonnet 5.5).

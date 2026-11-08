@@ -8,6 +8,7 @@ import { responseEligibility } from "../lib/rules.ts";
 import { factsFor, recommend } from "../lib/recommend.ts";
 import { judgePrompt, parseJudgement, supportRate } from "../lib/judge.ts";
 import cases from "../lib/golden/cases.json" with { type: "json" };
+import { goldenAnswer, type GoldenCase } from "../lib/eval-answers.ts";
 
 const JUDGE_MODEL = "claude-sonnet-5-5";
 
@@ -16,18 +17,20 @@ if (!process.env.ANTHROPIC_API_KEY) {
   process.exit(1);
 }
 
-type G = { id: string; answer: Record<string, boolean>; dispute: object };
+// Same pinned clock as golden-check, so the date-based cases match (override with CHECK_NOW).
+const NOW = new Date(process.env.CHECK_NOW ?? "2026-11-05T12:00:00Z");
 const client = new Anthropic();
 let total = 0;
 let unreadable = 0;
-for (const g of cases as unknown as G[]) {
+for (const g of cases as unknown as GoldenCase[]) {
+  const answer = goldenAnswer(g);
   const c = toCase(g.dispute as never);
-  const e = responseEligibility(c);
-  const r = await recommend(c, e, g.answer, client);
+  const e = responseEligibility(c, NOW);
+  const r = await recommend(c, e, answer, client, NOW);
   const reply = await client.messages.create({
     model: JUDGE_MODEL,
     max_tokens: 1500,
-    messages: [{ role: "user", content: judgePrompt(factsFor(c, e, g.answer), r.claims) }],
+    messages: [{ role: "user", content: judgePrompt(factsFor(c, e, answer), r.claims) }],
   });
   const text = reply.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
   let j;

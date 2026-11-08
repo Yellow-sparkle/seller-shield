@@ -14,6 +14,7 @@ import { addressNextStep, caseAnswer, DECISIONS, draftBasis, normalizeDecision, 
 import { evidenceItems } from "../../lib/evidence.ts";
 import { protectionShort, protectionTone } from "../../lib/protection.ts";
 import { trackingStatusText } from "../../lib/orders.ts";
+import { sameAnswer } from "../../lib/eval-answers.ts";
 import { readSentTracking, withSentTracking, type SentTracking } from "../../lib/sent-tracking.ts";
 import fixtures from "../../lib/fixtures/sandbox-disputes.json" with { type: "json" };
 import recorded from "../../lib/recorded/recommendations.json" with { type: "json" };
@@ -77,7 +78,10 @@ type Override = CardAnswers & { decision?: string; buyerFiles?: string[]; sent?:
 // The deterministic rules (lib/proof.ts) override the recorded answer, as they do in recommend().
 // The answer combines the demo answers, the order behind the case and the card's address question (lib/case-facts.ts, H1/H2).
 function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnType<typeof responseEligibility>, now: Date, answer: SellerAnswer): { recommendation: string; reasons: string; nextStep: string } {
-  const r = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[] }>)[id];
+  const rec = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[]; answer?: SellerAnswer }>)[id];
+  // A recording made from other facts is not shown as the AI's answer for these facts (second review S8).
+  const otherFacts = !!rec?.answer && !sameAnswer(rec.answer, answer);
+  const r = otherFacts ? undefined : rec;
   const underReview = c.status === "UNDER_REVIEW";
   const nextStep = c.lifeCycleStage === "CHARGEBACK"
     ? "1. The card issuer decides.\n2. Check the chargeback in the PayPal Resolution Center for what you can still send."
@@ -102,7 +106,7 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
     };
   }
   // No recorded AI answer yet (a newly added dispute): the seller decides, and keeps every action (second review S3).
-  if (!r) return { recommendation: "YOUR_CALL (not checked by the AI yet)", reasons: ["Not checked by the AI yet.", ...ruleReasons(c.reason, answer, "YOUR_CALL")].join("\n"), nextStep };
+  if (!r) return { recommendation: "YOUR_CALL (not checked by the AI yet)", reasons: [otherFacts ? "The AI checked this case with other facts. It has not checked these yet." : "Not checked by the AI yet.", ...ruleReasons(c.reason, answer, "YOUR_CALL")].join("\n"), nextStep };
   return {
     recommendation: `${r.recommendation} (${r.confidence.toLowerCase()} confidence)`,
     reasons: r.claims.map((c) => c.text).join("\n"),
