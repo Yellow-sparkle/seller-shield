@@ -59,3 +59,10 @@ test("L6: messages not loaded says so on the step", () => {
   const p = casePath({ ...base, sellerMessaged: null });
   assert.match(p[1].source, /not loaded/);
 });
+
+test("ADR 0003: a case past its deadline has no refund step, only what is left outside the dispute", () => {
+  const steps = casePath({ reason: "INR", route: "refund", sellerMessaged: false, trackingInPayPal: true, evidenceTicked: false, waitingForBuyer: false, overdue: true, closed: false });
+  assert.deepEqual(steps.map((s) => s.label), ["Buyer opened the case", "Ask the buyer to close the case", "PayPal decides. Appeal with new evidence if needed"]);
+  assert.equal(steps[1].state, "now");
+  assert.ok(!steps.some((s) => /Refund/.test(s.label)));
+});

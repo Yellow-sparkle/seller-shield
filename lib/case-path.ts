@@ -21,6 +21,7 @@ export type PathInput = {
   waitingForBuyer: boolean; // PayPal status WAITING_FOR_BUYER_RESPONSE
   underReview?: boolean; // PayPal status UNDER_REVIEW
   chargeback?: boolean; // the buyer went to their card issuer
+  overdue?: boolean; // the reply deadline passed: PayPal decides without the seller (Kate, 8 Nov 2026, ADR 0003)
   closed: boolean; // PayPal refunded or resolved the case
 };
 
@@ -40,6 +41,13 @@ export function casePath(p: PathInput): PathStep[] {
   if (p.chargeback) {
     steps = [opened, evidenceStep(p), { label: "The buyer's card issuer decides", done: p.closed, source: "From PayPal status" }];
     waitIndex = 2;
+  } else if (p.overdue) {
+    // Replies are closed, so no refund or evidence step in the dispute: what is left happens outside it (third review, 8 Nov 2026).
+    steps = [
+      opened,
+      { label: "Ask the buyer to close the case", done: p.closed, source: "Outside PayPal, if the parcel arrived" },
+      { label: "PayPal decides. Appeal with new evidence if needed", done: p.closed, source: "From PayPal status. Appeal window not confirmed" },
+    ];
   } else if (p.route === "refund") {
     steps = [
       opened,

@@ -363,6 +363,7 @@ function CasePath({ row }: { row: Row }) {
     waitingForBuyer: row.recommendation === "WAITING",
     underReview: row.underReview,
     chargeback: row.chargeback,
+    overdue: row.closedReason === "OVERDUE" && row.recommendation !== "RESOLVED" && row.recommendation !== "WAITING",
     closed: row.recommendation === "RESOLVED",
   });
   return (
@@ -645,7 +646,8 @@ function Conversation({ row }: { row: Row }) {
 // the seller presses an Approve button. Buttons are disabled when PayPal no longer accepts a response.
 type OnSent = (id: string, action: SentAction["action"]) => void;
 function ReplyDrafts({ rows, showId = true, onSent }: { rows: Row[]; showId?: boolean; onSent?: OnSent }) {
-  const cases = rows.filter((r) => /^(FIGHT|REFUND|YOUR_CALL)/.test(r.recommendation));
+  // A case past its reply deadline gets no draft: replies are closed, and the next step says what is left (third review).
+  const cases = rows.filter((r) => /^(FIGHT|REFUND|YOUR_CALL)/.test(r.recommendation) && r.closedReason !== "OVERDUE");
   if (cases.length === 0) return null;
   return (
     <section style={{ marginTop: 24 }}>
@@ -988,11 +990,12 @@ export default function CaseScreen() {
               <div>
                 <CaseSummary row={r} />
                 <OrderLine row={r} />
-                {["INR", "SNAD", "UNAUTHORISED"].includes(r.reasonCode) && r.recommendation !== "RESOLVED" && r.recommendation !== "WAITING" && (
+                {["INR", "SNAD", "UNAUTHORISED"].includes(r.reasonCode) && r.recommendation !== "RESOLVED" && r.recommendation !== "WAITING" && r.closedReason !== "OVERDUE" && (
                   <FactsForm row={r} onChange={(patch) => setOverrides((prev) => ({ ...prev, [r.id]: { ...prev[r.id], ...patch } }))} />
                 )}
                 {/* Only where the delivery address matters and the case is still open (M6). */}
-                {(r.reasonCode === "INR" || r.reasonCode === "UNAUTHORISED") && r.recommendation !== "RESOLVED" && (
+                {/* Not after the deadline: the answers can no longer change the case (third review). */}
+                {(r.reasonCode === "INR" || r.reasonCode === "UNAUTHORISED") && r.recommendation !== "RESOLVED" && r.closedReason !== "OVERDUE" && (
                   <CauseForm row={r} onChange={(mismatch, cause, evidence) => setCause(r.id, mismatch, cause, evidence)} />
                 )}
                 <Conversation row={r} />

@@ -72,12 +72,17 @@ These call Claude and cost a few cents per case. They need `ANTHROPIC_API_KEY` i
 # Recommendation for each sandbox dispute (add --record to save results for the case screen)
 node --env-file=.env.local --experimental-strip-types scripts/live-check.ts
 
-# Golden set: 19 hand-written cases with expected answers
+# Golden set: 21 cases with expected answers signed off by Kate. G20 and G21 are built from an order and card answers, like the case screen
 node --env-file=.env.local --experimental-strip-types scripts/golden-check.ts
 
 # Judge: checks each reason against the case facts
 node --env-file=.env.local --experimental-strip-types scripts/judge-check.ts
+
+# No AI call: lists recorded answers whose facts no longer match what the case screen builds
+node --experimental-strip-types scripts/stale-check.ts
 ```
+
+The rules decide most golden cases before the AI's answer counts, so report the AI and the rules separately (see the scorecard).
 
 How we evaluate the AI: [docs/evaluation.md](docs/evaluation.md). Results: [docs/eval-scorecard.md](docs/eval-scorecard.md).
 

@@ -11,3 +11,6 @@ Based on the "Layers of LLM Evaluation" table. Only the checks Seller Shield act
 
 - The judge is also an AI model, so its scores are a supporting check, not proof.
 - Eligibility and the rules-based recommendation are decided in code, not by the model. The evaluations above cover the model's explanation and draft reply.
+- Since 8 Nov 2026 (second review S8): the golden and judge checks build each answer the way the case screen does (`caseAnswer`) when a case holds an order and card answers (G20, G21). The rules decide 17 of the 21 golden cases. Only G01, G03, G20 and G21 test the model's own answer, so AI and rule results are reported separately and never as one total.
+- Recorded answers: the case screen never calls the model live. Each new recording keeps the answer it was made from. The screen hides a recording made from other facts, and `scripts/stale-check.ts` (no AI) lists the ones to re-record. `lib/eval-answers.test.ts` checks that every case the model decides has a recording.
+- All 21 golden labels are signed off by Kate (8 Nov 2026).
