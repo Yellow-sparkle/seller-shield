@@ -358,6 +358,27 @@ function CasePath({ row }: { row: Row }) {
                   {s.label} <span style={{ color: st.noteColor, fontSize: 12, fontWeight: 700, marginLeft: 4 }}>{st.note}</span>
                 </div>
                 <div style={{ color: "#5b6472", fontSize: 12 }}>{s.source}</div>
+                {/* The seller's checklist sits in the step it completes (Kate, 8 Nov 2026: no separate Documents section).
+                    Item not received has none: the tracking is the evidence and the app sends it. */}
+                {s.evidence && row.reasonCode !== "INR" && s.state !== "skipped" && (
+                  <div style={{ marginTop: 4 }}>
+                    {items.map((item, k) => (
+                      <label key={item} style={{ display: "flex", gap: 6, alignItems: "baseline", fontSize: 13, marginTop: 2 }}>
+                        <input
+                          type="checkbox"
+                          checked={!!ticks[k]}
+                          onChange={(e) => {
+                            const all = { ...(lastEvidence ?? readEvidence()) };
+                            const next = items.map((_, n) => !!(all[row.id] ?? [])[n]);
+                            next[k] = e.target.checked;
+                            writeEvidence({ ...all, [row.id]: next });
+                          }}
+                        />
+                        {item}
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
             </li>
           );
@@ -378,67 +399,6 @@ function CasePath({ row }: { row: Row }) {
   );
 }
 
-function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: boolean }) {
-  const [checked, setChecked] = useState<Record<string, boolean[]>>({});
-  useEffect(() => setChecked(readEvidence()), []);
-  if (rows.length === 0) return null;
-  return (
-    <section style={{ marginTop: 24 }}>
-      <h2 style={{ fontSize: 18, marginBottom: 4 }}>Documents</h2>
-      {rows.map((r) => {
-        const items = evidenceItems(r.reasonCode);
-        const boxes = checked[r.id] ?? items.map(() => false);
-        return (
-          // Two columns, buyer and seller, with only what matters (Kate, 8 Nov 2026). The buyer's claim is in Messages.
-          <div key={r.id} style={{ marginBottom: 8 }}>
-            {showId && <strong>{r.id}</strong>}
-            <div className="doc-columns">
-              <div className="doc-box">
-                <div className="doc-title">From the buyer</div>
-                {!r.buyerChecked && r.buyerFiles.length === 0 ? (
-                  <div className="doc-quiet">Not loaded from PayPal yet.</div>
-                ) : r.buyerFiles.length > 0 ? (
-                  <ul className="doc-files">
-                    {r.buyerFiles.map((f) => (
-                      <li key={f}>{f}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="doc-quiet">No files.</div>
-                )}
-              </div>
-              <div className="doc-box">
-                <div className="doc-title">From you</div>
-                {r.requested.length > 0 && (
-                  <div style={{ fontSize: 13, marginBottom: 4 }}>
-                    PayPal asks for: {r.requested.map((t) => (t === "PROOF_OF_FULFILLMENT" ? "proof of delivery" : t.toLowerCase().replace(/_/g, " "))).join(", ")}
-                  </div>
-                )}
-                {items.map((item, i) => (
-                  <label key={item} style={{ display: "flex", gap: 6, alignItems: "baseline", marginTop: 4, fontSize: 14 }}>
-                    <input
-                      type="checkbox"
-                      checked={!!boxes[i]}
-                      onChange={(e) => {
-                        const next = [...boxes];
-                        next[i] = e.target.checked;
-                        const all = { ...checked, [r.id]: next };
-                        setChecked(all);
-                        writeEvidence(all);
-                      }}
-                    />
-                    {item}
-                  </label>
-                ))}
-                <div className="doc-quiet" style={{ marginTop: 6 }}>Tick once uploaded in PayPal. Kept in this browser only.</div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </section>
-  );
-}
 
 // Address mismatch cause and its evidence, moved from the table to the card (Kate, 7 Nov 2026).
 // The evidence is saved when the box loses focus, so the case row does not recalculate on every key.
@@ -562,6 +522,12 @@ function Conversation({ row }: { row: Row }) {
             {last ? `You last messaged the buyer on ${when(last.time)}.` : "You have not messaged the buyer yet."}
           </p>
           {row.messages.length === 0 && <p style={{ color: "#555", fontSize: 14, margin: 0 }}>No messages in this case.</p>}
+          {/* The buyer's files sit with the buyer's messages (Kate, 8 Nov 2026), shown only when there are some. */}
+          {row.buyerFiles.length > 0 && (
+            <p style={{ fontSize: 14, margin: "6px 0 0" }}>
+              <strong>Files from the buyer:</strong> {row.buyerFiles.join(", ")}
+            </p>
+          )}
           {row.messages.map((m, i) => (
             <div key={i} style={{ marginTop: 6, padding: 10, border: "1px solid #d6dee8", borderRadius: 6, background: m.by === "SELLER" ? "#eaf1fb" : "#f5f7fa", fontSize: 14 }}>
               <div style={{ fontSize: 12, color: "#4a5568", marginBottom: 4 }}>
@@ -892,7 +858,6 @@ export default function CaseScreen() {
                 {(r.reasonCode === "INR" || r.reasonCode === "UNAUTHORISED") && r.recommendation !== "RESOLVED" && (
                   <CauseForm row={r} onChange={(mismatch, cause, evidence) => setCause(r.id, mismatch, cause, evidence)} />
                 )}
-                <EvidenceChecklist rows={[r]} showId={false} />
                 <Conversation row={r} />
                 <ReplyDrafts rows={[r]} showId={false} />
               </div>

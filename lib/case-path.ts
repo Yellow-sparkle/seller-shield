@@ -10,7 +10,7 @@
 // - L6: when PayPal's messages were not loaded, "Message the buyer" says so instead of looking undone.
 
 export type StepState = "done" | "now" | "open" | "later" | "skipped";
-export type PathStep = { label: string; state: StepState; source: string };
+export type PathStep = { label: string; state: StepState; source: string; evidence?: boolean };
 
 export type PathInput = {
   reason: "INR" | "SNAD" | "UNAUTHORISED" | "OTHER" | "UNKNOWN";
@@ -24,13 +24,13 @@ export type PathInput = {
   closed: boolean; // PayPal refunded or resolved the case
 };
 
-type Step = { label: string; done: boolean; source: string };
+type Step = { label: string; done: boolean; source: string; evidence?: boolean };
 
 function evidenceStep(p: PathInput): Step {
-  if (p.reason === "INR") return { label: "Add tracking in PayPal", done: p.trackingInPayPal, source: "From Orders and tracking, not confirmed by PayPal for this case" };
+  if (p.reason === "INR") return { label: "Add tracking in PayPal", done: p.trackingInPayPal, source: "From Orders and tracking, not confirmed by PayPal for this case", evidence: true };
   const label =
     p.reason === "SNAD" ? "Send photos and the listing" : p.reason === "UNAUTHORISED" ? "Send proof of shipment (within 2 days of PayPal's notice)" : "Send your evidence in PayPal";
-  return { label, done: p.evidenceTicked, source: "Done when you tick every box in Documents" };
+  return { label, done: p.evidenceTicked, source: "Upload in the PayPal Resolution Center, then tick each item", evidence: true };
 }
 
 export function casePath(p: PathInput): PathStep[] {
@@ -69,6 +69,7 @@ export function casePath(p: PathInput): PathStep[] {
   return steps.map((s, i) => ({
     label: s.label,
     source: s.source,
+    ...(s.evidence ? { evidence: true } : {}),
     state: s.done ? "done" : p.closed ? "skipped" : i === now ? "now" : i < now ? "open" : "later",
   }));
 }
