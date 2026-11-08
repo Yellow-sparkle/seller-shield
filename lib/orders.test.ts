@@ -97,7 +97,7 @@ test("M2: every order with a dispute links to its case, the demo one too", () =>
 });
 
 test("L11: tracking status text", () => {
-  assert.equal(trackingStatusText({ tracking: "T1", trackingStatus: "SHIPPED" }), "SHIPPED");
+  assert.equal(trackingStatusText({ tracking: "T1", trackingStatus: "SHIPPED" }), "Shipped");
   assert.equal(trackingStatusText({ tracking: "T1" }), "Not in PayPal yet");
   assert.equal(trackingStatusText({}), "No tracking");
 });

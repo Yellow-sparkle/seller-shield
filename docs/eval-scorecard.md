@@ -10,13 +10,13 @@
 | AI | Golden cases the AI decides (G01, G03, G20, G21) match the expected answer | golden-check, 3 runs | 4 / 4 each run | 4 / 4 on all 3 runs |
 | AI | Strong when the expected answer is Weak | golden-check | 0 | 0 in 3 runs |
 | Grounding | Cases where every reason is supported | AI judge | ≥ 95% | 21 / 21 (100%) |
-| Grounding | Reasons kept by the grounding guard (sandbox disputes) | Code | 100% | 18 / 18 (6 Nov) |
+| Grounding | Reasons kept by the grounding guard (sandbox disputes) | Code | 100% | 18 / 18 (6 Nov recordings, since re-recorded) |
 | Style | Plain English, no prediction of PayPal's decision | AI judge, plus a filter in code | 100% | 21 / 21 |
 | Style | Average reading grade of the reasons | Flesch-Kincaid formula, no AI (`scripts/readability-check.ts`) | 8 or below | 5.9 (recorded answers and benchmark reasons) |
 | Judge | Agreement with Kate's labels | 58 reasons Kate labelled | ≥ 90% | 58 / 58 |
 | Judge | False reasons passed by mistake | Same benchmark | 0 | 0 |
 | Judge | Deliberately false reasons caught | 12 planted reasons | all | 12 / 12 |
-| Code | Unit tests passing | node test | all | 223 / 223 |
+| Code | Unit tests passing | node test | all | 228 / 228 |
 
 Reading grade: about 1 reason in 6 is above grade 8. Most of these use PayPal's own terms, such as "eligible for Seller Protection" and "proof of fulfillment", which the formula counts as hard words but a PayPal seller knows. The formula measures sentence and word length, not clarity, so it sits next to the judge's plain English check.
 
@@ -40,10 +40,10 @@ Below KPI: Not as described, 75% on the judge check (one case added evidence exa
 
 ## What the scores cover (8 Nov 2026, second review S8)
 
-- **Most golden cases are decided by the rules, not the model.** recommend() applies the rules in lib/proof.ts last, so a rule result replaces the model's answer. With the pinned clock (5 Nov 2026), the rules decide 17 of the 21 golden cases. The model decides only 4: G01, G03, G20 and G21. The accuracy figure is therefore mainly a check of the rules. Report the model-decided cases separately: "AI X/4 on the cases the rules leave to it, rules 17/17, checked without the AI" (`lib/eval-answers.test.ts`, `lib/proof.test.ts`).
+- **Most golden cases are decided by the rules, not the model.** recommend() applies the rules in lib/proof.ts after the model, then the eligibility check, so a rule result replaces the model's answer. With the pinned clock (5 Nov 2026), the rules decide 17 of the 21 golden cases. The model decides only 4: G01, G03, G20 and G21. The accuracy figure is therefore mainly a check of the rules. Report the model-decided cases separately: "AI X/4 on the cases the rules leave to it, rules 17/17, checked without the AI" (`lib/eval-answers.test.ts`, `lib/proof.test.ts`).
 - **G20 and G21 are built the way the case screen builds them.** They hold an order and card answers, and the golden and judge checks turn these into an answer with caseAnswer(), the same function the screen uses. A no-AI test confirms that the rules leave both to the model.
 - **The judge only matters where the screen shows the model's words.** When a rule decides a case, the screen shows the rule's reasons (ruleReasons), not the model's claims.
-- **Recorded answers on the screen.** The screen never calls the model live. It shows recorded answers (lib/recorded/recommendations.json). Each new recording keeps the answer it was made from, and the screen does not show a recording made from other facts. `scripts/stale-check.ts` lists recordings to re-record. The figures above are from 6 Nov, before this change, and the run that includes G20 and G21 is still to do.
+- **Recorded answers on the screen.** The screen never calls the model live. It shows recorded answers (lib/recorded/recommendations.json). Each new recording keeps the answer it was made from, and the screen does not show a recording made from other facts. `scripts/stale-check.ts` lists recordings to re-record. The figures at the top are from the 8 Nov runs, which include G20 and G21.
 
 ## Judge benchmark against a human (8 Nov 2026)
 
@@ -62,7 +62,7 @@ Kate labelled 58 reasons from 10 golden cases (G01, G02, G03, G05, G08, G10, G13
 
 ## Run history and detail
 
-Only measured results are shown. The summary uses the latest live run on 6 Nov 2026, with the golden and judge checks run on the same code (recommender: Claude Opus 5.5, judge: Claude Sonnet 5.5).
+Only measured results are shown. The tables below are the 6 Nov 2026 run, kept for the record, with the golden and judge checks run on the same code (recommender: Claude Opus 5.5, judge: Claude Sonnet 5.5).
 
 Status key: **Pass** meets the target. **Near** is within 10% of the target. **Below** is more than 10% under the target.
 

@@ -1,4 +1,4 @@
-# 0003: A missed reply deadline means REFUND
+# 0004: A missed reply deadline means REFUND
 
 **Status:** Accepted, 8 Nov 2026 (Kate, golden case G08). Changes part of ADR 0001.
 

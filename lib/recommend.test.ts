@@ -63,3 +63,11 @@ test("G08: a FIGHT is forced to REFUND when the reply deadline has passed", () =
   assert.equal(forced.recommendation, "REFUND");
   assert.equal(forced.confidence, "HIGH");
 });
+
+test("a card-issuer chargeback past its deadline stays the seller's call, not a refund", () => {
+  const cb = toCase({ dispute_id: "C", reason: "INR", status: "OPEN", dispute_life_cycle_stage: "CHARGEBACK" });
+  const inr = toCase({ dispute_id: "I", reason: "INR", status: "OPEN" });
+  const overdue = { canRespond: false, reason: "OVERDUE" } as never;
+  assert.equal(enforceEligibility({ recommendation: "FIGHT", confidence: "HIGH" }, overdue, cb).recommendation, "YOUR_CALL");
+  assert.equal(enforceEligibility({ recommendation: "FIGHT", confidence: "HIGH" }, overdue, inr).recommendation, "REFUND");
+});

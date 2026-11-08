@@ -96,7 +96,8 @@ export function unauthorisedProofRule(c: Case, answer: SellerAnswer = {}, now: D
   }
   // Deadline passed with no proof on file: REFUND, whatever the tracking (Kate, 5 Nov 2026: fraud, refund in both cases).
   const proven = answer.hasTracking === true && !!answer.shipmentDate && answer.shippedToTransactionAddress === true;
-  if (!proven && now.getTime() > deadline.getTime()) return "REFUND";
+  // A shipment dated on day 2 still counts, so the time to ship ends at the end of day 2, not at its start (review, 8 Nov 2026).
+  if (!proven && now.getTime() >= deadline.getTime() + 86_400_000) return "REFUND";
   if (answer.hasTracking === false || answer.shippedToTransactionAddress === false) return "YOUR_CALL";
   return null;
 }

@@ -236,3 +236,11 @@ test("unauthorised past the deadline: REFUND whatever the tracking (Kate, 5 Nov 
   assert.equal(unauthorisedProofRule(u, { noticeDate: "2026-11-01" }, now), "REFUND");
   assert.equal(unauthorisedProofRule(u, { noticeDate: "2026-11-01", hasTracking: true }, now), "REFUND");
 });
+
+test("unauthorised: a seller can still ship on day 2 after the notice, so day 2 is not yet a refund", () => {
+  const u = toCase({ dispute_id: "U", reason: "UNAUTHORISED", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "75.00" } });
+  const answer = { noticeDate: "2026-11-05", hasTracking: true, shippedToTransactionAddress: true };
+  assert.equal(unauthorisedProofRule(u, answer, new Date("2026-11-07T10:00:00Z")), null);
+  assert.equal(unauthorisedProofRule(u, { ...answer, shipmentDate: "2026-11-07" }, new Date("2026-11-07T10:00:00Z")), null);
+  assert.equal(unauthorisedProofRule(u, answer, new Date("2026-11-08T00:00:00Z")), "REFUND");
+});

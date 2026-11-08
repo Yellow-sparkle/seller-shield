@@ -36,8 +36,11 @@ export const RECORDING_CARD: Record<string, CardAnswers> = {
 };
 
 // Same facts? Compares two answers with undefined keys dropped and keys sorted.
+// deliverySource is left out: the AI never sees it (factsFor), so it can't change the AI's answer. Without this, the demo
+// case read Mixed when the seller answered the address question but kept the order's delivery date (review, 8 Nov 2026).
 export function sameAnswer(a: SellerAnswer, b: SellerAnswer): boolean {
-  return JSON.stringify(sortKeys(plainAnswer(a))) === JSON.stringify(sortKeys(plainAnswer(b)));
+  const facts = (x: SellerAnswer) => { const rest = plainAnswer(x); delete rest.deliverySource; return sortKeys(rest); };
+  return JSON.stringify(facts(a)) === JSON.stringify(facts(b));
 }
 
 // Drops undefined keys, so a stored answer (JSON) and a built answer compare equal.

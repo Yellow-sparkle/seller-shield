@@ -1,5 +1,5 @@
 // Order rows for the tracking fixer (PRD F2).
-// Three rows are real PayPal sandbox orders, taken from the refunded dispute records (seller transaction ids).
+// Four rows are real PayPal sandbox orders, taken from the refunded dispute records (seller transaction ids).
 // The rest are seeded demo rows, labelled "Demo data" in the grid and never sent to PayPal.
 import type { Order } from "./orders.ts";
 

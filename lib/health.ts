@@ -34,6 +34,8 @@ export function summarizeHealth(disputes: HealthDispute[], orders: Order[], now:
     .filter((d) => d.status === "OPEN" || d.status === "WAITING_FOR_SELLER_RESPONSE")
     .filter((d) => !!d.seller_response_due_date && !Number.isNaN(Date.parse(d.seller_response_due_date)))
     .map((d) => ({ at: Date.parse(d.seller_response_due_date as string), id: d.dispute_id }))
+    // A deadline already passed is not the next one: it read "due in 0 days" while the cases screen said Passed (review, 8 Nov 2026).
+    .filter((d) => d.at > now.getTime())
     .sort((a, b) => a.at - b.at);
   const nextDeadline = dues.length
     ? { date: new Date(dues[0].at).toISOString(), daysLeft: Math.max(0, Math.ceil((dues[0].at - now.getTime()) / 86_400_000)), disputeId: dues[0].id }

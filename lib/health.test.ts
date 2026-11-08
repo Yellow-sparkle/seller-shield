@@ -90,3 +90,16 @@ test("M12: a dispute waiting for the buyer is still money at risk, but its date 
   assert.equal(h.moneyAtRisk.amount, 30);
   assert.equal(h.nextDeadline, null);
 });
+
+test("a deadline already passed is not shown as the next one", () => {
+  const now = new Date("2026-11-08T12:00:00Z");
+  const h = summarizeHealth(
+    [
+      { dispute_id: "OLD", status: "OPEN", seller_response_due_date: "2026-11-01T10:00:00Z", dispute_amount: { currency_code: "EUR", value: "10.00" } },
+      { dispute_id: "NEXT", status: "OPEN", seller_response_due_date: "2026-11-20T10:00:00Z", dispute_amount: { currency_code: "EUR", value: "10.00" } },
+    ] as never,
+    [],
+    now,
+  );
+  assert.equal(h.nextDeadline?.disputeId, "NEXT");
+});

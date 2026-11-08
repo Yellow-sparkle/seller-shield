@@ -18,17 +18,27 @@ export type PathInput = {
   sellerMessaged: boolean | null; // PayPal's messages include one from the seller; null when messages were not loaded
   trackingInPayPal: boolean; // the order has a PayPal tracking status (from Orders and tracking)
   evidenceTicked: boolean; // the seller ticked every box in Documents (this browser only)
+  evidenceSent?: boolean; // the seller sent the tracking as evidence from this screen
   waitingForBuyer: boolean; // PayPal status WAITING_FOR_BUYER_RESPONSE
   underReview?: boolean; // PayPal status UNDER_REVIEW
   chargeback?: boolean; // the buyer went to their card issuer
-  overdue?: boolean; // the reply deadline passed: PayPal decides without the seller (Kate, 8 Nov 2026, ADR 0003)
+  overdue?: boolean; // the reply deadline passed: PayPal decides without the seller (Kate, 8 Nov 2026, ADR 0004)
   closed: boolean; // PayPal refunded or resolved the case
 };
 
 type Step = { label: string; done: boolean; source: string; evidence?: boolean };
 
 function evidenceStep(p: PathInput): Step {
-  if (p.reason === "INR") return { label: "Add tracking in PayPal", done: p.trackingInPayPal, source: "From Orders and tracking, not confirmed by PayPal for this case", evidence: true };
+  // Item not received: the evidence is the order's tracking, sent from the card. Once PayPal waits for the buyer,
+  // the seller has replied (review, 8 Nov 2026: the step now has the same name as the Next step).
+  if (p.reason === "INR") {
+    return {
+      label: "Send tracking as evidence",
+      done: !!p.evidenceSent || p.waitingForBuyer,
+      source: p.trackingInPayPal ? "Tracking is on the order. Use Send tracking as evidence below" : "Add tracking in Orders and tracking first",
+      evidence: true,
+    };
+  }
   const label =
     p.reason === "SNAD" ? "Send photos and the listing" : p.reason === "UNAUTHORISED" ? "Send proof of shipment (within 2 days of PayPal's notice)" : "Send your evidence in PayPal";
   return { label, done: p.evidenceTicked, source: "Upload in the PayPal Resolution Center, then tick each item", evidence: true };
@@ -59,10 +69,12 @@ export function casePath(p: PathInput): PathStep[] {
       p.sellerMessaged === null
         ? { label: "Message the buyer", done: false, source: "PayPal messages not loaded for this case" }
         : { label: "Message the buyer", done: p.sellerMessaged, source: "From PayPal messages" };
+    // Evidence comes before the message: PayPal decides on evidence, and a message to the buyer is optional
+    // (review, 8 Nov 2026: the path marked "Message the buyer" as Now while the Next step said to send evidence).
     steps = [
       opened,
-      messaged,
       evidenceStep(p),
+      messaged,
       p.underReview
         ? { label: "PayPal reviews the case", done: p.closed, source: "From PayPal status" }
         : { label: "Wait for the buyer to reply", done: p.closed, source: "From PayPal status" },

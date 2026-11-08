@@ -37,5 +37,5 @@ Cases where `canRespond` is false (from `responseEligibility`):
 
 ## Update, 8 Nov 2026 (Kate, golden G11)
 - **NO_DUE_DATE** stays YOUR_CALL (Mixed), but the reply buttons stay on with the warning "Deadline unknown: check it in PayPal first". PayPal refuses anything it no longer accepts, and the screen shows that refusal.
-- **OVERDUE** now means REFUND (ADR 0003).
+- **OVERDUE** now means REFUND (ADR 0004).
 - All 21 golden labels are signed off by Kate (`signedOff` in lib/golden/cases.json).

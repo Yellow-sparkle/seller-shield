@@ -66,3 +66,10 @@ test("S8 parity: recordings that kept their input still match today's facts", ()
   const stale = staleRecordings(recorded as never, current).filter((s) => s.why === "facts changed");
   assert.deepEqual(stale, [], "re-record with scripts/live-check.ts --record --only <id>");
 });
+
+test("where the seller read the delivery date doesn't count as a different fact: the AI never sees it", async () => {
+  const { sameAnswer } = await import("./eval-answers.ts");
+  const fromOrder = { hasTracking: true, delivered: true, deliveryDate: "2026-10-29", deliveredToTransactionAddress: true, shippedToTransactionAddress: true };
+  assert.equal(sameAnswer(fromOrder, { ...fromOrder, deliverySource: "carrier tracking page" }), true);
+  assert.equal(sameAnswer(fromOrder, { ...fromOrder, deliveryDate: "2026-10-30" }), false);
+});

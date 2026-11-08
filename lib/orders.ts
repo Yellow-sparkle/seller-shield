@@ -136,5 +136,7 @@ export function caseLink(o: Order): string | null {
 // Tracking status text for the grid and the case card: PayPal's status when it has one,
 // "Not in PayPal yet" when we hold a number PayPal has not got, "No tracking" when there is no number.
 export function trackingStatusText(o: { tracking?: string | null; trackingStatus?: string | null }): string {
-  return o.trackingStatus ?? (o.tracking ? "Not in PayPal yet" : "No tracking");
+  // PayPal's codes (SHIPPED, DELIVERED) read as words, the way the reasons write them (review, 8 Nov 2026).
+  if (o.trackingStatus) return o.trackingStatus.charAt(0) + o.trackingStatus.slice(1).toLowerCase().replace(/_/g, " ");
+  return o.tracking ? "Not in PayPal yet" : "No tracking";
 }

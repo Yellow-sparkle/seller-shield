@@ -21,7 +21,7 @@ const CHIPS: { id: FilterChip; label: string }[] = [
   { id: "awaitingTracking", label: "Ready to send to PayPal" },
   { id: "missingTracking", label: "Missing tracking" },
   { id: "held", label: "Held" },
-  { id: "notProtected", label: "Not protected" },
+  { id: "notProtected", label: "Not eligible or not covered" },
   { id: "hasDispute", label: "Has dispute" },
   { id: "sandbox", label: "Sandbox orders only" },
   { id: "last30", label: "Last 30 days" },
@@ -158,7 +158,7 @@ export default function OrdersPage() {
       // Rows PayPal confirmed flip in the grid and on the case card.
       const ok = lines.filter((l) => next[l.orderNo] === "Tracking added");
       if (ok.length) setSent(recordSentTracking(ok));
-      setStatus(data.ok ? `PayPal sandbox replied HTTP ${data.status}. Sent ${lines.length} update(s). Response: ${data.body ?? "(empty)"}` : `Not sent: ${data.error ?? `PayPal returned HTTP ${data.status}: ${data.body ?? ""}`}`);
+      setStatus(data.ok ? `PayPal confirmed tracking for ${ok.length} of ${lines.length} ${lines.length === 1 ? "order" : "orders"}. See each row.` : `Not sent: ${data.error ?? `PayPal returned HTTP ${data.status}: ${data.body ?? ""}`}`);
     } catch {
       setStatus("Not sent: the request to the server failed.");
     }
@@ -166,7 +166,7 @@ export default function OrdersPage() {
 
   return (
     <main style={{ padding: 20, width: "100%", maxWidth: 1500, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: 22, margin: "0 0 6px" }}>Add tracking to orders</h1>
+      <h1 style={{ fontSize: 22, margin: "0 0 6px" }}>Orders and tracking</h1>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0" }}>
         {CHIPS.map((c) => (
@@ -204,7 +204,7 @@ export default function OrdersPage() {
 
       {review && plan && (
         <section ref={reviewRef} style={{ marginBottom: 16, padding: 16, background: "#e7f1fb", border: "2px solid #0070ba", borderRadius: 10 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#0070ba", textTransform: "uppercase", letterSpacing: "0.06em" }}>Step 2 of 2</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#0070ba", textTransform: "uppercase", letterSpacing: "0.06em" }}>Check before sending</div>
           <h2 style={{ fontSize: 18, marginTop: 2 }}>Review before sending</h2>
           <div role="table" aria-label="Tracking to send" style={{ border: "1px solid #d6dee8", borderRadius: 8, overflow: "hidden" }}>
             <div role="row" style={{ display: "grid", gridTemplateColumns: "minmax(170px,1.3fr) minmax(130px,0.8fr) minmax(170px,1fr) minmax(150px,1fr)", gap: 12, padding: "8px 12px", background: "#eaf1fb", color: "#003087", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>

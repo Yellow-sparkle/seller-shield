@@ -96,7 +96,7 @@ export async function recommend(
     .join("");
   // Grounding guard: drop any claim whose listed fields are missing or null.
   const guarded = applyGuard(parseRecommendation(text), factsFor(c, e, answer));
-  return enforceEligibility(applyProofRule(guarded, c, answer, now), e);
+  return enforceEligibility(applyProofRule(guarded, c, answer, now), e, c);
 }
 
 // Deterministic proof rules (lib/proof.ts): INR no tracking means REFUND; unconfirmed delivery or a missed unauthorised deadline means YOUR_CALL;
@@ -109,12 +109,14 @@ export function applyProofRule<T extends { recommendation: string; confidence: s
 }
 
 // Deterministic rule: if the seller cannot respond, the model cannot override the outcome, whatever it says.
-// - Reply deadline passed: REFUND (Kate, 8 Nov 2026, G08; ADR 0003). Seller Protection needs a reply in time,
+// - Reply deadline passed: REFUND (Kate, 8 Nov 2026, G08; ADR 0004). Seller Protection needs a reply in time,
 //   so it no longer applies and PayPal usually decides for the buyer.
 // - Under review, closed or no due date: the seller decides (YOUR_CALL, ADR 0001).
-export function enforceEligibility<T extends { recommendation: string; confidence: string }>(r: T, e: Eligibility): T {
+// - A card-issuer chargeback stays YOUR_CALL even past the deadline: the card issuer decides, not PayPal's Seller
+//   Protection, so the overdue rule doesn't apply (review, 8 Nov 2026).
+export function enforceEligibility<T extends { recommendation: string; confidence: string }>(r: T, e: Eligibility, c?: Case): T {
   if (e.canRespond) return r;
-  if (e.reason === "OVERDUE") return { ...r, recommendation: "REFUND", confidence: "HIGH" };
+  if (e.reason === "OVERDUE" && c?.lifeCycleStage !== "CHARGEBACK") return { ...r, recommendation: "REFUND", confidence: "HIGH" };
   // The model's confidence judged its FIGHT or REFUND, which is now discarded, so the answer is LOW.
   return { ...r, recommendation: "YOUR_CALL", confidence: "LOW" };
 }

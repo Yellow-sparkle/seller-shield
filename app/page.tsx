@@ -19,9 +19,17 @@ export default function ScanPage() {
   return (
     <main style={{ padding: 16, width: "100%", maxWidth: 900, margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: 22 }}>Health scan</h1>
-      <p style={{ color: "#4a5568", fontSize: 13, margin: "0 0 16px" }}>{result ? `Read ${new Date(result.asOf).toLocaleString()}` : "Reading PayPal..."}</p>
+      <p style={{ color: "#4a5568", fontSize: 13, margin: "0 0 16px" }}>{result ? `${result.ok ? "Read" : "Tried"} ${new Date(result.asOf).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}` : "Reading PayPal..."}</p>
 
-      {result && !result.ok && <p role="alert">Could not read PayPal: {result.error}</p>}
+      {result && !result.ok && (
+        <>
+          <p role="alert">Could not read PayPal: {result.error}</p>
+          {/* The other screens read saved data, so the seller is not left at a dead end (review, 8 Nov 2026). */}
+          <p style={{ fontSize: 14 }}>
+            Your orders and dispute cases are still available: <a href="/orders">Orders and tracking</a> · <a href="/cases">Dispute cases</a>
+          </p>
+        </>
+      )}
 
       {result?.ok && result.health && (
         <>

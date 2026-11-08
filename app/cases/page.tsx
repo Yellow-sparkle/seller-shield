@@ -97,13 +97,13 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
           ? "1. Add tracking.\n2. Reply before the due date."
           : answer.hasTracking === true
             ? // The INR wait note (Kate's case 1 rule) comes first; it was unreachable before.
-              addressNextStep(c.reason, answer, c.responseDueAt) ?? inrWaitNote(c, answer, now) ?? "1. Send the tracking as evidence (Send tracking as evidence below).\n2. Reply before the due date."
+              addressNextStep(c.reason, answer, c.responseDueAt) ?? inrWaitNote(c, answer, now) ?? evidenceNextStep(c.reason)
             : "1. Check the tracking for this order.\n2. Reply before the due date.";
   // Deadline passed: Weak (Kate, 8 Nov 2026, G08). Other closed cases: the seller decides.
-  if (!e.canRespond && e.reason === "OVERDUE") {
+  if (!e.canRespond && e.reason === "OVERDUE" && c.lifeCycleStage !== "CHARGEBACK") {
     return {
       recommendation: "REFUND (high confidence, rule)",
-      reasons: "The reply deadline has passed.\nSeller Protection needs a reply in time, so it no longer applies.\nPayPal usually decides for the buyer.",
+      reasons: "The reply deadline has passed, or less than an hour is left.\nSeller Protection needs a reply in time, so it no longer applies.\nPayPal usually decides for the buyer.",
       nextStep,
     };
   }
@@ -112,7 +112,8 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
     return {
       recommendation: `${forced} (${forced === "YOUR_CALL" ? "low" : "high"} confidence, rule)`,
       reasons: ruleReasons(c.reason, answer, forced).join("\n"),
-      nextStep,
+      // A Weak case gets the refund step, so the next step agrees with the strength (review, 8 Nov 2026).
+      nextStep: forced === "REFUND" ? REFUND_NEXT_STEP : nextStep,
     };
   }
   // No recorded AI answer yet (a newly added dispute): the seller decides, and keeps every action.
@@ -122,6 +123,17 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
     reasons: r.claims.map((c) => c.text).join("\n"),
     nextStep,
   };
+}
+
+const REFUND_NEXT_STEP = "1. Refund the buyer (Refund buyer below, or the PayPal Resolution Center).\n2. Do it before the due date. A refund is final.";
+
+// The evidence step for a case with tracking. Only Item not received has a send button here; the other reasons
+// send their evidence in the PayPal Resolution Center (review, 8 Nov 2026).
+function evidenceNextStep(reason: string): string {
+  if (reason === "INR") return "1. Send the tracking as evidence (Send tracking as evidence below).\n2. Reply before the due date.";
+  if (reason === "UNAUTHORISED") return "1. Send proof of shipment (tracking and shipment date) in the PayPal Resolution Center.\n2. Reply before the due date.";
+  if (reason === "SNAD") return "1. Upload the listing and photos taken before shipping in the PayPal Resolution Center.\n2. Reply before the due date.";
+  return "1. Send your evidence in the PayPal Resolution Center.\n2. Reply before the due date.";
 }
 
 // Reason labels on the screen: PayPal's issue names (disputes overview). OTHER covers billing or
@@ -151,7 +163,10 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
   // A refund or evidence sent from this browser closes the actions until PayPal's data is reloaded.
   // A message to the buyer does not: the seller may still need to send evidence or refund.
   const live = !resolved && !waitingForBuyer;
-  const sentFinal = live && (override.sent?.action === "refund" || override.sent?.action === "evidence");
+  // Once the case is saved from PayPal again after the send, PayPal's data is the truth, so the send no longer blocks
+  // the buttons (review, 8 Nov 2026: before, nothing cleared it).
+  const savedAfterSend = typeof fx.fetched_at === "string" && !!override.sent && Date.parse(fx.fetched_at) > Date.parse(override.sent.at);
+  const sentFinal = live && !savedAfterSend && (override.sent?.action === "refund" || override.sent?.action === "evidence");
   // No due date from PayPal: the case stays Mixed, but the buttons stay on, because PayPal refuses what it no longer
   // accepts and the screen shows that refusal (Kate, 8 Nov 2026, G11).
   const unknownDue = !e.canRespond && e.reason === "NO_DUE_DATE";
@@ -273,6 +288,18 @@ const columns: ColDef<Row>[] = [
   { field: "protection", headerName: "Seller protection", flex: 1, cellRenderer: (p: { value: string }) => <ProtectionBadge value={p.value} /> },
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
   { field: "recommendation", headerName: CASE_READ_LABEL, headerTooltip: "Based on the evidence on file. It is not a prediction of PayPal's decision.", flex: 2, minWidth: 200, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
+  // Next step, Address mismatch cause and Cause evidence moved to the case card (Kate, 7 Nov 2026).
+  // Seller decision sits next to Case strength, so it is on screen without scrolling (review, 8 Nov 2026).
+  {
+    field: "decision",
+    headerName: "Seller decision (double-click to change)",
+    flex: 1.5,
+    editable: true,
+    cellEditor: "agSelectCellEditor",
+    // The seller's decision is saved with the case and picks the step path and the reply draft.
+    cellEditorParams: { values: [...DECISIONS] },
+    headerTooltip: "Your decision. It sets the steps and the reply draft for this case.",
+  },
   // Why: one plain line per reason, a small gap between them, no bullets (Kate, 7 Nov 2026).
   {
     field: "reasons",
@@ -289,17 +316,6 @@ const columns: ColDef<Row>[] = [
         ))}
       </div>
     ),
-  },
-  // Next step, Address mismatch cause and Cause evidence moved to the case card (Kate, 7 Nov 2026).
-  {
-    field: "decision",
-    headerName: "Seller decision",
-    flex: 1.5,
-    editable: true,
-    cellEditor: "agSelectCellEditor",
-    // The seller's decision is saved with the case and picks the step path and the reply draft.
-    cellEditorParams: { values: [...DECISIONS] },
-    headerTooltip: "Your decision. It sets the steps and the reply draft for this case.",
   },
 ];
 
@@ -360,6 +376,7 @@ function CasePath({ row }: { row: Row }) {
     sellerMessaged: row.sentAction?.action === "message" ? true : row.buyerChecked ? row.messages.some((m) => m.by === "SELLER") || row.sellerMessages.length > 0 : null,
     trackingInPayPal: !!row.order?.status,
     evidenceTicked: items.every((_, i) => ticks[i]),
+    evidenceSent: row.sentAction?.action === "evidence",
     waitingForBuyer: row.recommendation === "WAITING",
     underReview: row.underReview,
     chargeback: row.chargeback,
@@ -552,7 +569,7 @@ function CaseSummary({ row }: { row: Row }) {
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <strong>{CASE_READ_LABEL}:</strong> <ReadBadge value={row.recommendation} />
         <span style={{ color: "#5b6472" }}>
-          {row.amount} · {row.status} · Your decision: {row.decision}
+          {row.amount} · {row.status} · Your decision: {row.decision} (change it in the Seller decision column)
         </span>
       </div>
       <div style={{ display: "grid", gap: 2, marginTop: 6 }}>
@@ -704,7 +721,7 @@ function DraftCard({ row, initial, refundDraft, showId = true, onSent }: { row: 
       if (data.ok) onSent?.(row.id, action);
       setOutcome(
         data.ok
-          ? { ok: true, text: action === "message" ? `Sent to the buyer. PayPal sandbox replied HTTP ${data.status}.` : action === "refund" ? `Refund accepted. PayPal sandbox replied HTTP ${data.status}.` : `Tracking sent to PayPal as evidence. PayPal sandbox replied HTTP ${data.status}.` }
+          ? { ok: true, text: action === "message" ? "Sent to the buyer. PayPal accepted it." : action === "refund" ? "Refund accepted by PayPal." : "Tracking sent to PayPal as evidence. PayPal accepted it." }
           : // PRD F3: on failure the case ends at "Approved, ready to submit", with the error, never a fake success.
             { ok: false, text: `Approved, ready to submit. Not sent: ${data.error ?? "PayPal did not accept it."}` },
       );
@@ -792,7 +809,7 @@ function DraftCard({ row, initial, refundDraft, showId = true, onSent }: { row: 
 // selected option; the deadline chip must also hold. Quick filter searches every column.
 const FILTERS: { id: string; label: string; group: "strength" | "status" | "deadline" }[] = [
   { id: "strong", label: "Strong case", group: "strength" },
-  { id: "mixed", label: "Mixed", group: "strength" },
+  { id: "mixed", label: "Mixed case", group: "strength" },
   { id: "weak", label: "Weak case", group: "strength" },
   { id: "canRespond", label: "You can respond", group: "status" },
   { id: "overdue", label: "Reply deadline passed", group: "status" },
@@ -844,7 +861,7 @@ function DataAge({ rows }: { rows: Row[] }) {
   return (
     <p style={{ margin: "0 0 8px", fontSize: 13, color: "#5b6472" }}>
       {text}
-      {missing > 0 && ` ${missing} ${missing === 1 ? "case has" : "cases have"} no save time.`} Run add-dispute for a case to refresh it.
+      {missing > 0 && ` ${missing} ${missing === 1 ? "case has" : "cases have"} no save time.`}
     </p>
   );
 }
