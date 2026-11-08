@@ -75,7 +75,13 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px s
 /* Case card: steps on the left, the rest on the right. One column on narrow screens. */
 .case-columns { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 24px; align-items: start; }
 .case-steps { position: sticky; top: 12px; border-right: 1px solid var(--line); padding-right: 16px; }
+.doc-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.doc-box { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.doc-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+.doc-quiet { color: #5b6472; font-size: 13px; }
+.doc-files { margin: 0; padding-left: 18px; font-size: 14px; }
 @media (max-width: 860px) {
+  .doc-columns { grid-template-columns: 1fr; }
   .case-columns { grid-template-columns: 1fr; }
   .case-steps { position: static; border-right: none; padding-right: 0; }
 }

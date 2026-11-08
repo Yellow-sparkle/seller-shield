@@ -389,51 +389,48 @@ function EvidenceChecklist({ rows, showId = true }: { rows: Row[]; showId?: bool
         const items = evidenceItems(r.reasonCode);
         const boxes = checked[r.id] ?? items.map(() => false);
         return (
-          <div key={r.id} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 8 }}>
+          // Two columns, buyer and seller, with only what matters (Kate, 8 Nov 2026). The buyer's claim is in Messages.
+          <div key={r.id} style={{ marginBottom: 8 }}>
             {showId && <strong>{r.id}</strong>}
-            {/* A tip on what to do here (Kate, 7 Nov 2026). The boxes are the seller's own evidence, not the buyer's files. */}
-            <p style={{ fontSize: 14, color: "#2c2e2f", background: "#eaf1fb", borderRadius: 6, padding: "8px 10px", margin: "0 0 4px" }}>
-              <strong>Tip:</strong> tick each item once you have uploaded it to this case in PayPal. The ticks are your own checklist. They stay in this browser and are not sent to PayPal.
-            </p>
-            <div style={{ fontSize: 14, fontWeight: 700, marginTop: 8 }}>Your evidence</div>
-            {items.map((item, i) => (
-              <label key={item} style={{ display: "block", marginTop: 6 }}>
-                <input
-                  type="checkbox"
-                  checked={!!boxes[i]}
-                  onChange={(e) => {
-                    const next = [...boxes];
-                    next[i] = e.target.checked;
-                    const all = { ...checked, [r.id]: next };
-                    setChecked(all);
-                    writeEvidence(all);
-                  }}
-                />{" "}
-                {item}
-              </label>
-            ))}
-            <div style={{ marginTop: 12, fontSize: 14, display: "grid", gap: 6 }}>
-              <div style={{ fontWeight: 700 }}>From PayPal and the buyer</div>
-              {r.requested.length > 0 && (
-                <div>
-                  <strong>PayPal asked you for:</strong>{" "}
-                  {r.requested.map((t) => (t === "PROOF_OF_FULFILLMENT" ? "proof of delivery (tracking)" : t.toLowerCase().replace(/_/g, " "))).join(", ")}
-                </div>
-              )}
-              {r.buyerClaim && (
-                <div>
-                  <strong>Buyer&apos;s claim:</strong> {r.buyerClaim}
-                </div>
-              )}
-              <div>
-                <strong>From the buyer:</strong>{" "}
+            <div className="doc-columns">
+              <div className="doc-box">
+                <div className="doc-title">From the buyer</div>
                 {!r.buyerChecked && r.buyerFiles.length === 0 ? (
-                  <span style={{ color: "#555" }}>Buyer files not loaded from PayPal for this case yet.</span>
+                  <div className="doc-quiet">Not loaded from PayPal yet.</div>
                 ) : r.buyerFiles.length > 0 ? (
-                  r.buyerFiles.join(", ")
+                  <ul className="doc-files">
+                    {r.buyerFiles.map((f) => (
+                      <li key={f}>{f}</li>
+                    ))}
+                  </ul>
                 ) : (
-                  <span style={{ color: "#555" }}>No files from the buyer.</span>
+                  <div className="doc-quiet">No files.</div>
                 )}
+              </div>
+              <div className="doc-box">
+                <div className="doc-title">From you</div>
+                {r.requested.length > 0 && (
+                  <div style={{ fontSize: 13, marginBottom: 4 }}>
+                    PayPal asks for: {r.requested.map((t) => (t === "PROOF_OF_FULFILLMENT" ? "proof of delivery" : t.toLowerCase().replace(/_/g, " "))).join(", ")}
+                  </div>
+                )}
+                {items.map((item, i) => (
+                  <label key={item} style={{ display: "flex", gap: 6, alignItems: "baseline", marginTop: 4, fontSize: 14 }}>
+                    <input
+                      type="checkbox"
+                      checked={!!boxes[i]}
+                      onChange={(e) => {
+                        const next = [...boxes];
+                        next[i] = e.target.checked;
+                        const all = { ...checked, [r.id]: next };
+                        setChecked(all);
+                        writeEvidence(all);
+                      }}
+                    />
+                    {item}
+                  </label>
+                ))}
+                <div className="doc-quiet" style={{ marginTop: 6 }}>Tick once uploaded in PayPal. Kept in this browser only.</div>
               </div>
             </div>
           </div>
