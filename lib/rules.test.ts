@@ -35,28 +35,31 @@ test("unknown reason has no evidence type", () => {
   assert.equal(requiredEvidence("UNKNOWN"), null);
 });
 
-test("FGC sandbox dispute: seller ID, protection and net hold match the live response", () => {
+test("FGC sandbox dispute: seller ID and protection match the live response; no hold once resolved", () => {
   const f = (fixtures as object[]).find((x) => (x as { dispute_id: string }).dispute_id === "PP-R-FGC-10196238");
   const c = toCase(f as never);
   assert.equal(c.transactionId, "7RX812769J8875301");
   assert.equal(c.sellerProtectionEligible, true);
-  assert.deepEqual(c.holdAmount, { currency: "EUR", value: -43.12 });
+  // Reloaded 8 Nov 2026: the case is RESOLVED and PayPal now lists DEBIT and CREDIT movements, no HOLD_PLACED.
+  assert.equal(c.holdAmount, null);
 });
 
-test("NVP sandbox dispute: seller ID, protection and net hold match the live response", () => {
+test("NVP sandbox dispute: seller ID and protection match the live response; no hold once resolved", () => {
   const f = (fixtures as object[]).find((x) => (x as { dispute_id: string }).dispute_id === "PP-R-NVP-10196239");
   const c = toCase(f as never);
   assert.equal(c.transactionId, "11X88937YC2460212");
   assert.equal(c.sellerProtectionEligible, true);
-  assert.deepEqual(c.holdAmount, { currency: "EUR", value: -81.76 });
+  // Reloaded 8 Nov 2026: the case is RESOLVED and PayPal now lists DEBIT and CREDIT movements, no HOLD_PLACED.
+  assert.equal(c.holdAmount, null);
 });
 
-test("GJM sandbox dispute: seller ID, protection and net hold match the live response", () => {
+test("GJM sandbox dispute: seller ID and protection match the live response; no hold once resolved", () => {
   const f = (fixtures as object[]).find((x) => (x as { dispute_id: string }).dispute_id === "PP-R-GJM-10196233");
   const c = toCase(f as never);
   assert.equal(c.transactionId, "35W222794X4866508");
   assert.equal(c.sellerProtectionEligible, true);
-  assert.deepEqual(c.holdAmount, { currency: "EUR", value: -57.61 });
+  // Reloaded 8 Nov 2026: the case is RESOLVED and PayPal now lists DEBIT and CREDIT movements, no HOLD_PLACED.
+  assert.equal(c.holdAmount, null);
 });
 
 test("NVP (SNAD) shows Not covered even though the sandbox says ELIGIBLE", () => {

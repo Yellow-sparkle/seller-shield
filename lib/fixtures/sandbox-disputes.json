@@ -2,7 +2,7 @@
   {
     "dispute_id": "PP-R-GJM-10196233",
     "reason": "INR",
-    "status": "REFUNDED",
+    "status": "RESOLVED",
     "dispute_amount": {
       "currency_code": "EUR",
       "value": "60.00"
@@ -12,25 +12,43 @@
         "seller_transaction_id": "35W222794X4866508"
       }
     ],
-    "create_time": "2026-11-03T10:00:00Z",
-    "seller_response_due_date": "2026-11-23T22:33:25Z",
-    "seller_protection": {
-      "status": "ELIGIBLE"
-    },
+    "create_time": "2026-11-03T22:33:25.182Z",
+    "dispute_life_cycle_stage": "INQUIRY",
     "fund_movements": [
       {
-        "type": "HOLD_PLACED",
+        "type": "DEBIT",
         "amount": {
           "currency_code": "EUR",
-          "value": "-57.61"
+          "value": "57.61"
+        }
+      },
+      {
+        "type": "CREDIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "60.00"
+        }
+      },
+      {
+        "type": "DEBIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "60.00"
         }
       }
-    ]
+    ],
+    "buyer_claim": "I ordered a handmade ceramic mug set (order #1042) on 20 October and paid €60. The shop said it would arrive by 28 October. It’s now 3 November and nothing has arrived. I emailed the shop on 30 October and haven’t had a reply. I’d like a full refund.",
+    "requested_from_seller": [],
+    "buyer_files": [],
+    "buyer_checked": true,
+    "seller_protection": {
+      "status": "ELIGIBLE"
+    }
   },
   {
     "dispute_id": "PP-R-FGC-10196238",
     "reason": "INR",
-    "status": "REFUNDED",
+    "status": "RESOLVED",
     "dispute_amount": {
       "currency_code": "EUR",
       "value": "45.00"
@@ -40,25 +58,43 @@
         "seller_transaction_id": "7RX812769J8875301"
       }
     ],
-    "create_time": "2026-11-03T10:00:00Z",
-    "seller_response_due_date": "2026-11-23T23:34:48Z",
-    "seller_protection": {
-      "status": "ELIGIBLE"
-    },
+    "create_time": "2026-11-03T23:34:48.563Z",
+    "dispute_life_cycle_stage": "INQUIRY",
     "fund_movements": [
       {
-        "type": "HOLD_PLACED",
+        "type": "DEBIT",
         "amount": {
           "currency_code": "EUR",
-          "value": "-43.12"
+          "value": "43.12"
+        }
+      },
+      {
+        "type": "CREDIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "45.00"
+        }
+      },
+      {
+        "type": "DEBIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "45.00"
         }
       }
-    ]
+    ],
+    "buyer_claim": "I ordered a ceramic serving bowl (order #1057) on 24 October and paid €45. I never got a tracking number and nothing has arrived. I’d like a full refund.",
+    "requested_from_seller": [],
+    "buyer_files": [],
+    "buyer_checked": true,
+    "seller_protection": {
+      "status": "ELIGIBLE"
+    }
   },
   {
     "dispute_id": "PP-R-NVP-10196239",
     "reason": "SNAD",
-    "status": "REFUNDED",
+    "status": "RESOLVED",
     "dispute_amount": {
       "currency_code": "EUR",
       "value": "85.00"
@@ -68,25 +104,45 @@
         "seller_transaction_id": "11X88937YC2460212"
       }
     ],
-    "create_time": "2026-11-03T10:00:00Z",
-    "seller_response_due_date": "2026-11-23T23:39:47Z",
-    "seller_protection": {
-      "status": "ELIGIBLE"
-    },
+    "create_time": "2026-11-03T23:39:47.492Z",
+    "dispute_life_cycle_stage": "INQUIRY",
     "fund_movements": [
       {
-        "type": "HOLD_PLACED",
+        "type": "DEBIT",
         "amount": {
           "currency_code": "EUR",
-          "value": "-81.76"
+          "value": "81.76"
+        }
+      },
+      {
+        "type": "CREDIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "85.00"
+        }
+      },
+      {
+        "type": "DEBIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "85.00"
         }
       }
-    ]
+    ],
+    "buyer_claim": "I received the glazed stoneware vase (order #1063) but it’s a different colour from the photos (grey, not blue) and smaller than the listed 30 cm. I’d like a refund.",
+    "requested_from_seller": [],
+    "buyer_files": [
+      "Screenshot 2026-11-04 at 00.39.14.png"
+    ],
+    "buyer_checked": true,
+    "seller_protection": {
+      "status": "ELIGIBLE"
+    }
   },
   {
     "dispute_id": "PP-R-SRZ-10196872",
     "reason": "INR",
-    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "status": "WAITING_FOR_BUYER_RESPONSE",
     "dispute_amount": {
       "currency_code": "EUR",
       "value": "25.00"
@@ -97,7 +153,6 @@
       }
     ],
     "create_time": "2026-11-06T17:51:53.319Z",
-    "seller_response_due_date": "2026-11-26T17:51:53.319Z",
     "dispute_life_cycle_stage": "INQUIRY",
     "fund_movements": [
       {
@@ -108,6 +163,12 @@
         }
       }
     ],
+    "buyer_claim": "I paid for a pink plate (25 EUR) on 6 November 2026, and it has not arrived. The seller has not given me a tracking number, and I have not received any delivery update. I would like a refund.",
+    "requested_from_seller": [
+      "PROOF_OF_FULFILLMENT"
+    ],
+    "buyer_files": [],
+    "buyer_checked": true,
     "seller_protection": {
       "status": "ELIGIBLE"
     }
