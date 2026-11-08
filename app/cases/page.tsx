@@ -886,6 +886,7 @@ export default function CaseScreen() {
   // Tracking the seller sent from Orders and tracking in this browser, read with the clock after mount.
   const [sent, setSent] = useState<SentTracking>({});
   const [overrides, setOverrides] = useState<Record<string, Override>>({});
+  const [chips, setChips] = useState<string[]>([]);
   // /cases?sample=1 shows the sample cause and evidence in memory only. Nothing is saved, and /cases clears it.
   const [sampleMode, setSampleMode] = useState(false);
   // The sample link is a demo tool, shown only with /cases?demo=1.
@@ -894,6 +895,9 @@ export default function CaseScreen() {
     setNow(new Date());
     setDemoTools(new URLSearchParams(window.location.search).get("demo") === "1");
     setSent(readSentTracking());
+    // /cases?chip=canRespond&chip=waiting opens the table filtered, as the health scan cards do for orders (Kate, 8 Nov 2026).
+    const fromUrl = new URLSearchParams(window.location.search).getAll("chip").filter((c) => FILTERS.some((f) => f.id === c));
+    if (fromUrl.length) setChips(fromUrl);
     if (new URLSearchParams(window.location.search).get("sample") === "1") {
       setSampleMode(true);
       setOverrides(SAMPLE_OVERRIDES);
@@ -931,7 +935,6 @@ export default function CaseScreen() {
     [now, overrides, sent],
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [chips, setChips] = useState<string[]>([]);
   const [quick, setQuick] = useState("");
   const gridRef = useRef<AgGridReact<Row>>(null);
   useEffect(() => {
