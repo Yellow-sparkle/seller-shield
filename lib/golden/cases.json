@@ -257,8 +257,8 @@
   },
   {
     "id": "G08",
-    "note": "Synthetic (case 8). Tracking exists, but the response deadline passed two days ago: PayPal decides without the seller, so the rule gives YOUR_CALL. The seller can still decide to refund the buyer or contact them outside the dispute.",
-    "expected": "YOUR_CALL",
+    "note": "Synthetic (case 8). Tracking exists, but the response deadline passed two days ago. Seller Protection needs a reply in time, so it no longer applies, and PayPal usually decides for the buyer: REFUND (Kate, 8 Nov 2026). The seller can ask the buyer to close the case, or appeal after PayPal decides.",
+    "expected": "REFUND",
     "answer": {
       "hasTracking": true
     },

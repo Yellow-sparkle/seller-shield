@@ -56,3 +56,10 @@ test("case 4: unauthorised, not covered, no evidence is forced to REFUND", () =>
   const r = applyProofRule({ recommendation: "FIGHT", confidence: "HIGH" }, u4, { hasTracking: false });
   assert.equal(r.recommendation, "REFUND");
 });
+
+// G08 (Kate, 8 Nov 2026): a missed reply deadline means REFUND. Protection needs a reply in time.
+test("G08: a FIGHT is forced to REFUND when the reply deadline has passed", () => {
+  const forced = enforceEligibility({ recommendation: "FIGHT", confidence: "HIGH", claims: [] }, { canRespond: false, reason: "OVERDUE" });
+  assert.equal(forced.recommendation, "REFUND");
+  assert.equal(forced.confidence, "HIGH");
+});

@@ -89,6 +89,8 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
     ? "1. Wait for PayPal's decision.\n2. Do not refund while it is under review."
     : !e.canRespond && e.reason === "NO_DUE_DATE"
       ? "1. Check the response deadline in PayPal.\n2. No due date in our data."
+      : !e.canRespond && e.reason === "OVERDUE"
+        ? "1. Ask the buyer, outside PayPal, to close the case if the parcel arrived.\n2. After PayPal decides, you can appeal with new evidence, such as proof of delivery (window not confirmed)."
       : !e.canRespond
         ? "1. Replies are closed. PayPal decides the rest.\n2. You may still be able to refund in the PayPal Resolution Center (not confirmed)."
         : answer.hasTracking === false
@@ -97,6 +99,14 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
             ? // The INR wait note (Kate's case 1 rule) comes first; it was unreachable before (H3).
               addressNextStep(c.reason, answer, c.responseDueAt) ?? inrWaitNote(c, answer, now) ?? "1. Send the tracking as evidence (Send tracking as evidence below).\n2. Reply before the due date."
             : "1. Check the tracking for this order.\n2. Reply before the due date.";
+  // Deadline passed: Weak (Kate, 8 Nov 2026, G08). Other closed cases: the seller decides.
+  if (!e.canRespond && e.reason === "OVERDUE") {
+    return {
+      recommendation: "REFUND (high confidence, rule)",
+      reasons: "The reply deadline has passed.\nSeller Protection needs a reply in time, so it no longer applies.\nPayPal usually decides for the buyer.",
+      nextStep,
+    };
+  }
   const forced = e.canRespond ? forcedRecommendation(c, answer, now) : "YOUR_CALL";
   if (forced) {
     return {

@@ -107,9 +107,13 @@ export function applyProofRule<T extends { recommendation: string; confidence: s
   return forced ? { ...r, recommendation: forced, confidence: forced === "YOUR_CALL" ? "LOW" : "HIGH" } : r;
 }
 
-// Deterministic rule: if the seller cannot respond (under review, overdue, closed, no due date),
-// the seller decides. The model cannot override this, whatever it says.
+// Deterministic rule: if the seller cannot respond, the model cannot override the outcome, whatever it says.
+// - Reply deadline passed: REFUND (Kate, 8 Nov 2026, G08; ADR 0003). Seller Protection needs a reply in time,
+//   so it no longer applies and PayPal usually decides for the buyer.
+// - Under review, closed or no due date: the seller decides (YOUR_CALL, ADR 0001).
 export function enforceEligibility<T extends { recommendation: string; confidence: string }>(r: T, e: Eligibility): T {
+  if (e.canRespond) return r;
+  if (e.reason === "OVERDUE") return { ...r, recommendation: "REFUND", confidence: "HIGH" };
   // The model's confidence judged its FIGHT or REFUND, which is now discarded, so the answer is LOW.
-  return e.canRespond ? r : { ...r, recommendation: "YOUR_CALL", confidence: "LOW" };
+  return { ...r, recommendation: "YOUR_CALL", confidence: "LOW" };
 }
