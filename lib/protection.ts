@@ -1,6 +1,6 @@
-// One set of Seller Protection labels for Orders and Cases (review findings M4 and L13, 7 Nov 2026).
+// One set of Seller Protection labels for Orders and Cases (7 Nov 2026).
 // The status values are PayPal's seller_protection values ELIGIBLE, PARTIALLY_ELIGIBLE and NOT_ELIGIBLE (Orders v2
-// seller_protection reference, checked 7 Nov 2026, L13). PayPal has no "PROTECTED" status. UNKNOWN means we have no status.
+// seller_protection reference, checked 7 Nov 2026). PayPal has no "PROTECTED" status. UNKNOWN means we have no status.
 // SNAD is excluded in PayPal's published PT terms, so a not-as-described dispute reads "Not covered" on both screens,
 // whatever the sandbox status says.
 export type ProtectionStatus = "ELIGIBLE" | "PARTIALLY_ELIGIBLE" | "NOT_ELIGIBLE" | "UNKNOWN";

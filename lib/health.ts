@@ -9,7 +9,7 @@ export type HealthDispute = {
 };
 
 // Disputes whose money is still at stake. WAITING_FOR_BUYER_RESPONSE counts too: the seller has replied, but the
-// case is not decided (review finding M12).
+// case is not decided.
 const OPEN = new Set(["OPEN", "WAITING_FOR_SELLER_RESPONSE", "WAITING_FOR_BUYER_RESPONSE", "UNDER_REVIEW"]);
 
 export type Health = {

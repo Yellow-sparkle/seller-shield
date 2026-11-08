@@ -18,7 +18,7 @@ const onlyIdx = process.argv.indexOf("--only");
 const only = onlyIdx > -1 ? process.argv[onlyIdx + 1] : undefined;
 const saved: Record<string, unknown> = {};
 
-// The sandbox disputes and the demo case, each with the answer the case screen builds (demo answers plus the order, S8).
+// The sandbox disputes and the demo case, each with the answer the case screen builds (demo answers plus the order).
 for (const raw of [...(fixtures as object[]), ...(demoDisputes as object[])]) {
   const c = toCase(raw as never);
   if (only && c.disputeId !== only) continue;

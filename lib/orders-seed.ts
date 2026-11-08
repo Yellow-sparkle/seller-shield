@@ -24,8 +24,8 @@ export function demoOrders(count = 200): Order[] {
     });
   }
   // DEMO-1025 is the order behind the demo case PP-R-DEMO-25 (lib/fixtures/demo-disputes.json). It matches the case:
-  // 45.00 EUR, eligible, 43.24 held, delivered (review finding M1). It is the only demo order with a dispute, because
-  // it is the only demo dispute with a case (finding M2).
+  // 45.00 EUR, eligible, 43.24 held, delivered. It is the only demo order with a dispute, because
+  // it is the only demo dispute with a case .
   const demoCase = rows[24];
   if (demoCase && demoCase.orderNo === "DEMO-1025") {
     Object.assign(demoCase, {
@@ -45,7 +45,7 @@ export function demoOrders(count = 200): Order[] {
 
 // Real sandbox orders. Amounts are the dispute amounts (the order total is not in the repo).
 // Tracking matches the test sends that PayPal accepted in the sandbox (see commit history). Those sends use
-// status SHIPPED (lib/tracking-api.ts), so PayPal's tracking status for them is SHIPPED (review finding M3;
+// status SHIPPED (lib/tracking-api.ts), so PayPal's tracking status for them is SHIPPED (;
 // not re-read live).
 export const sandboxOrders: Order[] = [
   {
@@ -90,9 +90,9 @@ export const sandboxOrders: Order[] = [
     disputeReason: "SNAD",
     source: "sandbox",
   },
-  // The order behind the open INR dispute PP-R-SRZ-10196872 (review finding H4). No tracking yet: adding it here is
+  // The order behind the open INR dispute PP-R-SRZ-10196872. No tracking yet: adding it here is
   // the fix for that dispute. Amount is the dispute amount. The dispute's fund movement is a DEBIT, not a hold: PayPal's
-  // Dispute Detail report separates "Debit" (money taken from the balance) from "On temporary hold" (L10, checked
+  // Dispute Detail report separates "Debit" (money taken from the balance) from "On temporary hold" (checked
   // 7 Nov 2026 against the report spec, not the API enum). So nothing is held; the 23.80 has already left the balance.
   {
     orderNo: "1P279948DJ181945Y",

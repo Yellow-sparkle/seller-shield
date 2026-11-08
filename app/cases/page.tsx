@@ -31,11 +31,11 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 type Row = {
   id: string;
   reason: string;
-  reasonCode: string; // PayPal's reason code; the path and the card read this, not the label (M7)
+  reasonCode: string; // PayPal's reason code; the path and the card read this, not the label
   closedReason: "OVERDUE" | "NO_DUE_DATE" | "CLOSED" | null; // why replies are closed, when they are
   underReview: boolean;
   chargeback: boolean;
-  orderRef: string; // what the buyer knows: the order number, else the case id (L4)
+  orderRef: string; // what the buyer knows: the order number, else the case id
   amount: string;
   fee: string;
   afterFees: string;
@@ -44,9 +44,9 @@ type Row = {
   protection: string;
   status: string;
   canRespond: boolean;
-  canMessage: boolean; // PayPal takes a message to the buyer only in the inquiry stage (S6)
-  canEvidence: boolean; // PayPal takes evidence only while it waits for the seller (S6)
-  sentAction: SentAction | null; // a send that succeeded from this browser, before the data is reloaded (S5)
+  canMessage: boolean; // PayPal takes a message to the buyer only in the inquiry stage
+  canEvidence: boolean; // PayPal takes evidence only while it waits for the seller
+  sentAction: SentAction | null; // a send that succeeded from this browser, before the data is reloaded
   recommendation: string;
   reasons: string;
   nextStep: string;
@@ -62,7 +62,7 @@ type Row = {
   messages: CaseMessage[];
   order: OrderTracking | null;
   facts: Facts;
-  fetchedAt: string | null; // when this case's PayPal data was saved by add-dispute (S4)
+  fetchedAt: string | null; // when this case's PayPal data was saved by add-dispute
 };
 
 // Orders by number, to show the order behind each case. The dispute's seller transaction ID is the order number.
@@ -76,10 +76,10 @@ type Override = CardAnswers & { decision?: string; buyerFiles?: string[]; sent?:
 
 // Recorded Opus answers (see scripts/live-check.ts --record). Shown without a live call.
 // The deterministic rules (lib/proof.ts) override the recorded answer, as they do in recommend().
-// The answer combines the demo answers, the order behind the case and the card's address question (lib/case-facts.ts, H1/H2).
+// The answer combines the demo answers, the order behind the case and the card's address question (lib/case-facts.ts).
 function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnType<typeof responseEligibility>, now: Date, answer: SellerAnswer): { recommendation: string; reasons: string; nextStep: string } {
   const rec = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[]; answer?: SellerAnswer }>)[id];
-  // A recording made from other facts is not shown as the AI's answer for these facts (second review S8).
+  // A recording made from other facts is not shown as the AI's answer for these facts.
   const otherFacts = !!rec?.answer && !sameAnswer(rec.answer, answer);
   const r = otherFacts ? undefined : rec;
   const underReview = c.status === "UNDER_REVIEW";
@@ -96,7 +96,7 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
         : answer.hasTracking === false
           ? "1. Add tracking.\n2. Reply before the due date."
           : answer.hasTracking === true
-            ? // The INR wait note (Kate's case 1 rule) comes first; it was unreachable before (H3).
+            ? // The INR wait note (Kate's case 1 rule) comes first; it was unreachable before.
               addressNextStep(c.reason, answer, c.responseDueAt) ?? inrWaitNote(c, answer, now) ?? "1. Send the tracking as evidence (Send tracking as evidence below).\n2. Reply before the due date."
             : "1. Check the tracking for this order.\n2. Reply before the due date.";
   // Deadline passed: Weak (Kate, 8 Nov 2026, G08). Other closed cases: the seller decides.
@@ -115,7 +115,7 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
       nextStep,
     };
   }
-  // No recorded AI answer yet (a newly added dispute): the seller decides, and keeps every action (second review S3).
+  // No recorded AI answer yet (a newly added dispute): the seller decides, and keeps every action.
   if (!r) return { recommendation: "YOUR_CALL (not checked by the AI yet)", reasons: [otherFacts ? "The AI checked this case with other facts. It has not checked these yet." : "Not checked by the AI yet.", ...ruleReasons(c.reason, answer, "YOUR_CALL")].join("\n"), nextStep };
   return {
     recommendation: `${r.recommendation} (${r.confidence.toLowerCase()} confidence)`,
@@ -148,7 +148,7 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
   const resolved = c.status !== null && RESOLVED_STATUSES.includes(c.status);
   // The seller has replied and PayPal is waiting for the buyer: nothing for the seller to do yet.
   const waitingForBuyer = c.status === "WAITING_FOR_BUYER_RESPONSE";
-  // A refund or evidence sent from this browser closes the actions until PayPal's data is reloaded (S5).
+  // A refund or evidence sent from this browser closes the actions until PayPal's data is reloaded.
   // A message to the buyer does not: the seller may still need to send evidence or refund.
   const live = !resolved && !waitingForBuyer;
   const sentFinal = live && (override.sent?.action === "refund" || override.sent?.action === "evidence");
@@ -187,7 +187,7 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
     canMessage: open && c.lifeCycleStage === "INQUIRY",
     canEvidence: open && c.status === "WAITING_FOR_SELLER_RESPONSE",
     sentAction: live ? override.sent ?? null : null,
-    // One word for a finished case on every part of the screen: "Closed by PayPal" (M9). No raw codes.
+    // One word for a finished case on every part of the screen: "Closed by PayPal". No raw codes.
     status: sentFinal
       ? override.sent?.action === "refund" ? "Refund sent. Waiting for PayPal to close the case." : "Evidence sent. Waiting for PayPal."
       : resolved
@@ -252,7 +252,7 @@ const columns: ColDef<Row>[] = [
   { field: "id", headerName: "Dispute", flex: 2, minWidth: 190 },
   { field: "reason", headerName: "Reason", flex: 1 },
   { field: "amount", headerName: "Amount", flex: 1 },
-  { field: "afterFees", headerName: "Amount after fees", flex: 1.5, // PayPal's merchant fees page: the fees paid to receive a payment are not returned on a refund (checked 7 Nov 2026, L9).
+  { field: "afterFees", headerName: "Amount after fees", flex: 1.5, // PayPal's merchant fees page: the fees paid to receive a payment are not returned on a refund (checked 7 Nov 2026).
     headerTooltip: "What the sale brought you after PayPal's fee. If you refund, the buyer gets the full amount and PayPal keeps the fee." },
   { field: "deadline", headerName: "Respond by", flex: 1 },
   // Decide by was folded into Days left (Kate, 7 Nov 2026): 2 days or fewer, or passed, shows in red.
@@ -263,7 +263,7 @@ const columns: ColDef<Row>[] = [
     // 1 or 2 days left: PayPal gold. Due today or passed: red.
     cellRenderer: (p: { value: number | null; data?: Row }) => {
       if (p.value === null || p.value === undefined) return <Quiet>{p.data?.recommendation === "RESOLVED" ? "Closed" : "Not set"}</Quiet>;
-      // Same cut-off as the reply buttons (L2): once PayPal stops taking replies, the deadline reads Passed.
+      // Same cut-off as the reply buttons: once PayPal stops taking replies, the deadline reads Passed.
       if (p.data?.closedReason === "OVERDUE") return <Pill tone="bad">Passed</Pill>;
       if (p.value <= 0) return <Pill tone="bad">{p.value < 0 ? "Passed" : "Due today"}</Pill>;
       if (p.value <= 2) return <span style={{ background: "#ffc439", color: "#2c2e2f", fontWeight: 700, padding: "2px 8px", borderRadius: 999, fontSize: 12 }}>{p.value} {p.value === 1 ? "day" : "days"}: decide now</span>;
@@ -297,7 +297,7 @@ const columns: ColDef<Row>[] = [
     flex: 1.5,
     editable: true,
     cellEditor: "agSelectCellEditor",
-    // The seller's decision is saved with the case and picks the step path and the reply draft (M10).
+    // The seller's decision is saved with the case and picks the step path and the reply draft.
     cellEditorParams: { values: [...DECISIONS] },
     headerTooltip: "Your decision. It sets the steps and the reply draft for this case.",
   },
@@ -307,7 +307,7 @@ const theme = themeQuartz.withParams({ accentColor: "#0070ba", headerBackgroundC
 
 // Evidence to attach before a FIGHT (case 5 gap 2, Kate, 5 Nov 2026). The checkbox state is kept in
 // this browser only, per case. If storage is blocked, the boxes still work for the session.
-// The items depend on the dispute reason (lib/evidence.ts, M5).
+// The items depend on the dispute reason (lib/evidence.ts).
 const EVIDENCE_KEY = "seller-shield-evidence";
 
 function readEvidence(): Record<string, boolean[]> {
@@ -339,7 +339,7 @@ const STEP_STYLE: Record<StepState, { dot: React.CSSProperties; mark: string; no
   now: { dot: { background: "#ffc439", color: "#2c2e2f", border: "2px solid #003087" }, mark: "", note: "Now", noteColor: "#003087" },
   open: { dot: { background: "#ffffff", color: "#2c2e2f", border: "2px solid #ffc439" }, mark: "", note: "Not done yet", noteColor: "#2c2e2f" },
   later: { dot: { background: "#ffffff", color: "#6b7280", border: "2px solid #c4cdd8" }, mark: "", note: "Later", noteColor: "#6b7280" },
-  // A step never done on a closed case (M8): grey, marked Skipped.
+  // A step never done on a closed case: grey, marked Skipped.
   skipped: { dot: { background: "#ffffff", color: "#6b7280", border: "2px dashed #c4cdd8" }, mark: "–", note: "Skipped", noteColor: "#6b7280" },
 };
 
@@ -356,7 +356,7 @@ function CasePath({ row }: { row: Row }) {
   const steps = casePath({
     reason: (["INR", "SNAD", "UNAUTHORISED", "OTHER"].includes(row.reasonCode) ? row.reasonCode : "UNKNOWN") as "INR",
     route: routeFor(normalizeDecision(row.decision), row.recommendation),
-    // Not loaded from PayPal: say so rather than show the step as not done (L6).
+    // Not loaded from PayPal: say so rather than show the step as not done.
     sellerMessaged: row.sentAction?.action === "message" ? true : row.buyerChecked ? row.messages.some((m) => m.by === "SELLER") || row.sellerMessages.length > 0 : null,
     trackingInPayPal: !!row.order?.status,
     evidenceTicked: items.every((_, i) => ticks[i]),
@@ -426,7 +426,7 @@ function CasePath({ row }: { row: Row }) {
       {row.recommendation === "RESOLVED" ? (
         <p style={{ fontSize: 14, color: "#5b6472", marginTop: 4 }}>No action needed. PayPal has closed this case.</p>
       ) : (
-        // The next step, including the INR "refund one day before the due date" prompt (H3).
+        // The next step, including the INR "refund one day before the due date" prompt.
         <div style={{ fontSize: 14, marginTop: 8, padding: "8px 10px", background: "#f5f7fa", borderRadius: 6 }}>
           <strong>Next step</strong>
           {row.nextStep.split("\n").filter(Boolean).map((line, i) => (
@@ -488,7 +488,7 @@ function CauseForm({ row, onChange }: { row: Row; onChange: (mismatch: "yes" | "
   );
 }
 
-// "Your facts" (second review S1, 8 Nov 2026): only the questions the rule for this reason needs.
+// "Your facts": only the questions the rule for this reason needs.
 // Saved with the address answer, and read by caseAnswer, so the case strength follows them.
 type Facts = Pick<CardAnswers, "carrierDeliveryDate" | "matchesListing" | "listingEvidence" | "noticeDate" | "shipmentDate">;
 function FactsForm({ row, onChange }: { row: Row; onChange: (patch: Facts) => void }) {
@@ -545,7 +545,7 @@ function FactsForm({ row, onChange }: { row: Row; onChange: (patch: Facts) => vo
   );
 }
 
-// The case strength, the reasons and the seller's decision at the top of the card (PRD F3, L5).
+// The case strength, the reasons and the seller's decision at the top of the card (PRD F3).
 function CaseSummary({ row }: { row: Row }) {
   return (
     <section style={{ marginBottom: 12, fontSize: 14 }}>
@@ -646,14 +646,14 @@ function Conversation({ row }: { row: Row }) {
 // the seller presses an Approve button. Buttons are disabled when PayPal no longer accepts a response.
 type OnSent = (id: string, action: SentAction["action"]) => void;
 function ReplyDrafts({ rows, showId = true, onSent }: { rows: Row[]; showId?: boolean; onSent?: OnSent }) {
-  // A case past its reply deadline gets no draft: replies are closed, and the next step says what is left (third review).
+  // A case past its reply deadline gets no draft: replies are closed, and the next step says what is left.
   const cases = rows.filter((r) => /^(FIGHT|REFUND|YOUR_CALL)/.test(r.recommendation) && r.closedReason !== "OVERDUE");
   if (cases.length === 0) return null;
   return (
     <section style={{ marginTop: 24 }}>
       <h2 style={{ fontSize: 18, marginBottom: 4 }}>Reply and act</h2>
       {cases.map((r) => {
-        // The draft follows the seller's decision, else the recommendation (M10).
+        // The draft follows the seller's decision, else the recommendation.
         const basis = draftBasis(normalizeDecision(r.decision), r.recommendation);
         const draft = templateReply({
           recommendation: basis,
@@ -679,10 +679,10 @@ function DraftCard({ row, initial, refundDraft, showId = true, onSent }: { row: 
   const [pending, setPending] = useState<Pending>(null);
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
-  // A refund draft goes to the buyer with the refund, never on its own, so it can't say "refunding" without a refund (H6).
+  // A refund draft goes to the buyer with the refund, never on its own, so it can't say "refunding" without a refund.
   const refundNote = refundDraft ? text : `Full refund of ${row.amount} accepted by the seller.`;
   const placeholder = hasPlaceholder(text);
-  // Fight on an item-not-received case sends the order's tracking to PayPal as evidence (Kate, 7 Nov 2026, H5).
+  // Fight on an item-not-received case sends the order's tracking to PayPal as evidence (Kate, 7 Nov 2026).
   const tracking = row.reasonCode === "INR" && row.order?.tracking ? { carrier: row.order.carrier ?? "Other", number: row.order.tracking } : null;
   const evidenceNote = `Tracking for ${row.orderRef}: ${tracking ? `${tracking.carrier} ${tracking.number}` : ""}.`;
 
@@ -823,7 +823,7 @@ function passesFilters(r: Row, chips: string[]): boolean {
 }
 
 // Sample cause and evidence for the demo screens (see ?sample=1 above). Shown only in memory.
-// The sample goes on the demo case only, and agrees with the rules (M11): the buyer asked for a new address after
+// The sample goes on the demo case only, and agrees with the rules: the buyer asked for a new address after
 // ordering, so the mismatch is the buyer's and the case is the seller's call.
 const SAMPLE_OVERRIDES: Record<string, Override> = {
   "PP-R-DEMO-25": {
@@ -853,12 +853,12 @@ export default function CaseScreen() {
   // Dates are computed after mount, so the server render does not depend on the clock.
   // Rows are built after mount (the clock). Seller cause and evidence typed on the screen are kept per case, for this session.
   const [now, setNow] = useState<Date | null>(null);
-  // Tracking the seller sent from Orders and tracking in this browser (M3), read with the clock after mount.
+  // Tracking the seller sent from Orders and tracking in this browser, read with the clock after mount.
   const [sent, setSent] = useState<SentTracking>({});
   const [overrides, setOverrides] = useState<Record<string, Override>>({});
   // /cases?sample=1 shows the sample cause and evidence in memory only. Nothing is saved, and /cases clears it.
   const [sampleMode, setSampleMode] = useState(false);
-  // The sample link is a demo tool, shown only with /cases?demo=1 (second review S11).
+  // The sample link is a demo tool, shown only with /cases?demo=1.
   const [demoTools, setDemoTools] = useState(false);
   useEffect(() => {
     setNow(new Date());
@@ -932,7 +932,7 @@ export default function CaseScreen() {
           </p>
         )
       )}
-      {/* S4: this screen reads saved PayPal data, not PayPal live, so it says how old the data is. */}
+      {/* this screen reads saved PayPal data, not PayPal live, so it says how old the data is. */}
       {rows.length > 0 && <DataAge rows={rows} />}
       {focusId && rows.length > 0 && !rows.some((r) => r.id === focusId) && <p role="status">Case {focusId} is not in the sandbox data.</p>}
       <div role="group" aria-label="Filter cases" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", margin: "12px 0" }}>
@@ -980,7 +980,7 @@ export default function CaseScreen() {
         selectedRows.map((r) => (
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
             <h2 style={{ fontSize: 24, margin: "0 0 4px" }}>Case {r.id}</h2>
-            {/* S7: answers are not on a server yet. */}
+            {/* answers are not on a server yet. */}
             <p style={{ margin: "0 0 12px", color: "#5b6472", fontSize: 13 }}>Your answers and decision on this case are saved in this browser only.</p>
             {/* Two columns (Kate, 7 Nov 2026): the step path on the left, everything else on the right. */}
             <div className="case-columns">
@@ -993,8 +993,8 @@ export default function CaseScreen() {
                 {["INR", "SNAD", "UNAUTHORISED"].includes(r.reasonCode) && r.recommendation !== "RESOLVED" && r.recommendation !== "WAITING" && r.closedReason !== "OVERDUE" && (
                   <FactsForm row={r} onChange={(patch) => setOverrides((prev) => ({ ...prev, [r.id]: { ...prev[r.id], ...patch } }))} />
                 )}
-                {/* Only where the delivery address matters and the case is still open (M6). */}
-                {/* Not after the deadline: the answers can no longer change the case (third review). */}
+                {/* Only where the delivery address matters and the case is still open. */}
+                {/* Not after the deadline: the answers can no longer change the case. */}
                 {(r.reasonCode === "INR" || r.reasonCode === "UNAUTHORISED") && r.recommendation !== "RESOLVED" && r.closedReason !== "OVERDUE" && (
                   <CauseForm row={r} onChange={(mismatch, cause, evidence) => setCause(r.id, mismatch, cause, evidence)} />
                 )}

@@ -128,12 +128,12 @@ export function gridSummary(orders: Order[]): GridSummary {
 }
 
 // Where a dispute flag leads. Every order with a dispute id has a case on the case screen
-// (the seed only flags demo orders that have a demo case, review finding M2).
+// (the seed only flags demo orders that have a demo case).
 export function caseLink(o: Order): string | null {
   return o.disputeId ? `/cases#${encodeURIComponent(o.disputeId)}` : null;
 }
 
-// Tracking status text for the grid and the case card (review finding L11): PayPal's status when it has one,
+// Tracking status text for the grid and the case card: PayPal's status when it has one,
 // "Not in PayPal yet" when we hold a number PayPal has not got, "No tracking" when there is no number.
 export function trackingStatusText(o: { tracking?: string | null; trackingStatus?: string | null }): string {
   return o.trackingStatus ?? (o.tracking ? "Not in PayPal yet" : "No tracking");

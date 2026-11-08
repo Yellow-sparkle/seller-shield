@@ -78,7 +78,7 @@ export async function sendTracking(creds: Creds, lines: BulkLine[], fetchFn: Fet
 // "message" sends the seller's reply to the buyer (PayPal allows this only in the INQUIRY stage).
 // "refund" accepts the claim with a full refund.
 // "evidence" sends the order's tracking as proof of fulfilment (provide-evidence), for item-not-received cases.
-// Kate's call on 7 Nov 2026 (review finding H5): Fight sends INR tracking as evidence; files for other reasons are
+// Kate's call on 7 Nov 2026: Fight sends INR tracking as evidence; files for other reasons are
 // uploaded in the PayPal Resolution Center. All three go to the sandbox only.
 export type DisputeAction = { disputeId: string; action: "message" | "refund" | "evidence"; text: string; tracking?: { carrier: string; number: string } };
 
@@ -136,7 +136,7 @@ export async function sendDisputeAction(creds: Creds, input: Partial<DisputeActi
 
 // provide-evidence takes multipart/form-data with the evidence as JSON in a part named "input", tracking under
 // evidences[].evidence_info.tracking_info (PayPal "Integrate Disputes APIs" guide, checked 7 Nov 2026). PayPal accepts
-// it only while the dispute is WAITING_FOR_SELLER_RESPONSE. Not yet tried against the live sandbox (H5).
+// it only while the dispute is WAITING_FOR_SELLER_RESPONSE. Not yet tried against the live sandbox.
 export function evidenceInput(tracking: { carrier: string; number: string }, notes: string) {
   const code = carrierCode(tracking.carrier);
   return {

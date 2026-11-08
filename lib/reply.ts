@@ -39,8 +39,8 @@ export function parseReply(text: string): ReplyDraft {
 // Plain template reply for the screen, used until a recorded or live AI draft is available.
 // It uses only the case facts passed in, and bracketed placeholders for any evidence the seller must add.
 // It goes through parseReply, so it can't predict PayPal's decision or run past the length cap.
-// Review fixes (7 Nov 2026): the refund draft no longer says the refund already happened (H6); an item-not-received
-// fight talks about delivery and uses the order's tracking when there is one (L3); the draft names the order (L4).
+// The refund draft goes with the refund, so it never says the refund already happened. An item-not-received
+// fight talks about delivery and uses the order's tracking when there is one. The draft names the order.
 export function templateReply(input: {
   recommendation: string;
   amount: string;
@@ -70,7 +70,7 @@ export function templateReply(input: {
   return parseReply(JSON.stringify({ draft, placeholders }));
 }
 
-// True while the text still holds a bracketed placeholder such as [attach ...]. Sending is blocked until it is filled (L3).
+// True while the text still holds a bracketed placeholder such as [attach ...]. Sending is blocked until it is filled.
 export function hasPlaceholder(text: string): boolean {
   return /\[[^\]]{2,}\]/.test(text);
 }

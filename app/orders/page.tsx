@@ -17,7 +17,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const theme = themeQuartz.withParams({ accentColor: "#0070ba", headerBackgroundColor: "#eaf1fb", headerTextColor: "#003087", borderRadius: 6 });
 const CHIPS: { id: FilterChip; label: string }[] = [
-  // "Has a number, not yet in PayPal" (L11): named so it can't be mistaken for "Missing tracking".
+  // "Has a number, not yet in PayPal": named so it can't be mistaken for "Missing tracking".
   { id: "awaitingTracking", label: "Ready to send to PayPal" },
   { id: "missingTracking", label: "Missing tracking" },
   { id: "held", label: "Held" },
@@ -48,7 +48,7 @@ const columns: ColDef<Order>[] = [
       if (isSummary(p)) return <Pill tone="bad">{sumOf(p).disputes} disputes</Pill>;
       if (!p.data?.disputeId) return <Quiet>None</Quiet>;
       const href = caseLink(p.data);
-      // Every dispute in the grid has a case (M2).
+      // Every dispute in the grid has a case.
       return href ? (
         <a href={href} style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: "#a3231b", color: "#fff", textDecoration: "none" }}>
           View case
@@ -76,7 +76,7 @@ const columns: ColDef<Order>[] = [
   {
     headerName: "Seller protection",
     valueGetter: (p) => (p.data ? protectionLabel(p.data) : ""),
-    // Same labels and colours as the case screen; a not-as-described dispute reads Not covered (M4).
+    // Same labels and colours as the case screen; a not-as-described dispute reads Not covered.
     cellRenderer: (p: P) => (isSummary(p) || !p.data ? "" : <span title={p.value}><Pill tone={protectionTone(p.value) as Tone}>{protectionShort(p.value)}</Pill></span>),
   },
   {
@@ -100,7 +100,7 @@ const columns: ColDef<Order>[] = [
 ];
 
 export default function OrdersPage() {
-  // Orders, with tracking PayPal confirmed from this browser shown as sent (M3).
+  // Orders, with tracking PayPal confirmed from this browser shown as sent.
   const seeded = useMemo(() => allOrders(), []);
   const [sent, setSent] = useState<ReturnType<typeof readSentTracking>>({});
   const all = useMemo(() => seeded.map((o) => withSentTracking(o, sent)), [seeded, sent]);
@@ -136,7 +136,7 @@ export default function OrdersPage() {
 
   const toggle = (id: FilterChip) => setChips((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
-  // Entries default to the order's carrier and number until the seller edits them (L12).
+  // Entries default to the order's carrier and number until the seller edits them.
   const prefilled = Object.fromEntries(selected.map((o) => [o.orderNo, entries[o.orderNo] ?? { carrier: o.carrier && CARRIER_OPTIONS.includes(o.carrier) ? o.carrier : o.carrier ? "Other" : "", tracking: o.tracking ?? "" }]));
   const plan = review ? planBulk(selected.filter((o) => review.includes(o.orderNo)), prefilled) : null;
   const setEntry = (orderNo: string, patch: Partial<TrackingEntry>) =>
@@ -155,7 +155,7 @@ export default function OrdersPage() {
       const next: Record<string, string> = {};
       for (const l of lines) next[l.orderNo] = confirmed.has(l.orderNo) && !(data.errors?.length) ? "Tracking added" : `Not confirmed by PayPal${data.errors?.length ? ": batch errors" : ""}`;
       setRowStatus(next);
-      // Rows PayPal confirmed flip in the grid and on the case card (M3).
+      // Rows PayPal confirmed flip in the grid and on the case card.
       const ok = lines.filter((l) => next[l.orderNo] === "Tracking added");
       if (ok.length) setSent(recordSentTracking(ok));
       setStatus(data.ok ? `PayPal sandbox replied HTTP ${data.status}. Sent ${lines.length} update(s). Response: ${data.body ?? "(empty)"}` : `Not sent: ${data.error ?? `PayPal returned HTTP ${data.status}: ${data.body ?? ""}`}`);
@@ -215,7 +215,7 @@ export default function OrdersPage() {
             </div>
             {review.map((no) => {
               const o = all.find((x) => x.orderNo === no);
-              // Starts from the order's own carrier and number, so a number on file is not typed again (L12).
+              // Starts from the order's own carrier and number, so a number on file is not typed again.
               const entry = entries[no] ?? { carrier: o?.carrier && CARRIER_OPTIONS.includes(o.carrier) ? o.carrier : o?.carrier ? "Other" : "", tracking: o?.tracking ?? "" };
               const result = rowStatus[no];
               return (

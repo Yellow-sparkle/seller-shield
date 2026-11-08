@@ -1,4 +1,4 @@
-// Stale check (second review S8, 8 Nov 2026): lists the recorded AI answers whose facts no longer match what the
+// Stale check: lists the recorded AI answers whose facts no longer match what the
 // case screen builds today. No API call.
 // Run: node --experimental-strip-types scripts/stale-check.ts
 import { toCase } from "../lib/dispute.ts";

@@ -1,7 +1,7 @@
 // Golden check: hand-written expected answers for synthetic cases (lib/golden/cases.json).
 // Runs Opus 5.5 once per case and prints the match rate. Costs about 2 cents per case.
 // Run: node --env-file=.env.local --experimental-strip-types scripts/golden-check.ts
-// Cases with an order or card answers are built the way the case screen builds them (caseAnswer, S8).
+// Cases with an order or card answers are built the way the case screen builds them (caseAnswer).
 // Red-flag subset only: add --red-flag (G02, G04, G06 and the YOUR_CALL cases G08 to G11).
 import { toCase } from "../lib/dispute.ts";
 import { responseEligibility } from "../lib/rules.ts";

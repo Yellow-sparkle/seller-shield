@@ -38,7 +38,7 @@ export function responseEligibility(c: Case, now: Date = new Date()): Eligibilit
 
 // Seller Protection label for the case screen. SNAD is excluded in PayPal's published PT terms,
 // so it reads "Not covered" even when PayPal's sandbox status says ELIGIBLE.
-// Same words as the orders grid (lib/protection.ts, review finding M4).
+// Same words as the orders grid (lib/protection.ts).
 export function protectionLabel(c: Case): string {
   return protectionText(c.sellerProtectionStatus, c.reason);
 }

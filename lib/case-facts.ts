@@ -1,9 +1,8 @@
-// The seller's answers for one case, put together from three places (review finding H1/H2, 7 Nov 2026):
+// The seller's answers for one case, put together from three places:
 // 1. answers entered for the demo (lib/answers.ts), which win when present;
 // 2. the order behind the case (Orders and tracking): tracking number, carrier status and delivery date;
-// 3. the address mismatch question on the case card.
-// Before this, the card's answers were saved but the INR rule never read them, and an order with tracking
-// was treated as "tracking unknown", so the recorded model answer (FIGHT) skipped Kate's INR proof rule.
+// 3. the seller's answers on the case card (Your facts and the address question).
+// The rules in lib/proof.ts read the result, so the case strength follows what the seller entered.
 import type { SellerAnswer } from "./answers.ts";
 
 export type OrderFacts = { tracking?: string | null; trackingStatus?: string | null; deliveredDate?: string | null };
@@ -11,7 +10,7 @@ export type CardAnswers = {
   addressMismatch?: "yes" | "no";
   addressMismatchCause?: "seller" | "buyer" | "unknown";
   causeEvidence?: string;
-  // "Your facts" on the card (second review S1, 8 Nov 2026): the inputs each rule needs, typed by the seller.
+  // "Your facts" on the card: the inputs each rule needs, typed by the seller.
   carrierDeliveryDate?: string; // INR: the delivery date shown on the carrier's own tracking page (YYYY-MM-DD)
   matchesListing?: "yes" | "partly" | "no"; // SNAD: does the item match the listing
   listingEvidence?: string; // SNAD: what shows it matches (the listing, photos before shipping)
@@ -34,7 +33,7 @@ export function caseAnswer(base: SellerAnswer = {}, order?: OrderFacts | null, c
   if (card.addressMismatch === "yes") a.deliveredToTransactionAddress = a.shippedToTransactionAddress = false;
   if (card.addressMismatch === "no") a.deliveredToTransactionAddress = a.shippedToTransactionAddress = true;
   // A delivery date the seller read on the carrier page confirms delivery and wins over the order's status,
-  // which the seller sets when adding tracking (S2).
+  // which the seller sets when adding tracking.
   if (isDate(card.carrierDeliveryDate)) {
     a.delivered = true;
     a.deliveryDate = card.carrierDeliveryDate;
@@ -97,7 +96,7 @@ export function ruleReasons(reason: string, a: SellerAnswer, forced: "FIGHT" | "
   return lines;
 }
 
-// The seller's decision on the case grid (review finding M10). Old saved values and sample text are mapped to the
+// The seller's decision on the case grid. Old saved values and sample text are mapped to the
 // three options; anything else is "Not decided".
 export const DECISIONS = ["Not decided", "Fight", "Refund"] as const;
 export type Decision = (typeof DECISIONS)[number];

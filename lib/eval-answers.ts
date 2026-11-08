@@ -1,6 +1,6 @@
-// The answer the eval and the recordings use, built the same way as the case screen (second review S8, 8 Nov 2026).
-// Before this, the golden set, the judge and live-check passed ready-made answers, while the screen combined the
-// demo answers, the order behind the case and the card's answers with caseAnswer(). Now all of them use caseAnswer().
+// The answer the eval and the recordings use, built the same way as the case screen.
+// The golden set, the judge, live-check and the case screen all build the answer with caseAnswer(), so the eval
+// tests what the seller sees.
 import type { SellerAnswer } from "./answers.ts";
 import { sellerAnswers } from "./answers.ts";
 import { caseAnswer, type CardAnswers, type OrderFacts } from "./case-facts.ts";

@@ -3,11 +3,11 @@
 // steps from showing as done: if the seller has not ticked their evidence but PayPal has closed the
 // case, the close still shows as done (Kate: "do not make the other statuses that come after not to be ticked").
 //
-// Review fixes (7 Nov 2026):
-// - M7: the path follows the seller's decision, or the recommendation when the seller has not decided. A refund
+// How the path reads:
+// - The path follows the seller's decision, or the recommendation when the seller has not decided. A refund
 //   has its own path. Unauthorised asks for proof of shipment. Under review and card-issuer cases have their own step.
-// - M8: on a closed case, a step that was never done reads "Skipped", not "Not done yet".
-// - L6: when PayPal's messages were not loaded, "Message the buyer" says so instead of looking undone.
+// - On a closed case, a step that was never done reads "Skipped", not "Not done yet".
+// - When PayPal's messages were not loaded, "Message the buyer" says so instead of looking undone.
 
 export type StepState = "done" | "now" | "open" | "later" | "skipped";
 export type PathStep = { label: string; state: StepState; source: string; evidence?: boolean };
@@ -42,7 +42,7 @@ export function casePath(p: PathInput): PathStep[] {
     steps = [opened, evidenceStep(p), { label: "The buyer's card issuer decides", done: p.closed, source: "From PayPal status" }];
     waitIndex = 2;
   } else if (p.overdue) {
-    // Replies are closed, so no refund or evidence step in the dispute: what is left happens outside it (third review, 8 Nov 2026).
+    // Replies are closed, so no refund or evidence step in the dispute: what is left happens outside it.
     steps = [
       opened,
       { label: "Ask the buyer to close the case", done: p.closed, source: "Outside PayPal, if the parcel arrived" },

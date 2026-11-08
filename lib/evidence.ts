@@ -1,6 +1,6 @@
-// The seller's own evidence checklist on the case card, by dispute reason (review finding M5, 7 Nov 2026).
-// Before this, every case showed the not-as-described list (listing photos), even item-not-received cases where
-// PayPal asks for proof of delivery. The ticks stay in the browser and are never sent to PayPal.
+// The seller's own evidence checklist on the case card, by dispute reason.
+// Item not received needs proof of delivery; not as described needs the listing and photos.
+// The ticks stay in the browser and are never sent to PayPal.
 export function evidenceItems(reason: string): string[] {
   switch (reason) {
     case "INR":
