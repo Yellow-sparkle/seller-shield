@@ -13,6 +13,7 @@ type FullDispute = {
   fund_movements?: { type?: string; amount?: Money }[];
   evidences?: { evidence_type?: string; source?: string; notes?: string; documents?: { name?: string }[] }[];
   messages?: { posted_by?: string; time_posted?: string; content?: string }[];
+  allowed_response_options?: Record<string, unknown>;
 };
 
 const REASONS: Record<string, string> = {
@@ -21,7 +22,8 @@ const REASONS: Record<string, string> = {
   UNAUTHORISED: "UNAUTHORISED",
 };
 
-export function toFixture(d: FullDispute): Record<string, unknown> {
+// fetchedAt is when PayPal's reply was read, so the case screen can say how old its data is (second review S4).
+export function toFixture(d: FullDispute, fetchedAt: Date = new Date()): Record<string, unknown> {
   if (!d.dispute_id) throw new Error("PayPal's reply has no dispute_id");
   const tx = d.disputed_transactions?.[0];
   const fixture: Record<string, unknown> = {
@@ -50,6 +52,9 @@ export function toFixture(d: FullDispute): Record<string, unknown> {
   fixture.messages = (d.messages ?? [])
     .map((m) => ({ by: m.posted_by ?? "UNKNOWN", time: m.time_posted ?? null, text: m.content ?? "" }))
     .sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
+  // What PayPal says the seller may do next, kept as PayPal sent it (S6). The screen also gates by status and stage.
+  if (d.allowed_response_options) fixture.allowed_response_options = d.allowed_response_options;
+  fixture.fetched_at = fetchedAt.toISOString();
   if (typeof tx?.seller_protection_eligible === "boolean") {
     fixture.seller_protection = { status: tx.seller_protection_eligible ? "ELIGIBLE" : "NOT_ELIGIBLE" };
   }

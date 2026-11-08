@@ -54,7 +54,7 @@ import { withSentTracking } from "./sent-tracking.ts";
 
 test("PRD F3: a your-decision INR case says what would settle it", () => {
   const lines = ruleReasons("INR", caseAnswer({}, { tracking: "T", trackingStatus: "DELIVERED" }, {}), "YOUR_CALL");
-  assert.match(lines[lines.length - 1], /What would settle it: the delivery date on the carrier page, your answer to the address question/);
+  assert.match(lines[lines.length - 1], /What would settle it: the delivery date on the carrier page \(Your facts\), your answer to the address question/);
 });
 
 test("M10: old decision values map to the three options", () => {
@@ -94,4 +94,45 @@ test("Next step on a delivered INR case follows the address answer, in plain wor
 test("No address next step when not delivered or not INR", () => {
   assert.equal(addressNextStep("INR", caseAnswer({}, { tracking: "T", trackingStatus: "SHIPPED" }, {}), null), null);
   assert.equal(addressNextStep("SNAD", caseAnswer({}, delivered, {}), null), null);
+});
+
+// Second review S1/S2 (8 Nov 2026): "Your facts" on the card feed the rules.
+test("S1: a carrier-page delivery date confirms delivery and can make an INR case strong", () => {
+  const order = { tracking: "T", trackingStatus: "SHIPPED" };
+  const a = caseAnswer({}, order, { carrierDeliveryDate: "2026-11-02", addressMismatch: "no" });
+  assert.equal(a.delivered, true);
+  assert.equal(a.deliveryDate, "2026-11-02");
+  assert.equal(forcedRecommendation(inr, a, now), null);
+  assert.match(ruleReasons("INR", a, "FIGHT").join(" "), /carrier page: 2026-11-02/);
+});
+
+test("S1: a malformed carrier date is ignored", () => {
+  const a = caseAnswer({}, { tracking: "T", trackingStatus: "SHIPPED" }, { carrierDeliveryDate: "2 Nov" });
+  assert.equal(a.delivered, false);
+  assert.equal(a.deliveryDate, undefined);
+});
+
+test("S2: the order status is described as the order's status, not the carrier's", () => {
+  const lines = ruleReasons("INR", caseAnswer({}, delivered, {}), "YOUR_CALL");
+  assert.ok(lines.some((l) => l.startsWith("The tracking status on the order is Delivered")));
+  assert.ok(!lines.some((l) => /carrier shows/.test(l)));
+});
+
+test("S1: the SNAD listing answer decides the SNAD rule", () => {
+  const snad = { ...inr, reason: "SNAD" as const };
+  assert.equal(forcedRecommendation(snad, caseAnswer({}, null, { matchesListing: "yes" }), now), "FIGHT");
+  assert.equal(forcedRecommendation(snad, caseAnswer({}, null, { matchesListing: "no" }), now), "REFUND");
+  assert.equal(forcedRecommendation(snad, caseAnswer({}, null, { matchesListing: "partly" }), now), "YOUR_CALL");
+  assert.match(ruleReasons("SNAD", {}, "YOUR_CALL").join(" "), /Does the item match the listing/);
+});
+
+test("S1: the card's answer wins over a coded demo answer", () => {
+  assert.equal(caseAnswer({ matchesListing: "partly" }, null, { matchesListing: "yes" }).matchesListing, true);
+});
+
+test("S1: unauthorised notice and shipment dates reach the unauthorised rule", () => {
+  const unauth = { ...inr, reason: "UNAUTHORISED" as const, sellerProtectionEligible: true };
+  const late = caseAnswer({}, { tracking: "T", trackingStatus: "SHIPPED" }, { noticeDate: "2026-11-01", shipmentDate: "2026-11-05" });
+  assert.equal(forcedRecommendation(unauth, late, now), "REFUND");
+  assert.match(ruleReasons("UNAUTHORISED", {}, "YOUR_CALL").join(" "), /PayPal's notice date and the shipment date/);
 });

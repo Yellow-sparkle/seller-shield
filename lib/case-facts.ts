@@ -11,7 +11,14 @@ export type CardAnswers = {
   addressMismatch?: "yes" | "no";
   addressMismatchCause?: "seller" | "buyer" | "unknown";
   causeEvidence?: string;
+  // "Your facts" on the card (second review S1, 8 Nov 2026): the inputs each rule needs, typed by the seller.
+  carrierDeliveryDate?: string; // INR: the delivery date shown on the carrier's own tracking page (YYYY-MM-DD)
+  matchesListing?: "yes" | "partly" | "no"; // SNAD: does the item match the listing
+  noticeDate?: string; // unauthorised: the date of PayPal's notice (YYYY-MM-DD)
+  shipmentDate?: string; // unauthorised: the date the seller shipped (YYYY-MM-DD)
 };
+
+const isDate = (v: string | undefined): v is string => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
 export function caseAnswer(base: SellerAnswer = {}, order?: OrderFacts | null, card: CardAnswers = {}): SellerAnswer {
   const a: SellerAnswer = { ...base };
@@ -25,6 +32,16 @@ export function caseAnswer(base: SellerAnswer = {}, order?: OrderFacts | null, c
   // The same answer feeds the unauthorised rule's "shipped to the transaction address".
   if (card.addressMismatch === "yes") a.deliveredToTransactionAddress = a.shippedToTransactionAddress = false;
   if (card.addressMismatch === "no") a.deliveredToTransactionAddress = a.shippedToTransactionAddress = true;
+  // A delivery date the seller read on the carrier page confirms delivery and wins over the order's status,
+  // which the seller sets when adding tracking (S2).
+  if (isDate(card.carrierDeliveryDate)) {
+    a.delivered = true;
+    a.deliveryDate = card.carrierDeliveryDate;
+    a.deliverySource = "carrier tracking page";
+  }
+  if (card.matchesListing) a.matchesListing = card.matchesListing === "yes" ? true : card.matchesListing === "no" ? false : "partly";
+  if (isDate(card.noticeDate)) a.noticeDate = card.noticeDate;
+  if (isDate(card.shipmentDate)) a.shipmentDate = card.shipmentDate;
   if (card.addressMismatch === "yes") {
     if (card.addressMismatchCause) a.addressMismatchCause = card.addressMismatchCause;
     if (card.causeEvidence) a.causeEvidence = card.causeEvidence;
@@ -39,8 +56,9 @@ export function ruleReasons(reason: string, a: SellerAnswer, forced: "FIGHT" | "
   if (a.hasTracking === true) lines.push("A tracking number is on the order.");
   if (a.hasTracking === false) lines.push("No tracking number is on the order.");
   if (reason === "INR" && a.hasTracking) {
-    if (a.delivered === true) lines.push(a.deliveryDate ? `The carrier shows it delivered on ${a.deliveryDate}.` : "The carrier shows it as delivered.");
-    if (a.delivered === false) lines.push("The carrier does not show it as delivered yet.");
+    if (a.delivered === true && a.deliverySource === "carrier tracking page") lines.push(`You read the delivery date on the carrier page: ${a.deliveryDate}.`);
+    else if (a.delivered === true) lines.push(a.deliveryDate ? `The tracking status on the order is Delivered, on ${a.deliveryDate}.` : "The tracking status on the order is Delivered.");
+    if (a.delivered === false) lines.push("The tracking status on the order is not Delivered yet.");
     if (a.deliveredToTransactionAddress === false) {
       lines.push("You said the parcel went to a different address than the one on the order.");
       const cause = a.causeEvidence ? a.addressMismatchCause : undefined;
@@ -49,14 +67,29 @@ export function ruleReasons(reason: string, a: SellerAnswer, forced: "FIGHT" | "
     }
     if (a.deliveredToTransactionAddress === true) lines.push("You said it went to the address on the order.");
   }
+  if (reason === "SNAD") {
+    if (a.matchesListing === true) lines.push("You said the item matches the listing.");
+    if (a.matchesListing === "partly") lines.push("You said the item partly matches the listing.");
+    if (a.matchesListing === false) lines.push("You said the item does not match the listing.");
+  }
+  if (reason === "UNAUTHORISED") {
+    if (a.noticeDate) lines.push(`PayPal's notice date: ${a.noticeDate}. Proof of shipment is due 2 days after it.`);
+    if (a.shipmentDate) lines.push(`You shipped on ${a.shipmentDate}.`);
+  }
   lines.push(forced === "FIGHT" ? "The evidence on file supports your side." : forced === "REFUND" ? "The evidence on file supports the buyer." : "The evidence on file does not settle it. You decide.");
   if (forced === "YOUR_CALL" && reason === "INR" && a.hasTracking) {
     const missing: string[] = [];
-    if (a.delivered === undefined) missing.push("the carrier's delivery status");
-    if (a.delivered && !a.deliveryDate) missing.push("the delivery date on the carrier page");
+    if (a.delivered !== false && !a.deliveryDate) missing.push("the delivery date on the carrier page (Your facts)");
     if (a.delivered && a.deliveredToTransactionAddress === undefined) missing.push("your answer to the address question below");
     if (a.deliveredToTransactionAddress === false && !(a.causeEvidence && a.addressMismatchCause !== "unknown")) missing.push("who caused the address mismatch, with evidence");
     if (missing.length) lines.push(`What would settle it: ${missing.join(", ")}.`);
+  }
+  if (forced === "YOUR_CALL" && reason === "SNAD" && a.matchesListing === undefined) lines.push("What would settle it: your answer to \"Does the item match the listing?\" (Your facts).");
+  if (forced === "YOUR_CALL" && reason === "UNAUTHORISED") {
+    const missing: string[] = [];
+    if (!a.noticeDate) missing.push("PayPal's notice date");
+    if (!a.shipmentDate) missing.push("the shipment date");
+    if (missing.length) lines.push(`What would settle it: ${missing.join(" and ")} (Your facts).`);
   }
   return lines;
 }

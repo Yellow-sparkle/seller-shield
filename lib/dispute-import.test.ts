@@ -61,3 +61,10 @@ test("keeps the buyer's claim, PayPal's requests and buyer files, and nothing el
   assert.deepEqual(f.messages, [{ by: "BUYER", time: null, text: "Not arrived." }]);
   assert.equal("evidences" in f, false);
 });
+
+test("S4: the fixture records when PayPal's data was read, and PayPal's allowed response options", () => {
+  const at = new Date("2026-11-08T16:40:00Z");
+  const f = toFixture({ ...full, allowed_response_options: { acknowledge_return_item: { accept_claim_types: ["REFUND"] } } } as never, at);
+  assert.equal(f.fetched_at, "2026-11-08T16:40:00.000Z");
+  assert.deepEqual(f.allowed_response_options, { acknowledge_return_item: { accept_claim_types: ["REFUND"] } });
+});

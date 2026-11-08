@@ -43,6 +43,9 @@ type Row = {
   protection: string;
   status: string;
   canRespond: boolean;
+  canMessage: boolean; // PayPal takes a message to the buyer only in the inquiry stage (S6)
+  canEvidence: boolean; // PayPal takes evidence only while it waits for the seller (S6)
+  sentAction: SentAction | null; // a send that succeeded from this browser, before the data is reloaded (S5)
   recommendation: string;
   reasons: string;
   nextStep: string;
@@ -57,6 +60,8 @@ type Row = {
   sellerMessages: string[];
   messages: CaseMessage[];
   order: OrderTracking | null;
+  facts: Facts;
+  fetchedAt: string | null; // when this case's PayPal data was saved by add-dispute (S4)
 };
 
 // Orders by number, to show the order behind each case. The dispute's seller transaction ID is the order number.
@@ -65,7 +70,8 @@ type OrderTracking = { orderNo: string; tracking: string | null; carrier: string
 
 type CaseMessage = { by: string; time: string | null; text: string };
 
-type Override = CardAnswers & { decision?: string; buyerFiles?: string[] };
+type SentAction = { action: "message" | "refund" | "evidence"; at: string };
+type Override = CardAnswers & { decision?: string; buyerFiles?: string[]; sent?: SentAction };
 
 // Recorded Opus answers (see scripts/live-check.ts --record). Shown without a live call.
 // The deterministic rules (lib/proof.ts) override the recorded answer, as they do in recommend().
@@ -74,7 +80,7 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
   const r = (recorded as Record<string, { recommendation: string; confidence: string; claims: { text: string }[] }>)[id];
   const underReview = c.status === "UNDER_REVIEW";
   const nextStep = c.lifeCycleStage === "CHARGEBACK"
-    ? "1. The card issuer decides.\n2. A refund within 20 hours of a pre-chargeback alert avoids the chargeback fee."
+    ? "1. The card issuer decides.\n2. Check the chargeback in the PayPal Resolution Center for what you can still send."
     : underReview
     ? "1. Wait for PayPal's decision.\n2. Do not refund while it is under review."
     : !e.canRespond && e.reason === "NO_DUE_DATE"
@@ -95,7 +101,8 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
       nextStep,
     };
   }
-  if (!r) return { recommendation: "Not recorded yet", reasons: "-", nextStep };
+  // No recorded AI answer yet (a newly added dispute): the seller decides, and keeps every action (second review S3).
+  if (!r) return { recommendation: "YOUR_CALL (not checked by the AI yet)", reasons: ["Not checked by the AI yet.", ...ruleReasons(c.reason, answer, "YOUR_CALL")].join("\n"), nextStep };
   return {
     recommendation: `${r.recommendation} (${r.confidence.toLowerCase()} confidence)`,
     reasons: r.claims.map((c) => c.text).join("\n"),
@@ -127,6 +134,11 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
   const resolved = c.status !== null && RESOLVED_STATUSES.includes(c.status);
   // The seller has replied and PayPal is waiting for the buyer: nothing for the seller to do yet.
   const waitingForBuyer = c.status === "WAITING_FOR_BUYER_RESPONSE";
+  // A refund or evidence sent from this browser closes the actions until PayPal's data is reloaded (S5).
+  // A message to the buyer does not: the seller may still need to send evidence or refund.
+  const live = !resolved && !waitingForBuyer;
+  const sentFinal = live && (override.sent?.action === "refund" || override.sent?.action === "evidence");
+  const open = e.canRespond && live && !sentFinal;
   const rec = waitingForBuyer
     ? {
         recommendation: "WAITING",
@@ -154,9 +166,14 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
     deadline: resolved ? "Closed" : c.responseDueAt ? c.responseDueAt.slice(0, 10) : "Not set",
     daysLeft: resolved ? null : daysUntilDue(c, now),
     protection: protectionLabel(c),
-    canRespond: e.canRespond && !waitingForBuyer && !resolved,
+    canRespond: open,
+    canMessage: open && c.lifeCycleStage === "INQUIRY",
+    canEvidence: open && c.status === "WAITING_FOR_SELLER_RESPONSE",
+    sentAction: live ? override.sent ?? null : null,
     // One word for a finished case on every part of the screen: "Closed by PayPal" (M9). No raw codes.
-    status: resolved
+    status: sentFinal
+      ? override.sent?.action === "refund" ? "Refund sent. Waiting for PayPal to close the case." : "Evidence sent. Waiting for PayPal."
+      : resolved
       ? c.status === "REFUNDED" ? "Closed by PayPal (buyer refunded)" : "Closed by PayPal"
       : waitingForBuyer
         ? "Waiting for the buyer to reply"
@@ -169,7 +186,9 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
         : e.reason === "OVERDUE"
         ? "Reply deadline passed. PayPal decides without your reply."
         : `Not open for replies (PayPal status: ${c.status ?? "not given"}).`,
-    ...rec,
+    ...(sentFinal
+      ? { ...rec, nextStep: override.sent?.action === "refund" ? "1. Wait for PayPal to close the case.\n2. Reload the PayPal data to see the final status." : "1. Wait for PayPal to review the evidence.\n2. Reload the PayPal data to see the new status." }
+      : rec),
     cause: override.addressMismatchCause ?? "unknown",
     evidence: override.causeEvidence ?? "",
     mismatch: override.addressMismatch ?? (override.causeEvidence || (override.addressMismatchCause && override.addressMismatchCause !== "unknown") ? "yes" : null),
@@ -181,6 +200,8 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
     sellerMessages: Array.isArray(fx.seller_messages) ? (fx.seller_messages as string[]) : [],
     messages: Array.isArray(fx.messages) ? (fx.messages as CaseMessage[]) : [],
     order,
+    fetchedAt: typeof fx.fetched_at === "string" ? fx.fetched_at : null,
+    facts: { carrierDeliveryDate: override.carrierDeliveryDate, matchesListing: override.matchesListing, noticeDate: override.noticeDate, shipmentDate: override.shipmentDate },
   };
 }
 
@@ -319,7 +340,7 @@ function CasePath({ row }: { row: Row }) {
     reason: (["INR", "SNAD", "UNAUTHORISED", "OTHER"].includes(row.reasonCode) ? row.reasonCode : "UNKNOWN") as "INR",
     route: routeFor(normalizeDecision(row.decision), row.recommendation),
     // Not loaded from PayPal: say so rather than show the step as not done (L6).
-    sellerMessaged: row.buyerChecked ? row.messages.some((m) => m.by === "SELLER") || row.sellerMessages.length > 0 : null,
+    sellerMessaged: row.sentAction?.action === "message" ? true : row.buyerChecked ? row.messages.some((m) => m.by === "SELLER") || row.sellerMessages.length > 0 : null,
     trackingInPayPal: !!row.order?.status,
     evidenceTicked: items.every((_, i) => ticks[i]),
     waitingForBuyer: row.recommendation === "WAITING",
@@ -449,6 +470,49 @@ function CauseForm({ row, onChange }: { row: Row; onChange: (mismatch: "yes" | "
   );
 }
 
+// "Your facts" (second review S1, 8 Nov 2026): only the questions the rule for this reason needs.
+// Saved with the address answer, and read by caseAnswer, so the case strength follows them.
+type Facts = Pick<CardAnswers, "carrierDeliveryDate" | "matchesListing" | "noticeDate" | "shipmentDate">;
+function FactsForm({ row, onChange }: { row: Row; onChange: (patch: Facts) => void }) {
+  const f = row.facts;
+  const dateField = (key: "carrierDeliveryDate" | "noticeDate" | "shipmentDate", label: string, hint?: string) => (
+    <label style={{ display: "grid", gap: 2 }}>
+      <strong>{label}</strong>
+      {hint && <span style={{ color: "#5b6472", fontSize: 13 }}>{hint}</span>}
+      <input type="date" value={f[key] ?? ""} onChange={(e) => onChange({ [key]: e.target.value || undefined })} style={{ maxWidth: 180 }} />
+    </label>
+  );
+  return (
+    <section style={{ marginTop: 20 }}>
+      <h2 style={{ fontSize: 18, marginBottom: 6 }}>Your facts</h2>
+      <div style={{ display: "grid", gap: 10, fontSize: 14, maxWidth: 640 }}>
+        {row.reasonCode === "INR" &&
+          (row.order?.tracking
+            ? dateField("carrierDeliveryDate", "Delivery date on the carrier's tracking page", "Open the carrier's own tracking page. Leave it empty if the parcel is not delivered yet.")
+            : <span style={{ color: "#555" }}>Add tracking in Orders and tracking first.</span>)}
+        {row.reasonCode === "SNAD" && (
+          <div role="radiogroup" aria-label="Does the item match the listing?">
+            <strong>Does the item match the listing?</strong>
+            <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+              {(["yes", "partly", "no"] as const).map((v) => (
+                <label key={v}>
+                  <input type="radio" name={`listing-${row.id}`} checked={f.matchesListing === v} onChange={() => onChange({ matchesListing: v })} /> {v === "yes" ? "Yes" : v === "partly" ? "Partly" : "No"}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+        {row.reasonCode === "UNAUTHORISED" && (
+          <>
+            {dateField("noticeDate", "Date of PayPal's notice about this claim", "Proof of shipment is due 2 days after it.")}
+            {dateField("shipmentDate", "Date you shipped the order")}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
 // The case strength, the reasons and the seller's decision at the top of the card (PRD F3, L5).
 function CaseSummary({ row }: { row: Row }) {
   return (
@@ -464,7 +528,10 @@ function CaseSummary({ row }: { row: Row }) {
           <div key={i}>{line}</div>
         ))}
       </div>
-      <div style={{ color: "#5b6472", fontSize: 12, marginTop: 4 }}>Based on the evidence on file. It is not a prediction of PayPal&apos;s decision.</div>
+      <div style={{ color: "#5b6472", fontSize: 12, marginTop: 4 }}>
+        Based on the evidence on file. It is not a prediction of PayPal&apos;s decision.
+        {!isDemo(row) && (row.fetchedAt ? ` PayPal data from ${when(row.fetchedAt)}.` : " PayPal data: save time not recorded.")}
+      </div>
     </section>
   );
 }
@@ -487,7 +554,7 @@ function OrderLine({ row }: { row: Row }) {
           <>
             Order {o.orderNo} · {o.tracking ? `${o.tracking}${o.carrier ? ` (${o.carrier})` : ""}` : "No tracking number"} ·{" "}
             <Pill tone={o.status ? "good" : "muted"}>{trackingStatusText({ tracking: o.tracking, trackingStatus: o.status })}</Pill>
-            {o.deliveredDate && <> · delivered {o.deliveredDate}</>}
+            {o.deliveredDate && <> · delivery date on the order: {o.deliveredDate}</>}
           </>
         )}
       </div>
@@ -545,7 +612,8 @@ function Conversation({ row }: { row: Row }) {
 // Reply drafts and actions (PRD F3). The draft is a template from case facts. The seller edits it, then either
 // copies it or approves a send. Sends go through /api/dispute-action to the PayPal sandbox only, and only after
 // the seller presses an Approve button. Buttons are disabled when PayPal no longer accepts a response.
-function ReplyDrafts({ rows, showId = true }: { rows: Row[]; showId?: boolean }) {
+type OnSent = (id: string, action: SentAction["action"]) => void;
+function ReplyDrafts({ rows, showId = true, onSent }: { rows: Row[]; showId?: boolean; onSent?: OnSent }) {
   const cases = rows.filter((r) => /^(FIGHT|REFUND|YOUR_CALL)/.test(r.recommendation));
   if (cases.length === 0) return null;
   return (
@@ -561,7 +629,7 @@ function ReplyDrafts({ rows, showId = true }: { rows: Row[]; showId?: boolean })
           reason: r.reasonCode,
           tracking: r.order?.tracking ? { carrier: r.order.carrier, number: r.order.tracking } : null,
         });
-        return <DraftCard key={`${r.id}-${basis}`} row={r} initial={draft.draft} refundDraft={basis.startsWith("REFUND")} showId={showId} />;
+        return <DraftCard key={`${r.id}-${basis}`} row={r} initial={draft.draft} refundDraft={basis.startsWith("REFUND")} showId={showId} onSent={onSent} />;
       })}
     </section>
   );
@@ -572,7 +640,7 @@ const isDemo = (r: Row) => r.id.includes("-DEMO-");
 type Pending = "message" | "refund" | "evidence" | null;
 type Outcome = { ok: boolean; text: string };
 
-function DraftCard({ row, initial, refundDraft, showId = true }: { row: Row; initial: string; refundDraft: boolean; showId?: boolean }) {
+function DraftCard({ row, initial, refundDraft, showId = true, onSent }: { row: Row; initial: string; refundDraft: boolean; showId?: boolean; onSent?: OnSent }) {
   const [text, setText] = useState(initial);
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState<Pending>(null);
@@ -600,6 +668,7 @@ function DraftCard({ row, initial, refundDraft, showId = true }: { row: Row; ini
         }),
       });
       const data = (await res.json()) as { ok: boolean; error?: string; status?: number };
+      if (data.ok) onSent?.(row.id, action);
       setOutcome(
         data.ok
           ? { ok: true, text: action === "message" ? `Sent to the buyer. PayPal sandbox replied HTTP ${data.status}.` : action === "refund" ? `Refund accepted. PayPal sandbox replied HTTP ${data.status}.` : `Tracking sent to PayPal as evidence. PayPal sandbox replied HTTP ${data.status}.` }
@@ -629,11 +698,11 @@ function DraftCard({ row, initial, refundDraft, showId = true }: { row: Row; ini
         <button type="button" onClick={() => navigator.clipboard?.writeText(text).then(() => setCopied(true), () => setCopied(false))}>
           Copy
         </button>
-        <button type="button" disabled={!row.canRespond || busy || isDemo(row) || placeholder || refundDraft} onClick={() => setPending("message")}>
+        <button type="button" disabled={!row.canMessage || busy || isDemo(row) || placeholder || refundDraft} onClick={() => setPending("message")}>
           Send to buyer...
         </button>
         {tracking && (
-          <button type="button" disabled={!row.canRespond || busy || isDemo(row)} onClick={() => setPending("evidence")}>
+          <button type="button" disabled={!row.canEvidence || busy || isDemo(row)} onClick={() => setPending("evidence")}>
             Send tracking as evidence...
           </button>
         )}
@@ -642,7 +711,16 @@ function DraftCard({ row, initial, refundDraft, showId = true }: { row: Row; ini
         </button>
         {copied && <span style={{ color: "#555", fontSize: 14 }}>Copied.</span>}
       </div>
-      {!row.canRespond && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>Replies are closed in PayPal for this case.</p>}
+      {!row.canRespond && (
+        <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>
+          {row.sentAction && row.sentAction.action !== "message"
+            ? `Sent from this browser on ${when(row.sentAction.at)}. The buttons stay off until the PayPal data is reloaded.`
+            : "Replies are closed in PayPal for this case."}
+        </p>
+      )}
+      {row.canRespond && !isDemo(row) && !row.canMessage && !refundDraft && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>PayPal takes messages to the buyer only in the inquiry stage. Copy the text into the PayPal Resolution Center instead.</p>}
+      {row.canRespond && !isDemo(row) && tracking && !row.canEvidence && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>PayPal takes evidence only while it waits for your reply.</p>}
+      {row.canRespond && row.sentAction?.action === "message" && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>Message sent from this browser on {when(row.sentAction.at)}.</p>}
       {row.canRespond && placeholder && <p style={{ color: "#7a4b00", fontSize: 14, marginTop: 6 }}>Fill in or remove the part in [brackets] before sending.</p>}
       {row.canRespond && refundDraft && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>This text goes to the buyer with the refund. Use Refund buyer to send both.</p>}
       {row.canRespond && !tracking && row.reasonCode === "INR" && <p style={{ color: "#555", fontSize: 14, marginTop: 6 }}>No tracking on the order yet. Add it in Orders and tracking, then send it here as evidence.</p>}
@@ -722,6 +800,21 @@ const SAMPLE_OVERRIDES: Record<string, Override> = {
   },
 };
 
+function DataAge({ rows }: { rows: Row[] }) {
+  const real = rows.filter((r) => !isDemo(r));
+  const times = real.map((r) => r.fetchedAt).filter((t): t is string => !!t).sort();
+  const missing = real.length - times.length;
+  const text = times.length
+    ? `PayPal data saved ${times[0] === times[times.length - 1] ? `on ${when(times[0])}` : `between ${when(times[0])} and ${when(times[times.length - 1])}`}.`
+    : "This screen reads saved PayPal data, not PayPal live.";
+  return (
+    <p style={{ margin: "0 0 8px", fontSize: 13, color: "#5b6472" }}>
+      {text}
+      {missing > 0 && ` ${missing} ${missing === 1 ? "case has" : "cases have"} no save time.`} Run add-dispute for a case to refresh it.
+    </p>
+  );
+}
+
 export default function CaseScreen() {
   // Dates are computed after mount, so the server render does not depend on the clock.
   // Rows are built after mount (the clock). Seller cause and evidence typed on the screen are kept per case, for this session.
@@ -731,8 +824,11 @@ export default function CaseScreen() {
   const [overrides, setOverrides] = useState<Record<string, Override>>({});
   // /cases?sample=1 shows the sample cause and evidence in memory only. Nothing is saved, and /cases clears it.
   const [sampleMode, setSampleMode] = useState(false);
+  // The sample link is a demo tool, shown only with /cases?demo=1 (second review S11).
+  const [demoTools, setDemoTools] = useState(false);
   useEffect(() => {
     setNow(new Date());
+    setDemoTools(new URLSearchParams(window.location.search).get("demo") === "1");
     setSent(readSentTracking());
     if (new URLSearchParams(window.location.search).get("sample") === "1") {
       setSampleMode(true);
@@ -796,10 +892,14 @@ export default function CaseScreen() {
           Showing sample cause and evidence (not saved). <a href="/cases" style={{ color: "#0070ba", fontWeight: 600 }}>Clear sample</a>
         </p>
       ) : (
-        <p style={{ margin: "0 0 8px", fontSize: 14 }}>
-          <a href="/cases?sample=1" style={{ color: "#0070ba", fontWeight: 600 }}>Show sample cause and evidence</a>
-        </p>
+        demoTools && (
+          <p style={{ margin: "0 0 8px", fontSize: 14 }}>
+            <a href="/cases?sample=1" style={{ color: "#0070ba", fontWeight: 600 }}>Show sample cause and evidence</a>
+          </p>
+        )
       )}
+      {/* S4: this screen reads saved PayPal data, not PayPal live, so it says how old the data is. */}
+      {rows.length > 0 && <DataAge rows={rows} />}
       {focusId && rows.length > 0 && !rows.some((r) => r.id === focusId) && <p role="status">Case {focusId} is not in the sandbox data.</p>}
       <div role="group" aria-label="Filter cases" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", margin: "12px 0" }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: "#003087", marginRight: 4 }}>Filter cases:</span>
@@ -845,7 +945,9 @@ export default function CaseScreen() {
         // One card per ticked case, so Documents and Reply and act for each case stay together.
         selectedRows.map((r) => (
           <section key={r.id} style={{ marginTop: 24, border: "1px solid #b8c7da", borderLeft: "6px solid #0070ba", borderRadius: 8, background: "#ffffff", padding: 16 }}>
-            <h2 style={{ fontSize: 24, margin: "0 0 12px" }}>Case {r.id}</h2>
+            <h2 style={{ fontSize: 24, margin: "0 0 4px" }}>Case {r.id}</h2>
+            {/* S7: answers are not on a server yet. */}
+            <p style={{ margin: "0 0 12px", color: "#5b6472", fontSize: 13 }}>Your answers and decision on this case are saved in this browser only.</p>
             {/* Two columns (Kate, 7 Nov 2026): the step path on the left, everything else on the right. */}
             <div className="case-columns">
               <div className="case-steps">
@@ -854,12 +956,15 @@ export default function CaseScreen() {
               <div>
                 <CaseSummary row={r} />
                 <OrderLine row={r} />
+                {["INR", "SNAD", "UNAUTHORISED"].includes(r.reasonCode) && r.recommendation !== "RESOLVED" && r.recommendation !== "WAITING" && (
+                  <FactsForm row={r} onChange={(patch) => setOverrides((prev) => ({ ...prev, [r.id]: { ...prev[r.id], ...patch } }))} />
+                )}
                 {/* Only where the delivery address matters and the case is still open (M6). */}
                 {(r.reasonCode === "INR" || r.reasonCode === "UNAUTHORISED") && r.recommendation !== "RESOLVED" && (
                   <CauseForm row={r} onChange={(mismatch, cause, evidence) => setCause(r.id, mismatch, cause, evidence)} />
                 )}
                 <Conversation row={r} />
-                <ReplyDrafts rows={[r]} showId={false} />
+                <ReplyDrafts rows={[r]} showId={false} onSent={(id, action) => setOverrides((prev) => ({ ...prev, [id]: { ...prev[id], sent: { action, at: new Date().toISOString() } } }))} />
               </div>
             </div>
           </section>
