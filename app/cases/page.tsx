@@ -10,7 +10,7 @@ import { protectionLabel, responseEligibility } from "../../lib/rules.ts";
 import { forcedRecommendation, inrWaitNote } from "../../lib/proof.ts";
 import { sellerAnswers, type SellerAnswer } from "../../lib/answers.ts";
 import { hasPlaceholder, templateReply } from "../../lib/reply.ts";
-import { caseAnswer, DECISIONS, draftBasis, normalizeDecision, routeFor, ruleReasons, type CardAnswers } from "../../lib/case-facts.ts";
+import { addressNextStep, caseAnswer, DECISIONS, draftBasis, normalizeDecision, routeFor, ruleReasons, type CardAnswers } from "../../lib/case-facts.ts";
 import { evidenceItems } from "../../lib/evidence.ts";
 import { protectionShort, protectionTone } from "../../lib/protection.ts";
 import { trackingStatusText } from "../../lib/orders.ts";
@@ -85,7 +85,7 @@ function recommendationFor(id: string, c: ReturnType<typeof toCase>, e: ReturnTy
           ? "1. Add tracking.\n2. Reply before the due date."
           : answer.hasTracking === true
             ? // The INR wait note (Kate's case 1 rule) comes first; it was unreachable before (H3).
-              inrWaitNote(c, answer, now) ?? "1. Send the tracking as evidence (Send tracking as evidence below).\n2. Reply before the due date."
+              addressNextStep(c.reason, answer, c.responseDueAt) ?? inrWaitNote(c, answer, now) ?? "1. Send the tracking as evidence (Send tracking as evidence below).\n2. Reply before the due date."
             : "1. Check the tracking for this order.\n2. Reply before the due date.";
   const forced = e.canRespond ? forcedRecommendation(c, answer, now) : "YOUR_CALL";
   if (forced) {
@@ -456,6 +456,7 @@ function CauseForm({ row, onChange }: { row: Row; onChange: (mismatch: "yes" | "
         {/* First a yes or no question; the cause and evidence open only on yes (Kate, 7 Nov 2026). */}
         <div role="radiogroup" aria-label="Was the parcel sent to a different address than the one on the order?">
           <strong>Was the parcel sent to a different address than the one on the order?</strong>
+          <div style={{ color: "#5b6472", fontSize: 13, marginTop: 2 }}>A parcel left at a locker or with a relative at the right address counts as the right address.</div>
           <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
             {(["yes", "no"] as const).map((v) => (
               <label key={v}>

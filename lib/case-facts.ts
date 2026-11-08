@@ -86,3 +86,18 @@ export function draftBasis(decision: Decision, recommendation: string): string {
   if (decision === "Refund") return "REFUND";
   return recommendation;
 }
+
+// Next step on a delivered item-not-received case, as one plain action that follows the address answer
+// (Kate, 8 Nov 2026: the old note repeated the question and showed internal codes). Null when it does not apply.
+export function addressNextStep(reason: string, a: SellerAnswer, dueAt: string | null): string | null {
+  if (reason !== "INR" || a.hasTracking !== true || a.delivered !== true) return null;
+  const t = dueAt ? Date.parse(dueAt) : NaN;
+  const by = Number.isNaN(t) ? "" : ` before ${new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}`;
+  if (a.deliveredToTransactionAddress === undefined) return "Answer the address question below.";
+  if (a.deliveredToTransactionAddress === false) {
+    const cause = a.causeEvidence ? a.addressMismatchCause : undefined;
+    if (cause === "seller") return `Refund the buyer${by}. A refund is final, even if the parcel arrives later.`;
+    if (cause !== "buyer") return "Say who caused it and add evidence, such as a carrier scan or the shipping label.";
+  }
+  return `Send the tracking as evidence${by}.`;
+}

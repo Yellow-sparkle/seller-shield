@@ -77,3 +77,21 @@ test("M3: tracking sent from this browser shows on the order", () => {
   assert.equal(o.trackingStatus, "SHIPPED");
   assert.equal(o.tracking, "T9");
 });
+
+import { addressNextStep } from "./case-facts.ts";
+
+test("Next step on a delivered INR case follows the address answer, in plain words", () => {
+  const due = "2026-11-25T09:12:00Z";
+  const ans = (card: Parameters<typeof caseAnswer>[2]) => addressNextStep("INR", caseAnswer({}, delivered, card), due);
+  assert.equal(ans({}), "Answer the address question below.");
+  assert.match(ans({ addressMismatch: "yes" })!, /^Say who caused it/);
+  assert.equal(ans({ addressMismatch: "yes", addressMismatchCause: "seller", causeEvidence: "label" }), "Refund the buyer before 25 Nov. A refund is final, even if the parcel arrives later.");
+  assert.equal(ans({ addressMismatch: "yes", addressMismatchCause: "buyer", causeEvidence: "msg" }), "Send the tracking as evidence before 25 Nov.");
+  assert.equal(ans({ addressMismatch: "no" }), "Send the tracking as evidence before 25 Nov.");
+  for (const s of [ans({}), ans({ addressMismatch: "yes" })]) assert.doesNotMatch(s!, /REFUND|YOUR_CALL/);
+});
+
+test("No address next step when not delivered or not INR", () => {
+  assert.equal(addressNextStep("INR", caseAnswer({}, { tracking: "T", trackingStatus: "SHIPPED" }, {}), null), null);
+  assert.equal(addressNextStep("SNAD", caseAnswer({}, delivered, {}), null), null);
+});
