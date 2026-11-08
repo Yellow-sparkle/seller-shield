@@ -67,9 +67,10 @@ export function casePath(p: PathInput): PathStep[] {
   } else {
     const messaged: Step =
       p.sellerMessaged === null
-        ? { label: "Message the buyer", done: false, source: "PayPal messages not loaded for this case" }
-        : { label: "Message the buyer", done: p.sellerMessaged, source: "From PayPal messages" };
-    // Evidence comes before the message: PayPal decides on evidence, and a message to the buyer is optional
+        ? { label: "Message the buyer (optional)", done: false, source: "PayPal messages not loaded for this case" }
+        : { label: "Message the buyer (optional)", done: p.sellerMessaged, source: "Share the tracking with the buyer too. It can end the case sooner, but PayPal decides on evidence" };
+    // Evidence comes before the message: PayPal decides on evidence and Seller Protection needs a reply in time, while a
+    // message to the buyer is optional (Kate, 8 Nov 2026, after weighing both orders)
     // (review, 8 Nov 2026: the path marked "Message the buyer" as Now while the Next step said to send evidence).
     steps = [
       opened,

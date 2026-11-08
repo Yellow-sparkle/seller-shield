@@ -136,6 +136,14 @@ function evidenceNextStep(reason: string): string {
   return "1. Send your evidence in the PayPal Resolution Center.\n2. Reply before the due date.";
 }
 
+// Open cases first, nearest deadline first; then cases waiting for the buyer; closed cases last (Kate, 8 Nov 2026).
+// The seller can still sort by any column.
+function byOpenFirst(a: Row, b: Row): number {
+  const rank = (r: Row) => (r.recommendation === "RESOLVED" ? 2 : r.recommendation === "WAITING" ? 1 : 0);
+  const days = (r: Row) => (r.daysLeft ?? Number.POSITIVE_INFINITY);
+  return rank(a) - rank(b) || days(a) - days(b);
+}
+
 // Reason labels on the screen: PayPal's issue names (disputes overview). OTHER covers billing or
 // subscription errors, requests for details and misdirected transactions (Kate, 5 Nov 2026).
 const REASON_LABEL: Record<string, string> = {
@@ -269,7 +277,8 @@ const columns: ColDef<Row>[] = [
   { field: "amount", headerName: "Amount", flex: 1 },
   { field: "afterFees", headerName: "Amount after fees", flex: 1.5, // PayPal's merchant fees page: the fees paid to receive a payment are not returned on a refund (checked 7 Nov 2026).
     headerTooltip: "What the sale brought you after PayPal's fee. If you refund, the buyer gets the full amount and PayPal keeps the fee." },
-  { field: "deadline", headerName: "Respond by", flex: 1 },
+  // Text, not a date column: AG Grid would read "2026-12-20" in the first row as a date and blank out "Closed" and "Not set".
+  { field: "deadline", headerName: "Respond by", flex: 1, cellDataType: "text" },
   // Decide by was folded into Days left (Kate, 7 Nov 2026): 2 days or fewer, or passed, shows in red.
   {
     field: "daysLeft",
@@ -292,13 +301,13 @@ const columns: ColDef<Row>[] = [
   // Seller decision sits next to Case strength, so it is on screen without scrolling (review, 8 Nov 2026).
   {
     field: "decision",
-    headerName: "Seller decision (double-click to change)",
+    headerName: "Seller decision",
     flex: 1.5,
     editable: true,
     cellEditor: "agSelectCellEditor",
     // The seller's decision is saved with the case and picks the step path and the reply draft.
     cellEditorParams: { values: [...DECISIONS] },
-    headerTooltip: "Your decision. It sets the steps and the reply draft for this case.",
+    headerTooltip: "Your decision. Double-click a cell to change it. It sets the steps and the reply draft for this case.",
   },
   // Why: one plain line per reason, a small gap between them, no bullets (Kate, 7 Nov 2026).
   {
@@ -913,7 +922,7 @@ export default function CaseScreen() {
         ? ([...(fixtures as object[]), ...(demoDisputes as object[])] as object[]).map((f) => {
             const id = toCase(f as never).disputeId;
             return toRow(f, now, overrides[id] ?? {}, sent);
-          })
+          }).sort(byOpenFirst)
         : [],
     [now, overrides, sent],
   );
