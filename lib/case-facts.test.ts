@@ -120,7 +120,8 @@ test("S2: the order status is described as the order's status, not the carrier's
 
 test("S1: the SNAD listing answer decides the SNAD rule", () => {
   const snad = { ...inr, reason: "SNAD" as const };
-  assert.equal(forcedRecommendation(snad, caseAnswer({}, null, { matchesListing: "yes" }), now), "FIGHT");
+  assert.equal(forcedRecommendation(snad, caseAnswer({}, null, { matchesListing: "yes" }), now), "YOUR_CALL");
+  assert.equal(forcedRecommendation(snad, caseAnswer({}, null, { matchesListing: "yes", listingEvidence: "Listing and photos before shipping" }), now), "FIGHT");
   assert.equal(forcedRecommendation(snad, caseAnswer({}, null, { matchesListing: "no" }), now), "REFUND");
   assert.equal(forcedRecommendation(snad, caseAnswer({}, null, { matchesListing: "partly" }), now), "YOUR_CALL");
   assert.match(ruleReasons("SNAD", {}, "YOUR_CALL").join(" "), /Does the item match the listing/);

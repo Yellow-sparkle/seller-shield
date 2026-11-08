@@ -3,6 +3,7 @@
 export type SellerAnswer = {
   hasTracking?: boolean;
   matchesListing?: boolean | "partly"; // true: matches, "partly": partly matches, false: does not match
+  listingEvidence?: string; // what shows the item matches, e.g. the listing and photos before shipping. Needed for "matches" to count (Kate, 8 Nov 2026).
   delivered?: boolean; // carrier tracking shows "delivered"
   deliveryDate?: string; // date shown by the carrier, e.g. "2026-10-14"
   deliveredToTransactionAddress?: boolean;

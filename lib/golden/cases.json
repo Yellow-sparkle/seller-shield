@@ -154,7 +154,8 @@
     "note": "Synthetic. SNAD where the item matches the listing: fight.",
     "expected": "FIGHT",
     "answer": {
-      "matchesListing": true
+      "matchesListing": true,
+      "listingEvidence": "Listing text and photos taken before shipping show the same item."
     },
     "dispute": {
       "dispute_id": "G-05",
@@ -408,7 +409,8 @@
     "note": "Synthetic. SNAD, item matches the listing, but no seller protection: fight with the listing as evidence.",
     "expected": "FIGHT",
     "answer": {
-      "matchesListing": true
+      "matchesListing": true,
+      "listingEvidence": "Listing text and photos taken before shipping show the same item."
     },
     "dispute": {
       "dispute_id": "G-12",

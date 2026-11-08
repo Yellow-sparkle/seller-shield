@@ -215,7 +215,7 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
     messages: Array.isArray(fx.messages) ? (fx.messages as CaseMessage[]) : [],
     order,
     fetchedAt: typeof fx.fetched_at === "string" ? fx.fetched_at : null,
-    facts: { carrierDeliveryDate: override.carrierDeliveryDate, matchesListing: override.matchesListing, noticeDate: override.noticeDate, shipmentDate: override.shipmentDate },
+    facts: { carrierDeliveryDate: override.carrierDeliveryDate, matchesListing: override.matchesListing, listingEvidence: override.listingEvidence, noticeDate: override.noticeDate, shipmentDate: override.shipmentDate },
   };
 }
 
@@ -486,7 +486,7 @@ function CauseForm({ row, onChange }: { row: Row; onChange: (mismatch: "yes" | "
 
 // "Your facts" (second review S1, 8 Nov 2026): only the questions the rule for this reason needs.
 // Saved with the address answer, and read by caseAnswer, so the case strength follows them.
-type Facts = Pick<CardAnswers, "carrierDeliveryDate" | "matchesListing" | "noticeDate" | "shipmentDate">;
+type Facts = Pick<CardAnswers, "carrierDeliveryDate" | "matchesListing" | "listingEvidence" | "noticeDate" | "shipmentDate">;
 function FactsForm({ row, onChange }: { row: Row; onChange: (patch: Facts) => void }) {
   const f = row.facts;
   const dateField = (key: "carrierDeliveryDate" | "noticeDate" | "shipmentDate", label: string, hint?: string) => (
@@ -514,6 +514,20 @@ function FactsForm({ row, onChange }: { row: Row; onChange: (patch: Facts) => vo
                 </label>
               ))}
             </div>
+            {f.matchesListing === "yes" && (
+              // "Matches" is the seller's view; it counts with evidence (Kate, 8 Nov 2026, G12).
+              <label style={{ display: "grid", gap: 4, marginTop: 8 }}>
+                <strong>What shows it matches?</strong>
+                <span style={{ color: "#5b6472", fontSize: 13 }}>PayPal decides on evidence from both sides. Without evidence the case stays your decision.</span>
+                <textarea
+                  key={f.listingEvidence ?? ""}
+                  rows={2}
+                  defaultValue={f.listingEvidence ?? ""}
+                  placeholder="For example: listing text and photos taken before shipping show the same item."
+                  onBlur={(e) => e.target.value.trim() !== (f.listingEvidence ?? "") && onChange({ listingEvidence: e.target.value.trim() || undefined })}
+                />
+              </label>
+            )}
           </div>
         )}
         {row.reasonCode === "UNAUTHORISED" && (

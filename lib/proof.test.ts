@@ -99,8 +99,11 @@ test("applyProofRule forces REFUND with HIGH confidence for case 4", () => {
 const snadCase = toCase({ dispute_id: "S5", reason: "SNAD", status: "OPEN", dispute_amount: { currency_code: "EUR", value: "25.00" }, seller_protection: { status: "ELIGIBLE" } });
 
 test("SNAD, item matches: FIGHT even though the sandbox flag says ELIGIBLE (case 5)", () => {
-  assert.equal(snadRule(snadCase, { matchesListing: true }), "FIGHT");
-  const r = applyProofRule({ recommendation: "REFUND", confidence: "HIGH" }, snadCase, { matchesListing: true });
+  assert.equal(snadRule(snadCase, { matchesListing: true, listingEvidence: "Listing photos" }), "FIGHT");
+  // Kate, 8 Nov 2026 (G12): "matches" is the seller's view; without evidence the seller decides.
+  assert.equal(snadRule(snadCase, { matchesListing: true }), "YOUR_CALL");
+  assert.equal(snadRule(snadCase, { matchesListing: true, listingEvidence: "  " }), "YOUR_CALL");
+  const r = applyProofRule({ recommendation: "REFUND", confidence: "HIGH" }, snadCase, { matchesListing: true, listingEvidence: "Listing photos" });
   assert.equal(r.recommendation, "FIGHT");
   assert.equal(r.confidence, "HIGH");
 });

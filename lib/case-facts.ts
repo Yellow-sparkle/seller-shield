@@ -14,6 +14,7 @@ export type CardAnswers = {
   // "Your facts" on the card (second review S1, 8 Nov 2026): the inputs each rule needs, typed by the seller.
   carrierDeliveryDate?: string; // INR: the delivery date shown on the carrier's own tracking page (YYYY-MM-DD)
   matchesListing?: "yes" | "partly" | "no"; // SNAD: does the item match the listing
+  listingEvidence?: string; // SNAD: what shows it matches (the listing, photos before shipping)
   noticeDate?: string; // unauthorised: the date of PayPal's notice (YYYY-MM-DD)
   shipmentDate?: string; // unauthorised: the date the seller shipped (YYYY-MM-DD)
 };
@@ -40,6 +41,7 @@ export function caseAnswer(base: SellerAnswer = {}, order?: OrderFacts | null, c
     a.deliverySource = "carrier tracking page";
   }
   if (card.matchesListing) a.matchesListing = card.matchesListing === "yes" ? true : card.matchesListing === "no" ? false : "partly";
+  if (card.matchesListing === "yes" && card.listingEvidence?.trim()) a.listingEvidence = card.listingEvidence.trim();
   if (isDate(card.noticeDate)) a.noticeDate = card.noticeDate;
   if (isDate(card.shipmentDate)) a.shipmentDate = card.shipmentDate;
   if (card.addressMismatch === "yes") {
@@ -68,7 +70,7 @@ export function ruleReasons(reason: string, a: SellerAnswer, forced: "FIGHT" | "
     if (a.deliveredToTransactionAddress === true) lines.push("You said it went to the address on the order.");
   }
   if (reason === "SNAD") {
-    if (a.matchesListing === true) lines.push("You said the item matches the listing.");
+    if (a.matchesListing === true) lines.push(a.listingEvidence ? `You said the item matches the listing. Evidence: ${a.listingEvidence}` : "You said the item matches the listing, with no evidence added yet.");
     if (a.matchesListing === "partly") lines.push("You said the item partly matches the listing.");
     if (a.matchesListing === false) lines.push("You said the item does not match the listing.");
   }
@@ -85,6 +87,7 @@ export function ruleReasons(reason: string, a: SellerAnswer, forced: "FIGHT" | "
     if (missing.length) lines.push(`What would settle it: ${missing.join(", ")}.`);
   }
   if (forced === "YOUR_CALL" && reason === "SNAD" && a.matchesListing === undefined) lines.push("What would settle it: your answer to \"Does the item match the listing?\" (Your facts).");
+  if (forced === "YOUR_CALL" && reason === "SNAD" && a.matchesListing === true && !a.listingEvidence) lines.push("What would settle it: evidence that it matches, such as the listing and photos taken before shipping (Your facts).");
   if (forced === "YOUR_CALL" && reason === "UNAUTHORISED") {
     const missing: string[] = [];
     if (!a.noticeDate) missing.push("PayPal's notice date");

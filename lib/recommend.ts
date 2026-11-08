@@ -21,6 +21,7 @@ export function factsFor(c: Case, e: Eligibility, answer: SellerAnswer = {}): Re
   return {
     hasTracking: answer.hasTracking ?? null,
     matchesListing: answer.matchesListing ?? null,
+    listingEvidence: answer.listingEvidence ?? null,
     delivered: answer.delivered ?? null,
     deliveryDate: answer.deliveryDate ?? null,
     deliveredToTransactionAddress: answer.deliveredToTransactionAddress ?? null,

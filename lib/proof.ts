@@ -113,11 +113,12 @@ export function unauthorisedNotCoveredRule(c: Case, answer: SellerAnswer = {}): 
 }
 
 // SNAD (case 5, Kate, 5 Nov 2026): SNAD is excluded in the published PT terms, so PayPal's sandbox
-// "ELIGIBLE" flag does not count. Matches the listing: FIGHT. Does not match: REFUND.
-// Partly matches or unknown: YOUR_CALL (the seller decides).
+// "ELIGIBLE" flag does not count. Matches the listing, with evidence: FIGHT. Does not match: REFUND.
+// Partly matches, unknown, or "matches" with no evidence: YOUR_CALL. "Matches" is the seller's view, and PayPal
+// decides on the evidence from both sides (Kate, 8 Nov 2026, G12).
 export function snadRule(c: Case, answer: SellerAnswer = {}): "FIGHT" | "REFUND" | "YOUR_CALL" | null {
   if (c.reason !== "SNAD") return null;
-  if (answer.matchesListing === true) return "FIGHT";
+  if (answer.matchesListing === true) return answer.listingEvidence?.trim() ? "FIGHT" : "YOUR_CALL";
   if (answer.matchesListing === false) return "REFUND";
   return "YOUR_CALL";
 }
