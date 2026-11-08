@@ -272,7 +272,7 @@ const columns: ColDef<Row>[] = [
   },
   { field: "protection", headerName: "Seller protection", flex: 1, cellRenderer: (p: { value: string }) => <ProtectionBadge value={p.value} /> },
   { field: "status", headerName: "Status", flex: 2, minWidth: 240 },
-  { field: "recommendation", headerName: CASE_READ_LABEL, headerTooltip: "Based on the evidence on file. It is not a prediction of PayPal's decision.", flex: 2, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
+  { field: "recommendation", headerName: CASE_READ_LABEL, headerTooltip: "Based on the evidence on file. It is not a prediction of PayPal's decision.", flex: 2, minWidth: 200, cellRenderer: (p: { value: string }) => <ReadBadge value={p.value} /> },
   // Why: one plain line per reason, a small gap between them, no bullets (Kate, 7 Nov 2026).
   {
     field: "reasons",
@@ -966,7 +966,12 @@ export default function CaseScreen() {
           defaultColDef={{ sortable: true, filter: true, filterParams: { maxNumConditions: 1 }, minWidth: 120, wrapHeaderText: true, autoHeaderHeight: true, wrapText: true, autoHeight: true, cellStyle: { lineHeight: "1.4", paddingTop: 8, paddingBottom: 8 } }}
           suppressColumnVirtualisation
           getRowId={(p) => p.data.id}
-          getRowStyle={(p) => (p.data && p.data.id === focusId ? { background: "#fff4d6", fontWeight: 600 } : undefined)}
+          // Closed cases are dimmed, so the cases that need the seller stand out (Kate, 8 Nov 2026).
+          getRowStyle={(p) => {
+            if (p.data && p.data.id === focusId) return { background: "#fff4d6", fontWeight: 600 };
+            if (p.data?.recommendation === "RESOLVED") return { opacity: 0.55 };
+            return undefined;
+          }}
           onRowDataUpdated={(e) => {
             const node = focusId ? e.api.getRowNode(focusId) : undefined;
             if (node) e.api.flashCells({ rowNodes: [node] });
