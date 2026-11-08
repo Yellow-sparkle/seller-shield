@@ -82,8 +82,8 @@
     "expected": "FIGHT",
     "answer": {
       "hasTracking": true,
-      "noticeDate": "2026-11-01",
-      "shipmentDate": "2026-11-02",
+      "noticeDate": "2026-11-02",
+      "shipmentDate": "2026-11-03",
       "shippedToTransactionAddress": true
     },
     "dispute": {
@@ -344,7 +344,7 @@
     "answer": {
       "hasTracking": true,
       "delivered": true,
-      "deliveryDate": "2026-11-12",
+      "deliveryDate": "2026-11-02",
       "deliveredToTransactionAddress": false,
       "addressMismatchCause": "seller",
       "causeEvidence": "carrier scan"

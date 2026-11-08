@@ -28,16 +28,22 @@ export function caseAnswer(base: SellerAnswer = {}, order?: OrderFacts | null, c
     if (a.delivered === undefined && order.tracking && order.trackingStatus) a.delivered = order.trackingStatus === "DELIVERED";
     if (a.deliveryDate === undefined && order.deliveredDate) a.deliveryDate = order.deliveredDate;
   }
-  // "Was the parcel sent to a different address than the one on the order?" Yes = address does not match.
-  // The same answer feeds the unauthorised rule's "shipped to the transaction address".
-  if (card.addressMismatch === "yes") a.deliveredToTransactionAddress = a.shippedToTransactionAddress = false;
-  if (card.addressMismatch === "no") a.deliveredToTransactionAddress = a.shippedToTransactionAddress = true;
   // A delivery date the seller read on the carrier page confirms delivery and wins over the order's status,
   // which the seller sets when adding tracking.
   if (isDate(card.carrierDeliveryDate)) {
     a.delivered = true;
     a.deliveryDate = card.carrierDeliveryDate;
     a.deliverySource = "carrier tracking page";
+  }
+  // "Was the parcel sent to a different address than the one on the order?" Yes = address does not match.
+  // The answer is about where it was sent, so it always sets "shipped to the transaction address".
+  // "Delivered to the transaction address" is set only once the parcel is delivered: a parcel on its way can't
+  // have been delivered anywhere (Kate found the contradiction while labelling, 8 Nov 2026).
+  // A parcel sent to the wrong address can't reach the right one, so Yes also means not delivered there.
+  if (card.addressMismatch === "yes") a.deliveredToTransactionAddress = a.shippedToTransactionAddress = false;
+  if (card.addressMismatch === "no") {
+    a.shippedToTransactionAddress = true;
+    if (a.delivered === true) a.deliveredToTransactionAddress = true;
   }
   if (card.matchesListing) a.matchesListing = card.matchesListing === "yes" ? true : card.matchesListing === "no" ? false : "partly";
   if (card.matchesListing === "yes" && card.listingEvidence?.trim()) a.listingEvidence = card.listingEvidence.trim();

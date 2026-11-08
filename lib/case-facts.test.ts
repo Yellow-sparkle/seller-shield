@@ -137,3 +137,12 @@ test("S1: unauthorised notice and shipment dates reach the unauthorised rule", (
   assert.equal(forcedRecommendation(unauth, late, now), "REFUND");
   assert.match(ruleReasons("UNAUTHORISED", {}, "YOUR_CALL").join(" "), /PayPal's notice date and the shipment date/);
 });
+
+// Found by Kate while labelling (8 Nov 2026): a parcel not yet delivered can't be "delivered to the right address".
+test("answering No on the address sets shipped, and delivered only once the parcel is delivered", () => {
+  const onTheWay = caseAnswer({}, { tracking: "T", trackingStatus: "SHIPPED" }, { addressMismatch: "no" });
+  assert.equal(onTheWay.shippedToTransactionAddress, true);
+  assert.equal(onTheWay.deliveredToTransactionAddress, undefined);
+  const arrived = caseAnswer({}, { tracking: "T", trackingStatus: "SHIPPED" }, { addressMismatch: "no", carrierDeliveryDate: "2026-11-02" });
+  assert.equal(arrived.deliveredToTransactionAddress, true);
+});
