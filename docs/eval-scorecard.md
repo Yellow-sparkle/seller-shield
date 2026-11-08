@@ -1,15 +1,17 @@
 # Eval results scorecard
 
+![Eval Results Scorecard, 8 Nov](eval-scorecard.png)
+
 ## All metrics (8 Nov 2026)
 
 | Area | Metric | How it's checked | Target | Result |
 |---|---|---|---|---|
-| Rules | Golden cases the rules decide match the expected answer | golden-check, plus unit tests with no AI | 17 / 17 | 17 / 17 |
-| AI | Golden cases the AI decides (G01, G03, G20, G21) match the expected answer | golden-check, 3 runs | 4 / 4 each run | 4 / 4 (run 1 of 3) |
-| AI | Strong when the expected answer is Weak | golden-check | 0 | 0 |
-| Grounding | Cases where every reason is supported | AI judge | ≥ 95% | 18 / 19 (6 Nov, to rerun) |
+| Rules | Golden cases the rules decide match the expected answer | golden-check, plus unit tests with no AI | 17 / 17 | 17 / 17 on all 3 runs |
+| AI | Golden cases the AI decides (G01, G03, G20, G21) match the expected answer | golden-check, 3 runs | 4 / 4 each run | 4 / 4 on all 3 runs |
+| AI | Strong when the expected answer is Weak | golden-check | 0 | 0 in 3 runs |
+| Grounding | Cases where every reason is supported | AI judge | ≥ 95% | 21 / 21 (100%) |
 | Grounding | Reasons kept by the grounding guard (sandbox disputes) | Code | 100% | 18 / 18 (6 Nov) |
-| Style | Plain English, no prediction of PayPal's decision | AI judge, plus a filter in code | 100% | 19 / 19 (6 Nov) |
+| Style | Plain English, no prediction of PayPal's decision | AI judge, plus a filter in code | 100% | 21 / 21 |
 | Style | Average reading grade of the reasons | Flesch-Kincaid formula, no AI (`scripts/readability-check.ts`) | 8 or below | 5.9 (recorded answers and benchmark reasons) |
 | Judge | Agreement with Kate's labels | 58 reasons Kate labelled | ≥ 90% | 58 / 58 |
 | Judge | False reasons passed by mistake | Same benchmark | 0 | 0 |
@@ -18,9 +20,13 @@
 
 Reading grade: about 1 reason in 6 is above grade 8. Most of these use PayPal's own terms, such as "eligible for Seller Protection" and "proof of fulfillment", which the formula counts as hard words but a PayPal seller knows. The formula measures sentence and word length, not clarity, so it sits next to the judge's plain English check.
 
+Golden set: 21 cases, 3 runs on 8 Nov 2026, 63 of 63 answers matched. Judge: Claude Sonnet 5.5 on the same 21 cases, after the prompt change that added PayPal's rules.
+
 ## 6 Nov 2026 detail
 
-![Eval Results Scorecard](eval-scorecard.png)
+The table and image below are from 6 Nov, before the 8 Nov changes, kept for the record.
+
+![Eval Results Scorecard, 6 Nov](eval-scorecard-6-nov.png)
 
 | Category | KPI | Ratio passing | Subcomponent | All | Item not received | Not as described | Unauthorised | Other / new reason |
 |---|---|---|---|---|---|---|---|---|
