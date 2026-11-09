@@ -7,3 +7,9 @@ export function formatDay(value: string | null | undefined): string {
   if (Number.isNaN(t)) return value;
   return new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
+
+// Dates written inside a sentence (AI reasons, rule reasons) in the same format, so a reason never says
+// "2026-12-20" next to a column that says "20 Dec 2026" (review, 9 Nov 2026).
+export function formatDaysInText(text: string): string {
+  return text.replace(/\b\d{4}-\d{2}-\d{2}\b/g, (d) => formatDay(d));
+}

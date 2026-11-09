@@ -1,5 +1,5 @@
 // Order rows for the tracking fixer (PRD F2).
-// Five rows are real PayPal sandbox orders, taken from the refunded dispute records (seller transaction ids).
+// Five rows are real PayPal sandbox orders: the seller transaction ids of the five sandbox disputes.
 // The rest are seeded demo rows, labelled "Demo data" in the grid and never sent to PayPal.
 import type { Order } from "./orders.ts";
 
@@ -25,7 +25,7 @@ export function demoOrders(count = 200): Order[] {
   }
   // DEMO-1025 is the order behind the demo case PP-R-DEMO-25 (lib/fixtures/demo-disputes.json). It matches the case:
   // 45.00 EUR, eligible, 43.24 held, delivered. It is the only demo order with a dispute, because
-  // it is the only demo dispute with a case .
+  // it is the only demo dispute with a case.
   const demoCase = rows[24];
   if (demoCase && demoCase.orderNo === "DEMO-1025") {
     Object.assign(demoCase, {
@@ -45,8 +45,7 @@ export function demoOrders(count = 200): Order[] {
 
 // Real sandbox orders. Amounts are the dispute amounts (the order total is not in the repo).
 // Tracking matches the test sends that PayPal accepted in the sandbox (see commit history). Those sends use
-// status SHIPPED (lib/tracking-api.ts), so PayPal's tracking status for them is SHIPPED (;
-// not re-read live).
+// status SHIPPED (lib/tracking-api.ts), so PayPal's tracking status for them is SHIPPED (not re-read live).
 export const sandboxOrders: Order[] = [
   {
     orderNo: "35W222794X4866508",

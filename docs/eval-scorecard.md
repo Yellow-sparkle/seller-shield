@@ -22,7 +22,7 @@ Reading grade: about 1 reason in 6 is above grade 8. Most of these use PayPal's 
 
 Golden set: 21 cases, 3 runs on 8 Nov 2026 and a fourth on 9 Nov on the final code (after the fourth review's fixes), 84 of 84 answers matched. Judge: Claude Sonnet 5.5 on the same 21 cases, after the prompt change that added PayPal's rules.
 
-**9 Nov 2026, after the fact-note fix.** One review found an AI reason that said "The seller said the item is not marked as delivered", when that fact came from the order's tracking. The cause was our own note to both the recommender and the judge, which called tracking and delivery facts the seller's answers. I changed the note (`lib/facts.ts`), re-recorded the sandbox answers, and ran both checks again: golden set 21 of 21, judge 21 of 21 at 100% support. The 8 Nov judge benchmark below was run with the old note.
+**9 Nov 2026, after the fact-note fix.** One review found an AI reason that said "The seller said the item is not marked as delivered", when that fact came from the order's tracking. The cause was our own note to both the recommender and the judge, which called tracking and delivery facts the seller's answers. I changed the note (`lib/facts.ts`), re-recorded the sandbox answers, and ran both checks again: golden set 21 of 21, judge 21 of 21 at 100% support. The new recordings kept 33 of 33 reasons (grounding guard), with an average reading grade of 6.0. The 8 Nov judge benchmark below was run with the old note.
 
 ## 6 Nov 2026 detail
 

@@ -136,7 +136,7 @@ export async function sendDisputeAction(creds: Creds, input: Partial<DisputeActi
 
 // provide-evidence takes multipart/form-data with the evidence as JSON in a part named "input", tracking under
 // evidences[].evidence_info.tracking_info (PayPal "Integrate Disputes APIs" guide, checked 7 Nov 2026). PayPal accepts
-// it only while the dispute is WAITING_FOR_SELLER_RESPONSE. Not yet tried against the live sandbox.
+// it only while the dispute is WAITING_FOR_SELLER_RESPONSE. Tried live on 9 Nov 2026 (PP-R-JEX-10197437): PayPal accepted it.
 export function evidenceInput(tracking: { carrier: string; number: string }, notes: string) {
   const code = carrierCode(tracking.carrier);
   return {

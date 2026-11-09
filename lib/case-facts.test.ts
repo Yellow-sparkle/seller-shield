@@ -85,9 +85,9 @@ test("Next step on a delivered INR case follows the address answer, in plain wor
   const ans = (card: Parameters<typeof caseAnswer>[2]) => addressNextStep("INR", caseAnswer({}, delivered, card), due);
   assert.equal(ans({}), "Answer the address question below.");
   assert.match(ans({ addressMismatch: "yes" })!, /^Say who caused it/);
-  assert.equal(ans({ addressMismatch: "yes", addressMismatchCause: "seller", causeEvidence: "label" }), "Refund the buyer before 25 Nov. A refund is final, even if the parcel arrives later.");
-  assert.equal(ans({ addressMismatch: "yes", addressMismatchCause: "buyer", causeEvidence: "msg" }), "Send the tracking as evidence before 25 Nov.");
-  assert.equal(ans({ addressMismatch: "no" }), "Send the tracking as evidence before 25 Nov.");
+  assert.equal(ans({ addressMismatch: "yes", addressMismatchCause: "seller", causeEvidence: "label" }), "Refund the buyer before 25 Nov 2026. A refund is final, even if the parcel arrives later.");
+  assert.equal(ans({ addressMismatch: "yes", addressMismatchCause: "buyer", causeEvidence: "msg" }), "Send the tracking as evidence before 25 Nov 2026.");
+  assert.equal(ans({ addressMismatch: "no" }), "Send the tracking as evidence before 25 Nov 2026.");
   for (const s of [ans({}), ans({ addressMismatch: "yes" })]) assert.doesNotMatch(s!, /REFUND|YOUR_CALL/);
 });
 

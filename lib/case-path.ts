@@ -34,8 +34,10 @@ function evidenceStep(p: PathInput): Step {
   if (p.reason === "INR") {
     return {
       label: "Send tracking as evidence",
-      done: !!p.evidenceSent || p.waitingForBuyer,
-      source: p.trackingInPayPal ? "Tracking is on the order. Use Send tracking as evidence below" : "Add tracking in Orders and tracking first",
+      // Waiting for the buyer counts only when the order has tracking: the open case SRZ waits for the buyer with no
+      // tracking, and read "Done" (review, 9 Nov 2026).
+      done: !!p.evidenceSent || (p.waitingForBuyer && p.trackingInPayPal),
+      source: p.evidenceSent || (p.waitingForBuyer && p.trackingInPayPal) ? "Tracking sent to PayPal" : p.trackingInPayPal ? "Tracking is on the order. Use Send tracking as evidence below" : "Add tracking in Orders and tracking first",
       evidence: true,
     };
   }

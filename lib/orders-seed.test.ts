@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { allOrders, demoOrders, sandboxOrders } from "./orders-seed.ts";
 import { filterOrders, isSelectable } from "./orders.ts";
 
-test("there are 200 demo rows plus the four sandbox rows", () => {
+test("there are 200 demo rows plus the five sandbox rows", () => {
   assert.equal(demoOrders().length, 200);
   assert.equal(allOrders().length, 205);
 });

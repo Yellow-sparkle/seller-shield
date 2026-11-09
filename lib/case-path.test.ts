@@ -28,6 +28,9 @@ test("item not received: step 2 is sending the order's tracking as evidence, don
 
 test("item not received with no tracking on the order says to add it first", () => {
   assert.match(casePath({ ...base, reason: "INR" })[1].source, /Add tracking in Orders and tracking first/);
+  // Waiting for the buyer with no tracking on the order (case SRZ): the evidence step is not shown as done.
+  assert.equal(casePath({ ...base, reason: "INR", waitingForBuyer: true })[1].state, "open");
+  assert.equal(casePath({ ...base, reason: "INR", waitingForBuyer: true, trackingInPayPal: true })[1].state, "done");
 });
 
 test("not as described: step 3 is done only once the seller ticks it", () => {

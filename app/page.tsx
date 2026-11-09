@@ -38,7 +38,7 @@ export default function ScanPage() {
             <Card title="Money at risk" value={`${result.health.moneyAtRisk.currency} ${result.health.moneyAtRisk.amount.toFixed(2)}`} detail={`${result.health.moneyAtRisk.count} open ${result.health.moneyAtRisk.count === 1 ? "dispute" : "disputes"} in PayPal. The demo case is not counted.`} href="/cases?chip=canRespond&chip=overdue&chip=waiting" action="Show these open cases" />
             <Card
               title="Missing tracking"
-              value={`${result.health.missingTracking.count} orders`}
+              value={`${result.health.missingTracking.count} ${result.health.missingTracking.count === 1 ? "order" : "orders"}`}
               detail={`${result.health.missingTracking.currency} ${result.health.missingTracking.total.toFixed(2)}`}
               href="/orders?chip=missingTracking&chip=sandbox"
               action="Show these orders in the grid"

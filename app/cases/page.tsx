@@ -15,7 +15,7 @@ import { evidenceItems } from "../../lib/evidence.ts";
 import { protectionShort, protectionTone } from "../../lib/protection.ts";
 import { trackingStatusText } from "../../lib/orders.ts";
 import { whySummary } from "../../lib/why-summary.ts";
-import { formatDay } from "../../lib/dates.ts";
+import { formatDay, formatDaysInText } from "../../lib/dates.ts";
 import { sameAnswer } from "../../lib/eval-answers.ts";
 import { readSentTracking, withSentTracking, type SentTracking } from "../../lib/sent-tracking.ts";
 import fixtures from "../../lib/fixtures/sandbox-disputes.json" with { type: "json" };
@@ -184,7 +184,8 @@ function toRow(raw: object, now: Date, override: Override = {}, sent: SentTracki
   const rec = waitingForBuyer
     ? {
         recommendation: "WAITING",
-        reasons: "You have replied. PayPal is waiting for the buyer.",
+        // Not "You have replied": a case can reach this status without a reply from this app (review, 9 Nov 2026).
+        reasons: "PayPal is waiting for the buyer.",
         nextStep: "1. Wait for the buyer's reply.\n2. PayPal decides if the buyer does not reply in time.",
       }
     : resolved
@@ -322,7 +323,7 @@ const columns: ColDef<Row>[] = [
     cellStyle: { lineHeight: "1.45", paddingTop: 8, paddingBottom: 8 },
     // One reason in the table, so every row stays short; all of them on hover and on the case card (Kate, 8 Nov 2026).
     cellRenderer: (p: { value: string }) => {
-      const w = whySummary(String(p.value ?? ""));
+      const w = whySummary(formatDaysInText(String(p.value ?? "")));
       return (
         <div title={w.all.join("\n")} style={{ whiteSpace: "normal" }}>
           <div>{w.main}</div>
@@ -588,7 +589,7 @@ function CaseSummary({ row }: { row: Row }) {
       </div>
       <div style={{ display: "grid", gap: 2, marginTop: 6 }}>
         {row.reasons.split("\n").filter((l) => l && l !== "-").map((line, i) => (
-          <div key={i}>{line}</div>
+          <div key={i}>{formatDaysInText(line)}</div>
         ))}
       </div>
       <div style={{ color: "#5b6472", fontSize: 12, marginTop: 4 }}>
@@ -1034,9 +1035,9 @@ export default function CaseScreen() {
                 {["INR", "SNAD", "UNAUTHORISED"].includes(r.reasonCode) && r.canRespond && (
                   <FactsForm row={r} onChange={(patch) => setOverrides((prev) => ({ ...prev, [r.id]: { ...prev[r.id], ...patch } }))} />
                 )}
-                {/* Only where the delivery address matters and the case is still open. */}
-                {/* Not after the deadline: the answers can no longer change the case. */}
-                {(r.reasonCode === "INR" || r.reasonCode === "UNAUTHORISED") && r.recommendation !== "RESOLVED" && r.closedReason !== "OVERDUE" && (
+                {/* Only where the delivery address matters, and only while the seller can respond, like Your facts: on a */}
+                {/* closed, waiting or overdue case the answer can no longer change anything (review, 9 Nov 2026). */}
+                {(r.reasonCode === "INR" || r.reasonCode === "UNAUTHORISED") && r.canRespond && (
                   <CauseForm row={r} onChange={(mismatch, cause, evidence) => setCause(r.id, mismatch, cause, evidence)} />
                 )}
                 <Conversation row={r} />

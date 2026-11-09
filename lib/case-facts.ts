@@ -4,6 +4,7 @@
 // 3. the seller's answers on the case card (Your facts and the address question).
 // The rules in lib/proof.ts read the result, so the case strength follows what the seller entered.
 import type { SellerAnswer } from "./answers.ts";
+import { formatDay } from "./dates.ts";
 
 export type OrderFacts = { tracking?: string | null; trackingStatus?: string | null; deliveredDate?: string | null };
 export type CardAnswers = {
@@ -133,7 +134,7 @@ export function draftBasis(decision: Decision, recommendation: string): string {
 export function addressNextStep(reason: string, a: SellerAnswer, dueAt: string | null): string | null {
   if (reason !== "INR" || a.hasTracking !== true || a.delivered !== true) return null;
   const t = dueAt ? Date.parse(dueAt) : NaN;
-  const by = Number.isNaN(t) ? "" : ` before ${new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}`;
+  const by = Number.isNaN(t) ? "" : ` before ${formatDay(new Date(t).toISOString())}`;
   if (a.deliveredToTransactionAddress === undefined) return "Answer the address question below.";
   if (a.deliveredToTransactionAddress === false) {
     const cause = a.causeEvidence ? a.addressMismatchCause : undefined;
