@@ -4,19 +4,19 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "This dispute is already resolved, so there is nothing left to fight or refund.",
+        "text": "This dispute is already resolved, so there is nothing left to fight or refund through it.",
         "fields": [
           "status"
         ]
       },
       {
-        "text": "PayPal no longer allows you to respond to it.",
+        "text": "PayPal no longer lets you respond to this dispute.",
         "fields": [
           "canRespond"
         ]
       },
       {
-        "text": "It was an Item Not Received claim for EUR 60.",
+        "text": "It is an Item Not Received claim for EUR 60.",
         "fields": [
           "reason",
           "amount"
@@ -35,7 +35,7 @@
         ]
       },
       {
-        "text": "PayPal's Item Not Received rule needs tracking and a delivered status, and neither applied here.",
+        "text": "Item Not Received protection needs tracking and a delivered status, and neither is in place here.",
         "fields": [
           "reason",
           "hasTracking",
@@ -54,38 +54,44 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "This dispute is already resolved, so you can no longer respond to it.",
-        "fields": [
-          "status",
-          "canRespond"
-        ]
-      },
-      {
-        "text": "The buyer said the item was not received, for EUR 45.",
+        "text": "This is an Item Not Received dispute for EUR 45.",
         "fields": [
           "reason",
           "amount"
         ]
       },
       {
-        "text": "No tracking recorded.",
+        "text": "The seller confirmed no tracking recorded.",
         "fields": [
           "hasTracking"
         ]
       },
       {
-        "text": "You confirmed the item was not delivered.",
+        "text": "The seller confirmed the item was not delivered.",
         "fields": [
           "delivered"
         ]
       },
       {
-        "text": "Seller protection here needs proof of fulfillment, and PayPal's Item Not Received rule needs tracking and a delivered status, which these answers do not meet.",
+        "text": "PayPal's Item Not Received rule needs tracking and a delivered status, so neither requirement is met.",
+        "fields": [
+          "hasTracking",
+          "delivered",
+          "evidenceTypeNeeded"
+        ]
+      },
+      {
+        "text": "Seller protection eligibility does not help without proof of fulfillment.",
         "fields": [
           "sellerProtectionEligible",
-          "evidenceTypeNeeded",
-          "hasTracking",
-          "delivered"
+          "evidenceTypeNeeded"
+        ]
+      },
+      {
+        "text": "The dispute is already resolved and the seller can no longer respond, so fighting is not an option.",
+        "fields": [
+          "status",
+          "canRespond"
         ]
       }
     ],
@@ -100,26 +106,26 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "This dispute is already resolved.",
+        "text": "This dispute is already resolved, so there is nothing left to fight or refund here.",
         "fields": [
           "status"
         ]
       },
       {
-        "text": "PayPal no longer lets you respond, so you can neither fight nor refund through this dispute.",
+        "text": "PayPal no longer allows you to respond to this dispute.",
         "fields": [
           "canRespond"
         ]
       },
       {
-        "text": "The buyer said the item was not as described, for 85 EUR.",
+        "text": "The buyer said the item was significantly not as described, for EUR 85.",
         "fields": [
           "reason",
           "amount"
         ]
       },
       {
-        "text": "You said the item only partly matches the listing.",
+        "text": "You said the item only partly matches your listing.",
         "fields": [
           "matchesListing"
         ]
@@ -137,7 +143,7 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "The buyer says the item was not received (INR).",
+        "text": "The buyer says the item was not received.",
         "fields": [
           "reason"
         ]
@@ -149,27 +155,26 @@
         ]
       },
       {
-        "text": "PayPal's INR rule needs tracking, so this case does not meet it even though it is marked eligible for Seller Protection.",
+        "text": "PayPal's Item Not Received rule needs tracking, so this case does not meet it.",
         "fields": [
-          "hasTracking",
           "reason",
-          "sellerProtectionEligible"
+          "hasTracking"
         ]
       },
       {
-        "text": "PayPal is asking for proof of fulfillment.",
+        "text": "PayPal asks for proof of fulfillment.",
         "fields": [
           "evidenceTypeNeeded"
         ]
       },
       {
-        "text": "The disputed amount is EUR 25.",
+        "text": "The dispute is for EUR 25.",
         "fields": [
           "amount"
         ]
       },
       {
-        "text": "You cannot respond right now because the case is waiting for the buyer.",
+        "text": "You cannot respond right now because PayPal is waiting for the buyer.",
         "fields": [
           "canRespond",
           "status"
@@ -186,10 +191,9 @@
     "confidence": "HIGH",
     "claims": [
       {
-        "text": "The buyer says a EUR 45 item was not received.",
+        "text": "The buyer says the item was not received.",
         "fields": [
-          "reason",
-          "amount"
+          "reason"
         ]
       },
       {
@@ -199,30 +203,36 @@
         ]
       },
       {
-        "text": "The seller says the item was delivered on 2026-10-29.",
+        "text": "The seller says the item was delivered on 2026-10-29 to the transaction address.",
         "fields": [
           "delivered",
-          "deliveryDate"
-        ]
-      },
-      {
-        "text": "The seller confirmed delivery to the transaction address.",
-        "fields": [
+          "deliveryDate",
           "deliveredToTransactionAddress"
         ]
       },
       {
-        "text": "The dispute is eligible for Seller Protection.",
+        "text": "Tracking, delivered status and a matching address meet PayPal's Item Not Received rule.",
         "fields": [
-          "sellerProtectionEligible"
+          "reason",
+          "hasTracking",
+          "delivered",
+          "deliveredToTransactionAddress"
         ]
       },
       {
-        "text": "Upload proof of fulfillment by 2026-12-20 09:12 UTC.",
+        "text": "Submit proof of fulfillment before 2026-12-20 09:12 UTC.",
         "fields": [
-          "evidenceTypeNeeded",
           "canRespond",
+          "evidenceTypeNeeded",
           "responseDueAt"
+        ]
+      },
+      {
+        "text": "The sale is eligible for Seller Protection, and PayPal is holding EUR 43.24 of the EUR 45 sale.",
+        "fields": [
+          "sellerProtectionEligible",
+          "holdAmount",
+          "amount"
         ]
       }
     ],
@@ -234,6 +244,56 @@
       "deliverySource": "carrier tracking page",
       "shippedToTransactionAddress": true,
       "deliveredToTransactionAddress": true
+    }
+  },
+  "PP-R-JEX-10197437": {
+    "recommendation": "YOUR_CALL",
+    "confidence": "LOW",
+    "claims": [
+      {
+        "text": "This is an Item Not Received dispute for EUR 65.",
+        "fields": [
+          "reason",
+          "amount"
+        ]
+      },
+      {
+        "text": "A tracking number was added, but tracking alone is not proof of delivery.",
+        "fields": [
+          "hasTracking"
+        ]
+      },
+      {
+        "text": "The seller said the item is not marked as delivered.",
+        "fields": [
+          "delivered"
+        ]
+      },
+      {
+        "text": "PayPal's Item Not Received rule needs a delivered status, so this case does not meet it.",
+        "fields": [
+          "reason",
+          "delivered"
+        ]
+      },
+      {
+        "text": "PayPal is asking for proof of fulfillment.",
+        "fields": [
+          "evidenceTypeNeeded"
+        ]
+      },
+      {
+        "text": "The seller cannot respond yet because PayPal is waiting for the buyer.",
+        "fields": [
+          "canRespond",
+          "status"
+        ]
+      }
+    ],
+    "removed": [],
+    "answer": {
+      "hasTracking": true,
+      "delivered": false
     }
   }
 }
