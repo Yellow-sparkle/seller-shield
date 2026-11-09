@@ -6,9 +6,9 @@
 
 | Area | Metric | How it's checked | Target | Result |
 |---|---|---|---|---|
-| Rules | Golden cases the rules decide match the expected answer | golden-check, plus unit tests with no AI | 17 / 17 | 17 / 17 on all 3 runs |
-| AI | Golden cases the AI decides (G01, G03, G20, G21) match the expected answer | golden-check, 3 runs | 4 / 4 each run | 4 / 4 on all 3 runs |
-| AI | Strong when the expected answer is Weak | golden-check | 0 | 0 in 3 runs |
+| Rules | Golden cases the rules decide match the expected answer | golden-check, plus unit tests with no AI | 17 / 17 | 17 / 17 on all 4 runs |
+| AI | Golden cases the AI decides (G01, G03, G20, G21) match the expected answer | golden-check, 3 runs or more | 4 / 4 each run | 4 / 4 on all 4 runs |
+| AI | Strong when the expected answer is Weak | golden-check | 0 | 0 in 4 runs |
 | Grounding | Cases where every reason is supported | AI judge | ≥ 95% | 21 / 21 (100%) |
 | Grounding | Reasons kept by the grounding guard (sandbox disputes) | Code | 100% | 27 / 27 (8 Nov recordings) |
 | Style | Plain English, no prediction of PayPal's decision | AI judge, plus a filter in code | 100% | 21 / 21 |
@@ -20,7 +20,7 @@
 
 Reading grade: about 1 reason in 6 is above grade 8. Most of these use PayPal's own terms, such as "eligible for Seller Protection" and "proof of fulfillment", which the formula counts as hard words but a PayPal seller knows. The formula measures sentence and word length, not clarity, so it sits next to the judge's plain English check.
 
-Golden set: 21 cases, 3 runs on 8 Nov 2026, 63 of 63 answers matched. Judge: Claude Sonnet 5.5 on the same 21 cases, after the prompt change that added PayPal's rules.
+Golden set: 21 cases, 3 runs on 8 Nov 2026 and a fourth on 9 Nov on the final code (after the fourth review's fixes), 84 of 84 answers matched. Judge: Claude Sonnet 5.5 on the same 21 cases, after the prompt change that added PayPal's rules.
 
 ## 6 Nov 2026 detail
 
