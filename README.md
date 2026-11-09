@@ -4,6 +4,14 @@ A companion for small PayPal sellers. It shows money at risk and reply deadlines
 
 Built for the PayPal AI Hackathon. PayPal sandbox only: EUR, no real buyers or money.
 
+## Research and planning
+
+Before building, I studied the problem and wrote a plan. Both are in this repo:
+
+- [Target user research](docs/research/target-user-research.pdf) (PDF, 11 slides; [.pptx](docs/research/target-user-research.pptx)): how I did the research, the persona Maria Costa (a composite, not a real person), an empathy map of 16 verbatim seller quotes from the PayPal Community forum, use cases with what was built, competitors, the problem and mission, and RICE priorities.
+- [Product requirements (PRD)](docs/product/PRD.md): scope, technical design, build plan, success metrics and risks, written 3 Nov and updated as decisions changed. I wrote it with AI agents playing a product, technical, research and evals review team.
+- [Decisions](docs/decisions/): why each larger choice was made.
+
 ## What it does
 
 | Screen | Address | What it does | Data |
