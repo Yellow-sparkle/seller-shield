@@ -1,6 +1,6 @@
 # Seller Shield
 
-A companion for small PayPal sellers. It shows money at risk and reply deadlines, helps add missing tracking to PayPal, and uses an AI model (Claude Opus 5.5) to recommend FIGHT, REFUND or YOUR_CALL (the seller decides) on each dispute. The seller always makes the final call.
+A companion for small PayPal sellers. It shows money at risk and reply deadlines, helps add missing tracking to PayPal, and rates each dispute as a Strong, Weak or Mixed case (the seller decides), using rules from PayPal's Seller Protection terms and an AI model (Claude Opus 5.5) where the rules leave it open. The seller always makes the final call.
 
 Built for the PayPal AI Hackathon. PayPal sandbox only: EUR, no real buyers or money.
 
@@ -20,7 +20,7 @@ Before building, I studied the problem and wrote a plan. Both are in this repo:
 | Tracking fixer | `/orders` | AG Grid of 204 orders with filters (ready to send to PayPal, missing tracking, held, not protected, has dispute, sandbox only, last 30 days), quick filter, status pills, a pinned totals row, a "View case" button on disputed orders, row selection and a review step. "Confirm and send" adds tracking in PayPal, and each row shows PayPal's result. | 4 real sandbox orders (one for each sandbox dispute), plus 200 seeded orders labelled "Demo data" that can't be sent. Sends to the PayPal sandbox only. |
 | Dispute cases | `/cases` | Each dispute with amount, amount after fees, deadline, seller protection, the AI recommendation with its reasons, an evidence checklist, and a reply draft. After the seller approves, the app sends the reply to the buyer, sends the order's tracking as proof of fulfilment on item-not-received cases, or accepts the claim with a refund, through PayPal's Disputes API. Photos and documents for other reasons are uploaded in the PayPal Resolution Center. | Disputes from `lib/fixtures/sandbox-disputes.json` (copied from PayPal sandbox responses), plus the demo case from `lib/fixtures/demo-disputes.json`. Recommendations from a recorded live Claude run. Reply drafts come from fixed templates. Sends go to the PayPal sandbox only, and only for cases PayPal still accepts a response on. |
 
-How the recommendation works: deterministic rules (`lib/proof.ts`, `lib/rules.ts`) decide eligibility and force an answer where the rules are clear. Otherwise one Claude call returns FIGHT, REFUND or YOUR_CALL, with reasons that cite the case facts they rely on. Reasons without a cited fact, or that predict PayPal's decision, are removed. Low confidence always becomes YOUR_CALL.
+How the recommendation works: deterministic rules (`lib/proof.ts`, `lib/rules.ts`) decide eligibility and force an answer where the rules are clear. Otherwise one Claude call returns FIGHT, REFUND or YOUR_CALL (shown as Strong, Weak or Mixed case), with reasons that cite the case facts they rely on. Reasons without a cited fact, or that predict PayPal's decision, are removed. Low confidence always becomes YOUR_CALL.
 
 ## Requirements
 
