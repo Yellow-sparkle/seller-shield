@@ -5,6 +5,9 @@ export const FACT_NOTES: string[] = [
   "hasTracking only says whether a tracking number was added. It is not proof of delivery.",
   "PayPal's Item Not Received rule needs a delivered status and a recipient address that matches the transaction, as well as tracking.",
   "For an unauthorised claim, noticeDate is when PayPal notified the seller. Shipment proof counts when shipmentDate is within 2 days of noticeDate and shippedToTransactionAddress is true.",
-  "hasTracking, matchesListing, listingEvidence, delivered, deliveryDate, deliveredToTransactionAddress, noticeDate, shipmentDate and shippedToTransactionAddress are the seller's own answers. A claim that the seller confirmed or said one of them is supported.",
+  // hasTracking, delivered and deliveryDate can come from the order's tracking data, not from the seller (review, 9 Nov 2026:
+  // the plates case said "The seller said the item is not marked as delivered", which came from the tracking status).
+  "hasTracking, delivered and deliveryDate can come from the order's tracking data or from the seller. State them as facts ('a tracking number was added', 'the item is not marked as delivered', 'the item was delivered on 2026-10-29'), never as something the seller said or confirmed.",
+  "matchesListing, listingEvidence, deliveredToTransactionAddress, noticeDate, shipmentDate and shippedToTransactionAddress are the seller's own answers. A claim that the seller confirmed or said one of them is supported.",
   "If hasTracking is false, say 'no tracking recorded'. Do not say the seller cannot prove delivery or has no evidence, unless a fact says so.",
 ];
