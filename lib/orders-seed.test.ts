@@ -5,7 +5,7 @@ import { filterOrders, isSelectable } from "./orders.ts";
 
 test("there are 200 demo rows plus the four sandbox rows", () => {
   assert.equal(demoOrders().length, 200);
-  assert.equal(allOrders().length, 204);
+  assert.equal(allOrders().length, 205);
 });
 
 test("only the sandbox rows are selectable for a bulk send", () => {
@@ -15,7 +15,7 @@ test("only the sandbox rows are selectable for a bulk send", () => {
 
 test("demo order numbers are unique", () => {
   const nos = new Set(allOrders().map((o) => o.orderNo));
-  assert.equal(nos.size, 204);
+  assert.equal(nos.size, 205);
 });
 
 test("the missing-tracking chip finds demo rows without tracking", () => {

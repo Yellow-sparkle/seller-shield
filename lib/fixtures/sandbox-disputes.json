@@ -172,5 +172,38 @@
     "seller_protection": {
       "status": "ELIGIBLE"
     }
+  },
+  {
+    "dispute_id": "PP-R-JEX-10197437",
+    "reason": "INR",
+    "status": "UNDER_REVIEW",
+    "dispute_amount": {
+      "currency_code": "EUR",
+      "value": "65.00"
+    },
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "95C49972EM7436207"
+      }
+    ],
+    "create_time": "2026-11-09T09:10:10.551Z",
+    "dispute_life_cycle_stage": "INQUIRY",
+    "fund_movements": [],
+    "buyer_claim": "I ordered a set of plates (€65) on 9 Nov 2026 and it has not arrived. I haven’t received any tracking information from the seller. Can you tell me where my parcel is, or send me the tracking number?",
+    "requested_from_seller": [],
+    "buyer_files": [],
+    "buyer_checked": true,
+    "seller_messages": [],
+    "messages": [
+      {
+        "by": "BUYER",
+        "time": "2026-11-09T09:10:10.551Z",
+        "text": "I ordered a set of plates (€65) on 9 Nov 2026 and it has not arrived. I haven’t received any tracking information from the seller. Can you tell me where my parcel is, or send me the tracking number?"
+      }
+    ],
+    "fetched_at": "2026-11-09T09:12:04.871Z",
+    "seller_protection": {
+      "status": "NOT_ELIGIBLE"
+    }
   }
 ]

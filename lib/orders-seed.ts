@@ -1,5 +1,5 @@
 // Order rows for the tracking fixer (PRD F2).
-// Four rows are real PayPal sandbox orders, taken from the refunded dispute records (seller transaction ids).
+// Five rows are real PayPal sandbox orders, taken from the refunded dispute records (seller transaction ids).
 // The rest are seeded demo rows, labelled "Demo data" in the grid and never sent to PayPal.
 import type { Order } from "./orders.ts";
 
@@ -102,6 +102,20 @@ export const sandboxOrders: Order[] = [
     protection: "ELIGIBLE",
     held: false,
     disputeId: "PP-R-SRZ-10196872",
+    disputeReason: "INR",
+    source: "sandbox",
+  },
+  // Set of plates, paid by the sandbox buyer on 9 Nov 2026 for the live "Send tracking as evidence" test (debate,
+  // 9 Nov 2026). Seller transaction id from add-dispute for PP-R-JEX-10197437. No tracking yet: Kate adds it on the
+  // Orders page, then sends it as evidence on the case. Protection as on the other sandbox orders (all read as eligible).
+  {
+    orderNo: "95C49972EM7436207",
+    date: "2026-11-09",
+    buyer: "Sandbox buyer",
+    amount: { currency: "EUR", value: "65.00" },
+    protection: "ELIGIBLE",
+    held: false,
+    disputeId: "PP-R-JEX-10197437",
     disputeReason: "INR",
     source: "sandbox",
   },
