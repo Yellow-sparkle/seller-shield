@@ -176,7 +176,7 @@
   {
     "dispute_id": "PP-R-JEX-10197437",
     "reason": "INR",
-    "status": "UNDER_REVIEW",
+    "status": "WAITING_FOR_BUYER_RESPONSE",
     "dispute_amount": {
       "currency_code": "EUR",
       "value": "65.00"
@@ -188,7 +188,15 @@
     ],
     "create_time": "2026-11-09T09:10:10.551Z",
     "dispute_life_cycle_stage": "INQUIRY",
-    "fund_movements": [],
+    "fund_movements": [
+      {
+        "type": "DEBIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "62.44"
+        }
+      }
+    ],
     "buyer_claim": "I ordered a set of plates (€65) on 9 Nov 2026 and it has not arrived. I haven’t received any tracking information from the seller. Can you tell me where my parcel is, or send me the tracking number?",
     "requested_from_seller": [],
     "buyer_files": [],
@@ -201,9 +209,16 @@
         "text": "I ordered a set of plates (€65) on 9 Nov 2026 and it has not arrived. I haven’t received any tracking information from the seller. Can you tell me where my parcel is, or send me the tracking number?"
       }
     ],
-    "fetched_at": "2026-11-09T09:12:04.871Z",
+    "allowed_response_options": {
+      "accept_claim": {
+        "accept_claim_types": [
+          "REFUND"
+        ]
+      }
+    },
+    "fetched_at": "2026-11-09T09:21:43.544Z",
     "seller_protection": {
-      "status": "NOT_ELIGIBLE"
+      "status": "ELIGIBLE"
     }
   }
 ]

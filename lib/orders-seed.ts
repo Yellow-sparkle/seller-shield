@@ -106,10 +106,13 @@ export const sandboxOrders: Order[] = [
     source: "sandbox",
   },
   // Set of plates, paid by the sandbox buyer on 9 Nov 2026 for the live "Send tracking as evidence" test (debate,
-  // 9 Nov 2026). Seller transaction id from add-dispute for PP-R-JEX-10197437. No tracking yet: Kate adds it on the
-  // Orders page, then sends it as evidence on the case. Protection as on the other sandbox orders (all read as eligible).
+  // 9 Nov 2026). Seller transaction id from add-dispute for PP-R-JEX-10197437. Kate added the tracking on the Orders
+  // page and sent it as evidence on the case on 9 Nov 2026; PayPal accepted both, so it is recorded here. Protection as on the other sandbox orders (all read as eligible).
   {
     orderNo: "95C49972EM7436207",
+    carrier: "DHL",
+    tracking: "TESTPLATES65",
+    trackingStatus: "SHIPPED",
     date: "2026-11-09",
     buyer: "Sandbox buyer",
     amount: { currency: "EUR", value: "65.00" },

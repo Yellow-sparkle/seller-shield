@@ -98,7 +98,7 @@ How we evaluate the AI: [docs/evaluation.md](docs/evaluation.md). Results: [docs
 
 These are in the product plan but not in this version:
 
-- Sending evidence files to PayPal's Disputes API. The app sends messages, refunds and item-not-received tracking as evidence, not files. The tracking evidence call has not yet been tried against the live sandbox.
+- Sending evidence files to PayPal's Disputes API. The app sends messages, refunds and item-not-received tracking as evidence, not files. The tracking evidence call was tried live on 9 Nov 2026 on sandbox case PP-R-JEX-10197437, and PayPal accepted it.
 - Reading tracking status back from PayPal for the health scan.
 
 ## Stack
