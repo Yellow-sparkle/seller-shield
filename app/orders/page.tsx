@@ -8,6 +8,7 @@ import { allOrders } from "@/lib/orders-seed";
 import { Pill, type Tone } from "../pill";
 import { caseLink, chipsFromQuery, filterOrders, gridSummary, isSelectable, planBulk, protectionLabel, trackingStatusText, type BulkLine, type FilterChip, type GridSummary, type Order } from "@/lib/orders";
 import { protectionShort, protectionTone } from "@/lib/protection";
+import { formatDay } from "@/lib/dates";
 import { readSentTracking, recordSentTracking, withSentTracking } from "@/lib/sent-tracking";
 
 const CARRIER_OPTIONS = ["DHL", "PostNL", "DPD", "UPS", "Other"];
@@ -90,7 +91,8 @@ const columns: ColDef<Order>[] = [
     cellRenderer: (p: P) => (isSummary(p) ? <strong>{sumOf(p).total.toFixed(2)} {sumOf(p).currency}</strong> : p.data ? `${p.data.amount.value} ${p.data.amount.currency}` : ""),
   },
   { colId: "carrier", headerName: "Carrier", valueGetter: (p) => p.data?.carrier ?? "Not set", cellRenderer: (p: P) => (p.data?.carrier ? p.data.carrier : <Quiet>Not set</Quiet>) },
-  { field: "date", headerName: "Date" },
+  // Sorted on the raw ISO date, shown as "20 Oct 2026" like the other screens.
+  { field: "date", headerName: "Date", valueFormatter: (p) => formatDay(p.value) },
   { field: "buyer", headerName: "Buyer" },
   {
     headerName: "Source",

@@ -15,6 +15,7 @@ import { evidenceItems } from "../../lib/evidence.ts";
 import { protectionShort, protectionTone } from "../../lib/protection.ts";
 import { trackingStatusText } from "../../lib/orders.ts";
 import { whySummary } from "../../lib/why-summary.ts";
+import { formatDay } from "../../lib/dates.ts";
 import { sameAnswer } from "../../lib/eval-answers.ts";
 import { readSentTracking, withSentTracking, type SentTracking } from "../../lib/sent-tracking.ts";
 import fixtures from "../../lib/fixtures/sandbox-disputes.json" with { type: "json" };
@@ -279,7 +280,7 @@ const columns: ColDef<Row>[] = [
   { field: "afterFees", headerName: "Amount after fees", flex: 1.5, // PayPal's merchant fees page: the fees paid to receive a payment are not returned on a refund (checked 7 Nov 2026).
     headerTooltip: "What the sale brought you after PayPal's fee. If you refund, the buyer gets the full amount and PayPal keeps the fee." },
   // Text, not a date column: AG Grid would read "2026-12-20" in the first row as a date and blank out "Closed" and "Not set".
-  { field: "deadline", headerName: "Respond by", flex: 1, cellDataType: "text" },
+  { field: "deadline", headerName: "Respond by", flex: 1, cellDataType: "text", valueFormatter: (p) => formatDay(p.value) },
   // Decide by was folded into Days left (Kate, 7 Nov 2026): 2 days or fewer, or passed, shows in red.
   {
     field: "daysLeft",
@@ -616,7 +617,7 @@ function OrderLine({ row }: { row: Row }) {
           <>
             Order {o.orderNo} · {o.tracking ? `${o.tracking}${o.carrier ? ` (${o.carrier})` : ""}` : "No tracking number"} ·{" "}
             <Pill tone={o.status ? "good" : "muted"}>{trackingStatusText({ tracking: o.tracking, trackingStatus: o.status })}</Pill>
-            {o.deliveredDate && <> · delivery date on the order: {o.deliveredDate}</>}
+            {o.deliveredDate && <> · delivery date on the order: {formatDay(o.deliveredDate)}</>}
           </>
         )}
       </div>
@@ -1028,7 +1029,9 @@ export default function CaseScreen() {
               <div>
                 <CaseSummary row={r} />
                 <OrderLine row={r} />
-                {["INR", "SNAD", "UNAUTHORISED"].includes(r.reasonCode) && r.recommendation !== "RESOLVED" && r.recommendation !== "WAITING" && r.closedReason !== "OVERDUE" && (
+                {/* Only while the seller can still respond (review, 8 Nov 2026): on closed, waiting or overdue cases, and after */}
+                {/* tracking or a refund was sent, the answers can no longer change anything. */}
+                {["INR", "SNAD", "UNAUTHORISED"].includes(r.reasonCode) && r.canRespond && (
                   <FactsForm row={r} onChange={(patch) => setOverrides((prev) => ({ ...prev, [r.id]: { ...prev[r.id], ...patch } }))} />
                 )}
                 {/* Only where the delivery address matters and the case is still open. */}

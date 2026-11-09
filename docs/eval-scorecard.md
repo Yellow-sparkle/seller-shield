@@ -16,7 +16,7 @@
 | Judge | Agreement with Kate's labels | 58 reasons Kate labelled | ≥ 90% | 58 / 58 |
 | Judge | False reasons passed by mistake | Same benchmark | 0 | 0 |
 | Judge | Deliberately false reasons caught | 12 planted reasons | all | 12 / 12 |
-| Code | Unit tests passing | node test | all | 228 / 228 |
+| Code | Unit tests passing | node test | all | 233 / 233 |
 
 Reading grade: about 1 reason in 6 is above grade 8. Most of these use PayPal's own terms, such as "eligible for Seller Protection" and "proof of fulfillment", which the formula counts as hard words but a PayPal seller knows. The formula measures sentence and word length, not clarity, so it sits next to the judge's plain English check.
 

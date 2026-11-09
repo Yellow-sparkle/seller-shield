@@ -3,6 +3,7 @@
 // Each card opens the rows behind its number.
 import { useEffect, useState } from "react";
 import type { Health } from "@/lib/health";
+import { formatDay } from "@/lib/dates";
 
 type ScanResult = { ok: boolean; asOf: string; health?: Health; error?: string };
 
@@ -45,7 +46,7 @@ export default function ScanPage() {
             <Card
               title="Next deadline"
               value={result.health.nextDeadline ? `${result.health.nextDeadline.daysLeft} days` : "None"}
-              detail={result.health.nextDeadline ? new Date(result.health.nextDeadline.date).toLocaleDateString() : "No open deadline"}
+              detail={result.health.nextDeadline ? formatDay(result.health.nextDeadline.date) : "No open deadline"}
               href={result.health.nextDeadline?.disputeId ? `/cases#${result.health.nextDeadline.disputeId}` : "/cases"}
               action={result.health.nextDeadline?.disputeId ? "Open this case" : "Open the dispute cases"}
             />
