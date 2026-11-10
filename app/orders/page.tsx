@@ -139,8 +139,12 @@ export default function OrdersPage() {
   const toggle = (id: FilterChip) => setChips((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
   // Entries default to the order's carrier and number until the seller edits them.
-  const prefilled = Object.fromEntries(selected.map((o) => [o.orderNo, entries[o.orderNo] ?? { carrier: o.carrier && CARRIER_OPTIONS.includes(o.carrier) ? o.carrier : o.carrier ? "Other" : "", tracking: o.tracking ?? "" }]));
-  const plan = review ? planBulk(selected.filter((o) => review.includes(o.orderNo)), prefilled) : null;
+  // The review keeps its orders after a send, even when they leave the filtered grid (an order with tracking leaves
+  // "Missing tracking"), so the seller sees PayPal's result (Kate's video take, 10 Nov 2026: the box closed at once).
+  // Orders PayPal already confirmed are not sent again.
+  const reviewOrders = review ? all.filter((o) => review.includes(o.orderNo) && rowStatus[o.orderNo] !== "Tracking added") : [];
+  const prefilled = Object.fromEntries(reviewOrders.map((o) => [o.orderNo, entries[o.orderNo] ?? { carrier: o.carrier && CARRIER_OPTIONS.includes(o.carrier) ? o.carrier : o.carrier ? "Other" : "", tracking: o.tracking ?? "" }]));
+  const plan = review ? planBulk(reviewOrders, prefilled) : null;
   const setEntry = (orderNo: string, patch: Partial<TrackingEntry>) =>
     setEntries((e) => {
       const o = all.find((x) => x.orderNo === orderNo);
@@ -181,7 +185,7 @@ export default function OrdersPage() {
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
         <span>{visible.length} {visible.length === 1 ? "order" : "orders"} shown, {selected.length} selected</span>
-        <button className="primary" aria-disabled={selected.length === 0} onClick={() => { if (selected.length === 0) { setPickMsg("Choose at least one order first. Tick the boxes on the left."); setReview(null); return; } setPickMsg(null); setReview(selected.map((o) => o.orderNo)); }} style={{ opacity: selected.length === 0 ? 0.5 : 1 }}>Review tracking to send</button>
+        <button className="primary" aria-disabled={selected.length === 0} onClick={() => { if (selected.length === 0) { setPickMsg("Choose at least one order first. Tick the boxes on the left."); setReview(null); return; } setPickMsg(null); setRowStatus({}); setStatus(null); setReview(selected.map((o) => o.orderNo)); }} style={{ opacity: selected.length === 0 ? 0.5 : 1 }}>Review tracking to send</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
@@ -256,7 +260,7 @@ export default function OrdersPage() {
           <p style={{ margin: "12px 0", fontSize: 14, color: "#003087" }}><strong>Will send ({plan.lines.length}):</strong> <span style={{ color: "#4a5568" }}>{plan.lines.map((l) => `${l.orderNo} via ${l.carrier}, ${l.tracking}`).join("; ") || "nothing yet"}</span></p>
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
             <button className="primary" disabled={plan.lines.length === 0} onClick={() => confirmSend(plan.lines)}>Confirm and send</button>
-            <button onClick={() => { setReview(null); setStatus(null); }} style={{ padding: "8px 14px" }}>Close review</button>
+            <button onClick={() => { setReview(null); setStatus(null); setRowStatus({}); }} style={{ padding: "8px 14px" }}>Close review</button>
           </div>
           {status && <p role="status" style={{ marginBottom: 0 }}>{status}</p>}
         </section>
@@ -273,7 +277,8 @@ export default function OrdersPage() {
             const rows = e.api.getSelectedRows();
             setSelected(rows);
             if (rows.length > 0) setPickMsg(null);
-            else setReview(null);
+            // Unticking every order closes the review, unless it shows a send result.
+            else if (Object.keys(rowStatus).length === 0) setReview(null);
           }}
           defaultColDef={{ sortable: true, filter: true, filterParams: { maxNumConditions: 1 }, resizable: true, minWidth: 130, flex: 1 }}
         />
