@@ -180,7 +180,7 @@ export default function OrdersPage() {
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-        <span>{visible.length} orders shown, {selected.length} selected</span>
+        <span>{visible.length} {visible.length === 1 ? "order" : "orders"} shown, {selected.length} selected</span>
         <button className="primary" aria-disabled={selected.length === 0} onClick={() => { if (selected.length === 0) { setPickMsg("Choose at least one order first. Tick the boxes on the left."); setReview(null); return; } setPickMsg(null); setReview(selected.map((o) => o.orderNo)); }} style={{ opacity: selected.length === 0 ? 0.5 : 1 }}>Review tracking to send</button>
       </div>
 
