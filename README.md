@@ -101,9 +101,24 @@ These are in the product plan but not in this version:
 - Sending evidence files to PayPal's Disputes API. The app sends messages, refunds and item-not-received tracking as evidence, not files. The tracking evidence call was tried live on 9 Nov 2026 on sandbox case PP-R-JEX-10197437, and PayPal accepted it.
 - Reading tracking status back from PayPal for the health scan.
 
-## Stack
+## Tools used
 
-Next.js (App Router, TypeScript), AG Grid Community, PayPal REST APIs (Disputes, Shipment Tracking, sandbox), Anthropic SDK (Claude Opus 5.5 for recommendations, Claude Sonnet 5.5 as judge).
+**PayPal (sandbox, REST APIs called from the server; keys never reach the browser)**
+- OAuth 2.0: the access token for every call.
+- Disputes API: lists disputes and reads each case for the health scan and the case screen. After the seller approves, it sends a message to the buyer, sends the order's tracking as proof of fulfilment, or refunds.
+- Shipment Tracking API: adds missing tracking to PayPal transactions in bulk from the orders grid.
+- Transaction Search: reads the PayPal fee on each sale, so the app shows the amount after fees.
+
+**AI**
+- Claude Opus 5.5 (Anthropic API): rates the disputes the code rules leave open and writes the reasons, each based on named case facts. Answers are recorded, so the case screen makes no live model calls.
+- Claude Sonnet 5.5 (Anthropic API): the judge that checks each reason against the case facts, in the check scripts.
+- I built the app with Claude as my engineering team, and used AI agents to review the PRD.
+
+**Sponsor tools**
+- AG Grid Community: the orders and tracking grid (filter chips, quick filter, status pills, checkbox selection, totals for the rows shown).
+- Postman: used to try the PayPal sandbox calls by hand before building them into the app.
+
+**App:** Next.js (App Router) and TypeScript.
 
 ## Licence
 
