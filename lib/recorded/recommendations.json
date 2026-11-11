@@ -4,15 +4,16 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "This dispute is already resolved.",
+        "text": "The dispute is marked resolved and no response can be submitted.",
         "fields": [
-          "status"
+          "status",
+          "canRespond"
         ]
       },
       {
-        "text": "You can no longer respond to this dispute.",
+        "text": "This is an Item Not Received dispute.",
         "fields": [
-          "canRespond"
+          "reason"
         ]
       },
       {
@@ -28,7 +29,7 @@
         ]
       },
       {
-        "text": "An Item Not Received case needs tracking and a delivered status, so these facts would not have won it.",
+        "text": "Item Not Received protection needs tracking and a delivered status, so these facts do not meet it.",
         "fields": [
           "reason",
           "hasTracking",
@@ -36,9 +37,9 @@
         ]
       },
       {
-        "text": "Check the outcome in PayPal before sending any refund, so you don't pay twice.",
+        "text": "The amount in dispute is EUR 60.",
         "fields": [
-          "status"
+          "amount"
         ]
       }
     ],
@@ -53,11 +54,17 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "This Item Not Received dispute is already resolved, and no response can be submitted.",
+        "text": "This dispute is already resolved and can no longer be responded to, so there is nothing to fight or refund here.",
         "fields": [
-          "reason",
           "status",
           "canRespond"
+        ]
+      },
+      {
+        "text": "It was an Item Not Received claim for EUR 45.",
+        "fields": [
+          "reason",
+          "amount"
         ]
       },
       {
@@ -73,7 +80,7 @@
         ]
       },
       {
-        "text": "The Item Not Received rule needs tracking and a delivered status, so a fight would not meet it.",
+        "text": "PayPal's Item Not Received rule needs tracking and a delivered status, so this case would not have met it.",
         "fields": [
           "reason",
           "hasTracking",
@@ -81,16 +88,11 @@
         ]
       },
       {
-        "text": "The order is eligible for seller protection, but PayPal needs proof of fulfillment.",
+        "text": "Check the dispute outcome in PayPal. Add tracking to future orders to qualify for protection.",
         "fields": [
-          "sellerProtectionEligible",
-          "evidenceTypeNeeded"
-        ]
-      },
-      {
-        "text": "The disputed amount is EUR 45.",
-        "fields": [
-          "amount"
+          "status",
+          "hasTracking",
+          "sellerProtectionEligible"
         ]
       }
     ],
@@ -105,35 +107,33 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "This Significantly Not as Described dispute is already resolved.",
+        "text": "This dispute is already resolved, so there is nothing left to fight or refund here.",
         "fields": [
-          "reason",
           "status"
         ]
       },
       {
-        "text": "PayPal no longer allows a response on this dispute.",
+        "text": "PayPal no longer allows a response on this case.",
         "fields": [
           "canRespond"
         ]
       },
       {
-        "text": "There is nothing left to fight or refund through this dispute.",
+        "text": "The buyer said the item was significantly not as described.",
         "fields": [
-          "status",
-          "canRespond"
-        ]
-      },
-      {
-        "text": "The dispute was for EUR 85.",
-        "fields": [
-          "amount"
+          "reason"
         ]
       },
       {
         "text": "The seller said the item only partly matches the listing.",
         "fields": [
           "matchesListing"
+        ]
+      },
+      {
+        "text": "The disputed amount is EUR 85.",
+        "fields": [
+          "amount"
         ]
       }
     ],
@@ -149,10 +149,9 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "This is an Item Not Received dispute for EUR 25.",
+        "text": "The buyer says the item was not received.",
         "fields": [
-          "reason",
-          "amount"
+          "reason"
         ]
       },
       {
@@ -162,23 +161,32 @@
         ]
       },
       {
-        "text": "PayPal's Item Not Received rule requires tracking, so this case does not meet it.",
+        "text": "PayPal's Item Not Received rule requires tracking, so it cannot be met here.",
         "fields": [
           "reason",
           "hasTracking"
         ]
       },
       {
-        "text": "PayPal is asking for proof of fulfillment.",
+        "text": "PayPal asks for proof of fulfilment for this dispute.",
         "fields": [
           "evidenceTypeNeeded"
         ]
       },
       {
-        "text": "The dispute is waiting for the buyer's response, and you cannot respond right now.",
+        "text": "The order is eligible for seller protection, but for this claim that still requires tracking.",
+        "fields": [
+          "sellerProtectionEligible",
+          "hasTracking",
+          "reason"
+        ]
+      },
+      {
+        "text": "The dispute is waiting for the buyer, and you cannot respond yet. A refund would be EUR 25.",
         "fields": [
           "status",
-          "canRespond"
+          "canRespond",
+          "amount"
         ]
       }
     ],
@@ -192,15 +200,14 @@
     "confidence": "HIGH",
     "claims": [
       {
-        "text": "The buyer says the item was not received.",
+        "text": "A tracking number was added.",
         "fields": [
-          "reason"
+          "hasTracking"
         ]
       },
       {
-        "text": "A tracking number was added, and the item was delivered on 2026-10-29.",
+        "text": "The item was delivered on 2026-10-29.",
         "fields": [
-          "hasTracking",
           "delivered",
           "deliveryDate"
         ]
@@ -212,27 +219,27 @@
         ]
       },
       {
-        "text": "This meets PayPal's Item Not Received rule, and the sale is eligible for Seller Protection.",
+        "text": "This meets PayPal's Item Not Received rule.",
         "fields": [
           "reason",
           "hasTracking",
           "delivered",
-          "deliveredToTransactionAddress",
+          "deliveredToTransactionAddress"
+        ]
+      },
+      {
+        "text": "The dispute is eligible for Seller Protection.",
+        "fields": [
           "sellerProtectionEligible"
         ]
       },
       {
-        "text": "Submit proof of fulfillment by 2026-12-20.",
+        "text": "Submit proof of fulfillment by 2026-12-20 to recover the EUR 43.24 held.",
         "fields": [
           "evidenceTypeNeeded",
           "responseDueAt",
+          "holdAmount",
           "canRespond"
-        ]
-      },
-      {
-        "text": "PayPal is holding EUR 43.24 until the dispute is resolved.",
-        "fields": [
-          "holdAmount"
         ]
       }
     ],
@@ -251,9 +258,10 @@
     "confidence": "LOW",
     "claims": [
       {
-        "text": "The buyer says the item was not received.",
+        "text": "This is an Item Not Received dispute for EUR 65.",
         "fields": [
-          "reason"
+          "reason",
+          "amount"
         ]
       },
       {
@@ -264,9 +272,23 @@
         ]
       },
       {
-        "text": "PayPal's Item Not Received rule needs a delivered status, so this case does not meet it.",
+        "text": "PayPal's Item Not Received rule needs a delivered status, so tracking alone does not meet it.",
         "fields": [
           "reason",
+          "hasTracking",
+          "delivered"
+        ]
+      },
+      {
+        "text": "PayPal is asking for proof of fulfillment.",
+        "fields": [
+          "evidenceTypeNeeded"
+        ]
+      },
+      {
+        "text": "The case is marked eligible for Seller Protection, but without a delivered status it does not meet the rule.",
+        "fields": [
+          "sellerProtectionEligible",
           "delivered"
         ]
       },
@@ -276,12 +298,6 @@
           "status",
           "canRespond"
         ]
-      },
-      {
-        "text": "The disputed amount is EUR 65.",
-        "fields": [
-          "amount"
-        ]
       }
     ],
     "removed": [],
@@ -289,5 +305,33 @@
       "hasTracking": true,
       "delivered": false
     }
+  },
+  "PP-R-JGU-10196814": {
+    "recommendation": "YOUR_CALL",
+    "confidence": "LOW",
+    "claims": [
+      {
+        "text": "This Item Not Received dispute is already resolved.",
+        "fields": [
+          "reason",
+          "status"
+        ]
+      },
+      {
+        "text": "You can no longer respond to it, so there is nothing to fight or refund here.",
+        "fields": [
+          "canRespond",
+          "status"
+        ]
+      },
+      {
+        "text": "The disputed amount was 15 EUR.",
+        "fields": [
+          "amount"
+        ]
+      }
+    ],
+    "removed": [],
+    "answer": {}
   }
 }

@@ -220,5 +220,60 @@
     "seller_protection": {
       "status": "ELIGIBLE"
     }
+  },
+  {
+    "dispute_id": "PP-R-JGU-10196814",
+    "reason": "INR",
+    "status": "RESOLVED",
+    "dispute_amount": {
+      "currency_code": "EUR",
+      "value": "15.00"
+    },
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "8W935552C2660182V"
+      }
+    ],
+    "create_time": "2026-11-06T11:34:32.869Z",
+    "dispute_life_cycle_stage": "INQUIRY",
+    "fund_movements": [
+      {
+        "type": "DEBIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "14.14"
+        }
+      },
+      {
+        "type": "DEBIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "15.00"
+        }
+      },
+      {
+        "type": "CREDIT",
+        "amount": {
+          "currency_code": "EUR",
+          "value": "15.00"
+        }
+      }
+    ],
+    "buyer_claim": "Transaction: 9L905240W4620471J, 15 EUR, vase with flowers\nDescription: “Sandbox test case for our dispute integration. Item not received. This is a test, not a real purchase.”",
+    "requested_from_seller": [],
+    "buyer_files": [],
+    "buyer_checked": true,
+    "seller_messages": [],
+    "messages": [
+      {
+        "by": "BUYER",
+        "time": "2026-11-06T11:34:32.869Z",
+        "text": "Transaction: 9L905240W4620471J, 15 EUR, vase with flowers\nDescription: “Sandbox test case for our dispute integration. Item not received. This is a test, not a real purchase.”"
+      }
+    ],
+    "fetched_at": "2026-11-11T19:59:26.766Z",
+    "seller_protection": {
+      "status": "ELIGIBLE"
+    }
   }
 ]
