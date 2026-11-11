@@ -31,7 +31,7 @@ How the recommendation works: deterministic rules (`lib/proof.ts`, `lib/rules.ts
 ## Run it
 
 ```bash
-git clone https://github.com/Yellow-sparkle/seller-shield.git
+git clone https://gitlab.com/yellow-sparkle-group/seller-shield.git
 cd seller-shield
 npm install
 ```
