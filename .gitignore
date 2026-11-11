@@ -44,3 +44,7 @@ next-env.d.ts
 *.bundle
 /benchmark/
 /dispute.txt
+
+# written by next dev for AI coding tools
+AGENTS.md
+CLAUDE.md
