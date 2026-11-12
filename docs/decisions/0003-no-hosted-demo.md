@@ -2,6 +2,8 @@
 
 **Status:** Accepted by Kate, 6 Nov 2026. This replaces "Hosted URL with demo login" in the PRD (sections 7 and 14).
 
+**Superseded 11 Nov 2026:** hosted on Render at https://seller-shield.onrender.com.
+
 ## Context
 The PRD planned a hosted URL with one demo login. The hackathon rules accept either a hosted demo URL or "complete setup and run instructions in the repository". Hosting would put PayPal sandbox and Anthropic keys on a public server, and would need login and abuse protection that the judges don't score.
 
